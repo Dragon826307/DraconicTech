@@ -3,28 +3,64 @@
 # certain platforms or Java versions, and provides a first line of defence
 # against bad commits.
 
-name: build
-on: [pull_request, push]
+name: PUBLISH
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  actions: read
 
 jobs:
-  build:
-    runs-on: ubuntu-24.04
+  build-matrix:
+    strategy:
+      matrix:
+        mc_version: [origin-1.21.10]
+    runs-on: ubuntu-latest
     steps:
-      - name: checkout repository
-        uses: actions/checkout@v6
+      - name: Checkout ${{ matrix.mc_version }} branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{matrix.mc_version}}
       - name: validate gradle wrapper
-        uses: gradle/actions/wrapper-validation@v6
+        uses: gradle/actions/wrapper-validation@v4
       - name: setup jdk
         uses: actions/setup-java@v5
         with:
-          java-version: '25'
+          java-version: '21'
           distribution: 'microsoft'
+      - name: setup gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: 9.4.1
+          cache-read-only: false
       - name: make gradle wrapper executable
         run: chmod +x ./gradlew
       - name: build
         run: ./gradlew build
-      - name: capture build artifacts
-        uses: actions/upload-artifact@v7
+      - name: upload ${{matrix.mc_version}} artifacts
+        uses: actions/upload-artifact@v4
         with:
-          name: Artifacts
-          path: build/libs/
+          name: artifacts-${{ matrix.mc_version }}
+          path: build/libs/*.jar
+  create-release:
+    needs: build-matrix
+    runs-on: ubuntu-latest
+    steps:
+      - name: check out
+        uses: actions/checkout@v4
+      - name: Prepare release assets directory
+        run: mkdir -p release-assets
+      - name: Download all built JARs
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets/
+          merge-multiple: false
+      - name: Publish to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          name: LostCitier ${{github.ref_name}}
+          files: release-assets/**/*.jar
+          fail_on_unmatched_files: true
