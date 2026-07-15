@@ -1,0 +1,21 @@
+{
+  "required": true,
+  "package": "dragon826307.dt.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "tick.CommandFunctionManagerMixin",
+    "tick.MinecraftServerMixin",
+    "tick.ServerChunkManagerMixin",
+    "tick.ServerEntityManagerMixin",
+    "tick.ServerWorldMixin",
+    "tick.TickCommandMixin",
+    "tick.TickManagerMixin",
+    "tick.WorldMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+	}
+}

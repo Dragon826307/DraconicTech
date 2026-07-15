@@ -1,0 +1,22 @@
+{
+  "required": true,
+  "package": "dragon826307.dt.client.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "ChatHudAccessor",
+    "ChatHudMixin",
+    "ClientPlayNetworkHandlerMixin",
+    "CommandNodeAccessor",
+    "GameRendererMixin",
+    "MinecraftClientMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  },
+  "mixins": [
+    "ClientConnectionMixin"
+  ]
+}

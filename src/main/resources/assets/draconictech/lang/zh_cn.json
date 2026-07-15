@@ -1,0 +1,23 @@
+{
+  "draconictech.chat.microtick.game_normal": "游戏正常以正常速率运行",
+  "draconictech.client_async_server_pinger.already_ping": "服务器地址已经在ping了: %s",
+  "draconictech.client_async_server_pinger.disconnected": "Ping:[%s] 断开连接",
+  "draconictech.client_async_server_pinger.dns_latency": "DNS解析耗时:",
+  "draconictech.client_async_server_pinger.done": "Ping:[%s] 完成",
+  "draconictech.client_async_server_pinger.fails": "Ping:[%s] 失败",
+  "draconictech.client_async_server_pinger.info_ping": "延迟:",
+  "draconictech.client_async_server_pinger.info_player": "玩家:",
+  "draconictech.client_async_server_pinger.info_version": "[版本]",
+  "draconictech.client_async_server_pinger.interrupted": "Ping:[%s] 任务中断",
+  "draconictech.client_async_server_pinger.invalid": "无效地址!",
+  "draconictech.client_async_server_pinger.prepare": "准备中...",
+  "draconictech.client_async_server_pinger.tcp_latency": "TCP握手延迟:",
+  "draconictech.client_async_server_pinger.timeout": "Ping:[%s] 超时",
+  "draconictech.client_async_server_pinger.too_many_task": "当前进行的 Ping 任务过多",
+  "draconictech.client_async_server_pinger.udp_latency": "UDP应用层延迟:",
+  "draconictech.client_async_server_pinger.unknow_host": "Ping:[%s] 未知主机",
+  "draconictech.key.open_menu": "打开菜单",
+  "key.category.draconictech.draconictech": "龙族科技",
+  "status_command.jvm_info": "§3>>>JVM>>>----------------\n§7版本: %s\n§7运行时间: %d §3天 %d §3时 %d §3分 %d §3秒\n§7CPU: %s%% \n§7内存: %d MiB",
+  "status_command.system_info": "§3>>>系统>>>----------------\n§7系统: %s\n§7运行时间: %d §3天 %d §3时 %d §分 %d §3秒\n§7CPU:%s §7使用率: %s%% \n§7内存: %s\n§7磁盘容量: §3可用: %dGB / §3空闲: %dGB"
+}
