@@ -34,7 +34,7 @@ public class DraconicTech implements ModInitializer {
     public void onInitialize() {
         DraconicTech.LOGGER.info("Initializing DraconicTech...");
         drawModLogoInLogger();
-        ArgumentTypeRegistry.registerArgumentType(Identifier.of(MOD_ID,"config_value"), ConfigValueArgumentType.class, new ConfigValueArgumentSerializer());
+//        ArgumentTypeRegistry.registerArgumentType(Identifier.of(MOD_ID,"config_value"), ConfigValueArgumentType.class, new ConfigValueArgumentSerializer());
         ConfigProjectManager.init();//ConfigProjectManager必须优先于ServerCommandHandler
         ServerCommandHandler.init();
         ModNetworkHandler.init();

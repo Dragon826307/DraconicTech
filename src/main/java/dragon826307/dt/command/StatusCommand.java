@@ -4,6 +4,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.sun.management.OperatingSystemMXBean;
 import dragon826307.dt.config.ConfigProjectManager;
 import dragon826307.dt.config.ConfigProjects;
+import dragon826307.dt.server.ServerConfigProjectManager;
 import dragon826307.dt.util.ServerTranslationUtil;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
@@ -36,7 +37,7 @@ public class StatusCommand implements ServerCommandCallback{
             updateSystemInfo();
             context.getSource().sendFeedback(() -> Text.translatableWithFallback("status_command.system_info", ServerTranslationUtil.get("status_command.system_info"),SYSTEM_INFO_LIST).withColor(0x55FFFF),false);
             return 1;
-        })).then(CommandManager.literal("minecraft")).requires(source -> source.hasPermissionLevel(ConfigProjectManager.getConfig(ConfigProjects.Server.STATUS_COMMAND_PERMISSION).asInt()));
+        })).then(CommandManager.literal("minecraft")).requires(source -> source.hasPermissionLevel(ServerConfigProjectManager.getConfig(ConfigProjects.Server.STATUS_COMMAND_PERMISSION).asInt()));
     }
     @Override
     public String setBranchName() {

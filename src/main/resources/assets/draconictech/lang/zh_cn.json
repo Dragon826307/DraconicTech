@@ -19,5 +19,16 @@
   "draconictech.key.open_menu": "打开菜单",
   "key.category.draconictech.draconictech": "龙族科技",
   "status_command.jvm_info": "§3>>>JVM>>>----------------\n§7版本: %s\n§7运行时间: %d §3天 %d §3时 %d §3分 %d §3秒\n§7CPU: %s%% \n§7内存: %d MiB",
-  "status_command.system_info": "§3>>>系统>>>----------------\n§7系统: %s\n§7运行时间: %d §3天 %d §3时 %d §分 %d §3秒\n§7CPU:%s §7使用率: %s%% \n§7内存: %s\n§7磁盘容量: §3可用: %dGB / §3空闲: %dGB"
+  "status_command.system_info": "§3>>>系统>>>----------------\n§7系统: %s\n§7运行时间: %d §3天 %d §3时 %d §分 %d §3秒\n§7CPU:%s §7使用率: %s%% \n§7内存: %s\n§7磁盘容量: §3可用: %dGB / §3空闲: %dGB",
+  "dt.enhanced_argument.format_err": "格式错误：%s",
+  "dt.config_value.invalid_range": "范围不合法：%s",
+  "dt.config_value.unknow_err": "未知错误！",
+  "dt.config_value.set_config_to": "§a配置项'%s§a'的值更新至：%s",
+  "dt.config_value.current_value": "§b当前配置项'%s§b'的值是'%s§b'",
+  "dt.e_chat.escape_at_end": "不能以转义字符结尾！",
+  "dt.e_chat.miss_char": "标签未闭合！",
+  "dt.e_chat.unclose_tag": "冗余或不匹配的标签：'%s'",
+  "dt.e_chat.args_count_err": "参数数量错误！标签'%s'需要：%s个参数。",
+  "dt.e_chat.unknow": "未知功能：'%s'",
+  "dt.e_chat.parsed_fail": "功能'%s'内部格式错误或缺少结束标签"
 }

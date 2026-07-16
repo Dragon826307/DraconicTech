@@ -12,7 +12,7 @@ public final class ConfigProjects {
     //无限定:null
     //boolean类和char类默认总是有效
     public enum Client implements ConfigProjectsInt{
-        ALLOW_ANY_CHAT_CHARACTER("EnhancedChat:allow_illegal_character",ConfigType.BOOLEAN,false,null,false,null);
+        ALLOW_ILLEGAL_CHAT_CHARACTER("EnhancedChat:allow_illegal_character",ConfigType.BOOLEAN,false,null,false,null);
         private final String name;
         private final ConfigType type;
         private final Object defaultValue;

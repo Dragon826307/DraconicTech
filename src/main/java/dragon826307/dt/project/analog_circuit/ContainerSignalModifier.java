@@ -25,9 +25,8 @@ public class ContainerSignalModifier implements UseBlockCallback{
     ));
     @Override
     public ActionResult interact(PlayerEntity playerEntity, World world, Hand hand, BlockHitResult blockHitResult) {
-        //TODO : 检查玩家游戏模式
-        if (!playerEntity.isPlayer() || !playerEntity.getMainHandStack().isEmpty()) return ActionResult.PASS;
-        if (ConfigProjectManager.getConfig(ConfigProjects.Main.ALLOW_MODIFY_CONTAINER_SIGNAL).asBoolean() && !world.isClient()){
+        if (!ConfigProjectManager.getConfig(ConfigProjects.Main.ALLOW_MODIFY_CONTAINER_SIGNAL).asBoolean() || hand != Hand.MAIN_HAND || !playerEntity.isPlayer() || playerEntity.getGameMode() == null || !playerEntity.getMainHandStack().isEmpty() || !playerEntity.getGameMode().isCreative()) return ActionResult.PASS;
+        if (!world.isClient()){
             BlockPos blockPos = blockHitResult.getBlockPos();
             BlockState blockState = world.getBlockState(blockPos);
             Block block = blockState.getBlock();
@@ -42,6 +41,6 @@ public class ContainerSignalModifier implements UseBlockCallback{
         level++;
         level %= 9;
         BlockState state = blockState.with(ComposterBlock.LEVEL, level);
-        world.setBlockState(blockPos, state , Block.NOTIFY_NEIGHBORS);
+        world.setBlockState(blockPos, state , Block.NOTIFY_LISTENERS);
     }
 }

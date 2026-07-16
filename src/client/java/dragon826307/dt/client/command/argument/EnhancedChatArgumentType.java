@@ -9,9 +9,9 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import dragon826307.dt.client.util.enhanced_chat.ChatFeatures;
 import dragon826307.dt.client.util.enhanced_chat.ParseResult;
-import dragon826307.dt.util.StringReaderHelper;
 import net.minecraft.text.Text;
 import net.minecraft.util.Colors;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,23 +20,20 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 public final class EnhancedChatArgumentType implements ArgumentType<String> {
-    private static StringBuilder suggestPrefix;
+    private static final Text ESCAPE_AT_END = Text.translatable("dt.e_chat.escape_at_end");
+    private static final Text MISS_CHAR = Text.translatable("dt.e_chat.miss_char");
     private static final Set<String> FEATURE_SET = ChatFeatures.getNames();
     private static final List<String> SUGGEST_LIST = new ArrayList<>();
     private static final DynamicCommandExceptionType FORMAT_ERR = new DynamicCommandExceptionType(err -> Text.translatable("dt.enhanced_argument.format_err",err).withColor(Colors.RED));
+    private static int argument_start = 0;
     public static EnhancedChatArgumentType eChatArgument() {return new EnhancedChatArgumentType();}
-    private static void initSuggestions() {
-        suggestPrefix = new StringBuilder();
-    }
     @Override
     public String parse(StringReader reader) throws CommandSyntaxException {
         FEATURE_SET.addAll(ChatFeatures.getNames());
         SUGGEST_LIST.clear();
-        ParseResult result = parseNode(reader);
-        if (result.isSuccess()) return result.parseValue();
-        throw FORMAT_ERR.createWithContext(reader,result.errMessage());
+        argument_start = reader.getCursor();
+        return parseNode(reader, null);
     }
-
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
         for (String s : SUGGEST_LIST) {
@@ -44,60 +41,108 @@ public final class EnhancedChatArgumentType implements ArgumentType<String> {
         }
         return builder.buildFuture();
     }
-
     public static String getMessage(CommandContext<?> context , String name) {
         return context.getArgument(name, String.class);
     }
-    private static ParseResult parseNode(StringReader stringReader) {
-        if (stringReader.getRemaining().isEmpty()) return ParseResult.success("");
-        StringBuilder builder = new StringBuilder();
-        while (stringReader.canRead()) {
-            char c = StringReaderHelper.readOut(stringReader);
-            if (c == '<') {
-                String key_with_args = StringReaderHelper.readUntilNotThrow(stringReader,'>',false);
-                if (key_with_args != null) {
-                    List<String> key_parser = new ArrayList<>(Arrays.asList(key_with_args.split(":")));
-                    String key = key_parser.getFirst();
-                    key_parser.removeFirst();
-                    ChatFeatures feature;
-                    if ((feature = ChatFeatures.getByID(key)) != null) {
-                        if (feature.getArgCount() == key_parser.size()) {
-                            String end_tag = "</" + key + ">";
-                            int index = stringReader.getRemaining().indexOf(end_tag);
-                            if (index != -1) {
-                                String content = StringReaderHelper.readUntilMeet(stringReader, end_tag);
-                                ParseResult result = parseNode(new StringReader(content));
-                                if (result.isSuccess()) {
-                                    String parsed = result.parseValue();
-                                    ParseResult value = feature.getParser().parse(parsed, key_parser.toArray(new String[0]));
-                                    if (value.isSuccess()) {
-                                        builder.append(value.parseValue());
-                                        stringReader.setCursor(stringReader.getCursor() + index + end_tag.length());
-                                    }else {
-                                        return ParseResult.error(value.errMessage());
-                                    }
-                                }else {
-                                    return ParseResult.error(result.errMessage());
-                                }
-                            }else {
-                                return ParseResult.error("End tag not found!");
-                            }
-                        }else {
-                            return ParseResult.error("Argument count mismatch!");
-                        }
-                    }else {
-                        return ParseResult.error("Unknown ChatFeature: " + key);
-                    }
-                }else {
-                    String prefix = builder.toString();
-                    for (String s : FEATURE_SET) {
-                        SUGGEST_LIST.add(prefix + s);
-                    }
-                    return ParseResult.error("Missing '>' in command argument");
+    private static String parseNode(StringReader reader,@Nullable ChatFeatures parent) throws CommandSyntaxException {
+        StringBuilder result = new StringBuilder();
+        while (reader.canRead()) {
+            int currentCursor = reader.getCursor();
+            if (reader.peek() == '\\') {
+                reader.skip();
+                if (reader.canRead()) {
+                    result.append(reader.read());
+                } else {
+                    reader.setCursor(currentCursor);
+                    throw FORMAT_ERR.createWithContext(reader, ESCAPE_AT_END);
+                }
+                continue;
+            }
+            if (parent != null && reader.peek() == '<') {
+                String expectedCloseTag = "</" + parent.getID() + ">";
+                if (reader.getRemaining().startsWith(expectedCloseTag)) {
+                    break;
                 }
             }
-            builder.append(c);
+            if (reader.peek() == '<') {
+                int tagStartCursor = reader.getCursor();
+                reader.skip();
+                String tagContent = readUntilUnescaped(reader);
+                if (!reader.canRead()) {
+                    reader.setCursor(tagStartCursor);
+                    String prefix = reader.getString().substring(argument_start, tagStartCursor + 1);
+                    ChatFeatures f = null;
+                    if (tagContent.endsWith(":")) f = ChatFeatures.getByID(tagContent.substring(0, tagContent.length()-1));
+                    if (f == null) {
+                        for (String s : FEATURE_SET) {
+                            SUGGEST_LIST.add(prefix + s);
+                        }
+                    }else {
+                        String[] suggest = f.getSuggestions();
+                        reader.setCursor(argument_start);
+                        if (suggest != null) {
+                            for (String s : suggest) {
+                                SUGGEST_LIST.add(reader.getRemaining() + s + ">");
+                            }
+                        }else SUGGEST_LIST.add(reader.getRemaining() + ">");
+                        reader.setCursor(tagStartCursor);
+                    }
+                    throw FORMAT_ERR.createWithContext(reader, MISS_CHAR);
+                }
+                reader.skip();
+                String[] parts = tagContent.split(":");
+                String tagName = parts[0];
+                FEATURE_SET.remove(tagName);
+                if (tagName.startsWith("/")) {
+                    reader.setCursor(tagStartCursor);
+                    throw FORMAT_ERR.createWithContext(reader, Text.translatable("dt.e_chat.unclose_tag",tagName));
+                }
+                ChatFeatures feature = ChatFeatures.getByID(tagName);
+                if (feature == null) {
+                    reader.setCursor(tagStartCursor);
+                    throw FORMAT_ERR.createWithContext(reader, Text.translatable("dt.e_chat.unknow",tagName));
+                }
+                if (parts.length - 1 != feature.getArgCount()) {
+                    reader.setCursor(tagStartCursor);
+                    throw FORMAT_ERR.createWithContext(reader, Text.translatable("dt.e_chat.args_count_err",tagName,feature.getArgCount()));
+                }
+                String[] args = Arrays.copyOfRange(parts, 1, parts.length);
+                String innerContent = parseNode(reader, feature);
+                int closeTagStart = reader.getCursor();
+                String expectedCloseTag = "</" + feature.getID() + ">";
+                if (!reader.getRemaining().startsWith(expectedCloseTag)) {
+                    reader.setCursor(argument_start);
+                    SUGGEST_LIST.add(reader.getRemaining() + expectedCloseTag);
+                    reader.setCursor(closeTagStart);
+                    throw FORMAT_ERR.createWithContext(reader, Text.translatable("dt.e_chat.parsed_fail",tagName));
+                }
+                reader.setCursor(closeTagStart + expectedCloseTag.length());
+                ParseResult parseResult = feature.getParser().parse(innerContent, args);
+                if (!parseResult.isSuccess()) {
+                    reader.setCursor(tagStartCursor);
+                    throw FORMAT_ERR.createWithContext(reader, Text.translatable(parseResult.errMessage(), parseResult.args()));
+                }
+                result.append(parseResult.parseValue());
+
+            } else {
+                result.append(reader.read());
+            }
         }
-        return ParseResult.success(builder.toString());
+        return result.toString();
+    }
+    private static String readUntilUnescaped(StringReader reader) {
+        StringBuilder builder = new StringBuilder();
+        while (reader.canRead()) {
+            if (reader.peek() == '\\') {
+                reader.skip();
+                if (reader.canRead()) builder.append(reader.read());
+                continue;
+            }
+            if (reader.peek() == '>') {
+                break;
+            }
+            builder.append(reader.read());
+        }
+        return builder.toString();
     }
 }

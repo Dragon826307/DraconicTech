@@ -16,6 +16,6 @@ public final class ServerTranslationUtil {
         }else return null;
     }
     public static MutableText getTranslatedWithFallback(String key, Object... args) {
-        return Text.translatableWithFallback(key, LANGUAGE.get(key), Arrays.stream(args).map(String::valueOf));
+        return Text.translatableWithFallback(key, LANGUAGE.get(key), args);
     }
 }

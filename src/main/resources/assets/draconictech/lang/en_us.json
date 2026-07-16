@@ -24,5 +24,14 @@
   "dt.config_value.invalid_range": "Invalid range: %s",
   "dt.config_value.unknow_err": "Unknow Error!",
   "dt.config_value.set_config_to": "§aSet config '%s§a' to value: %s",
-  "dt.config_value.current_value": "§bThe current value of config project '%s§b' is '%s§b'"
+  "dt.config_value.current_value": "§bThe current value of config project '%s§b' is '%s§b'",
+  "dt.e_chat.escape_at_end": "Can NOT end with escape char!",
+  "dt.e_chat.miss_char": "Unclose tag!",
+  "dt.e_chat.unclose_tag": "Redundant or mismatched closing tags: '%s'",
+  "dt.e_chat.args_count_err": "Argument counts mismatch! Tag '%s' Require: %s arguments.",
+  "dt.e_chat.unknow": "Unknow Feature: '%s'",
+  "dt.e_chat.parsed_fail": "Feature '%s' inner format error or missing end tag.",
+  "dt.e_chat.repeat.invalid_num": "The argument is not a valid number",
+  "dt.e_chat.utf.format_err": "UTF8 format error",
+  "dt.e_chat.utf.illegal_char": "Illegal character: %s"
 }
