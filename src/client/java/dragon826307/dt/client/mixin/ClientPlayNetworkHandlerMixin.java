@@ -58,8 +58,13 @@ public class ClientPlayNetworkHandlerMixin {
     @Inject(method = "onCommandTree",at = @At("TAIL"))
     private void onOnCommandTree(CommandTreeS2CPacket packet, CallbackInfo ci){
         serverCommandTreeBranch = new CommandDispatcher<FabricClientCommandSource>().getRoot();
-        this.commandDispatcher.getRoot().getChild("draconictech").getChildren().forEach(serverCommandTreeBranch::addChild);
+        CommandNode<FabricClientCommandSource> node = this.commandDispatcher.getRoot().getChild("draconictech");
+        if (node == null) return;
+        else node.getChildren().forEach(serverCommandTreeBranch::addChild);
         this.commandDispatcher.register(ClientCommandHandler.commandRoot);
+        node = this.commandDispatcher.getRoot().getChild("dt");
+        if (node == null) return;
+        this.commandDispatcher.register(ClientCommandHandler.commandRoot_copy);
     }
     @Unique
     private static <S> boolean isInCommandTree(String command, CommandNode<S> commandNode){

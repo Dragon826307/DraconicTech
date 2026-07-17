@@ -8,7 +8,7 @@ import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import dragon826307.dt.client.util.enhanced_chat.ChatFeatures;
-import dragon826307.dt.client.util.enhanced_chat.ParseResult;
+import dragon826307.dt.client.util.enhanced_chat.EnhancedChatParseResult;
 import net.minecraft.text.Text;
 import net.minecraft.util.Colors;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -117,12 +117,12 @@ public final class EnhancedChatArgumentType implements ArgumentType<String> {
                     throw FORMAT_ERR.createWithContext(reader, Text.translatable("dt.e_chat.parsed_fail",tagName));
                 }
                 reader.setCursor(closeTagStart + expectedCloseTag.length());
-                ParseResult parseResult = feature.getParser().parse(innerContent, args);
-                if (!parseResult.isSuccess()) {
+                EnhancedChatParseResult enhancedChatParseResult = feature.getParser().parse(innerContent, args);
+                if (!enhancedChatParseResult.isSuccess()) {
                     reader.setCursor(tagStartCursor);
-                    throw FORMAT_ERR.createWithContext(reader, Text.translatable(parseResult.errMessage(), parseResult.args()));
+                    throw FORMAT_ERR.createWithContext(reader, Text.translatable(enhancedChatParseResult.errMessage(), enhancedChatParseResult.args()));
                 }
-                result.append(parseResult.parseValue());
+                result.append(enhancedChatParseResult.parseValue());
 
             } else {
                 result.append(reader.read());

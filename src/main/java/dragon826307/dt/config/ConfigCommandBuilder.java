@@ -24,7 +24,7 @@ import java.util.function.Function;
 public final class ConfigCommandBuilder {
     private static final Text UNKNOW_ERR = Text.translatable("dt.config_value.unknow_err").withColor(Colors.RED);
     @SafeVarargs
-    public static <S, T extends ConfigProjectsInt> LiteralArgumentBuilder<S> buildIn(LiteralArgumentBuilder<S> command, BiConsumer<S, Text> feedbackSender, BiFunction<T, Object,@NonNull Boolean> setter, Function<T, ConfigValue> getter, T... configProjectsInts) {
+    public static <S, T extends ConfigProjectsInt> LiteralArgumentBuilder<S> buildIn(LiteralArgumentBuilder<S> command, BiConsumer<S, Text> feedbackSender, BiFunction<T, Object,@NonNull Boolean> setter, Function<T, ConfigGetterValue> getter, T... configProjectsInts) {
         for (T configProject : configProjectsInts) {
             LiteralArgumentBuilder<S> singleConfigNode = LiteralArgumentBuilder.<S>literal(configProject.getName()).executes(context -> {
                 feedbackSender.accept(context.getSource(), SendMessageHelper.getMessage(ServerTranslationUtil.getTranslatedWithFallback("dt.config_value.current_value", configProject.getName(), String.valueOf(getter.apply(configProject).value())).withColor(0x449CCC),true));
@@ -40,8 +40,8 @@ public final class ConfigCommandBuilder {
                 .executes(context -> {
                     String rawString = StringArgumentType.getString(context, "new value");
                     Object newValue = ConfigProjectManager.parseValueFromString(rawString, configProject.getConfigType());
-                    ParseValue parseValue = ConfigProjectManager.parseValue(newValue, configProject);
-                    if (parseValue.isSuccess()) {
+                    ConfigParserValue configParserValue = ConfigProjectManager.parseValue(newValue, configProject);
+                    if (configParserValue.isSuccess()) {
                         return executeConfigChange(context.getSource(), configProject, newValue, feedbackSender, setter);
                     }else {
                         feedbackSender.accept(context.getSource(), SendMessageHelper.getMessage(ServerTranslationUtil.getTranslatedWithFallback("dt.config_value.invalid_range", rawString),true));

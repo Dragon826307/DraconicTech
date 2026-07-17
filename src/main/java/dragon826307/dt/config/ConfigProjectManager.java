@@ -24,8 +24,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 public class ConfigProjectManager {
-    private static final Map<ConfigProjects.Main,ConfigValue> CACHE_MAIN = new ConcurrentHashMap<>();
-    private static final Map<ConfigProjects.Auto,ConfigValue> CACHE_AUTO = new ConcurrentHashMap<>();
+    private static final Map<ConfigProjects.Main, ConfigGetterValue> CACHE_MAIN = new ConcurrentHashMap<>();
+    private static final Map<ConfigProjects.Auto, ConfigGetterValue> CACHE_AUTO = new ConcurrentHashMap<>();
     protected static final Path ROOT = FabricLoader.getInstance().getGameDir().resolve(DraconicTech.MOD_ID).resolve("config");
     protected static final Path CLIENT_CONFIG = ROOT.resolve("client.dat");
     protected static final Path MAIN_CONFIG = ROOT.resolve("main.dat");
@@ -38,30 +38,30 @@ public class ConfigProjectManager {
         }catch (IOException e){
             throw new RuntimeException(e);
         }
-        for (ConfigProjects.Main project: ConfigProjects.Main.values()) CACHE_MAIN.put(project, new ConfigValue(project.getDefaultValue()));
-        for (ConfigProjects.Auto project: ConfigProjects.Auto.values()) CACHE_AUTO.put(project, new ConfigValue(project.getDefaultValue()));
+        for (ConfigProjects.Main project: ConfigProjects.Main.values()) CACHE_MAIN.put(project, new ConfigGetterValue(project.getDefaultValue()));
+        for (ConfigProjects.Auto project: ConfigProjects.Auto.values()) CACHE_AUTO.put(project, new ConfigGetterValue(project.getDefaultValue()));
         loadALL();
     }
-    public static ConfigValue getConfig(ConfigProjects.Main project){
+    public static ConfigGetterValue getConfig(ConfigProjects.Main project){
         return CACHE_MAIN.get(project);
     }
-    public static ConfigValue getConfig(ConfigProjects.Auto project){
+    public static ConfigGetterValue getConfig(ConfigProjects.Auto project){
         return CACHE_AUTO.get(project);
     }
     public static boolean setConfig(ConfigProjects.Main project, Object value) {
         if (project.getConfigType().getClazz().isInstance(value)) {
-            CACHE_MAIN.put(project, new ConfigValue(value));
+            CACHE_MAIN.put(project, new ConfigGetterValue(value));
             return true;
         }
         return false;
     }
     public static boolean setConfig(ConfigProjects.Auto project, Object value) {
-        CACHE_AUTO.put(project, new ConfigValue(value));
+        CACHE_AUTO.put(project, new ConfigGetterValue(value));
         return true;
     }
     //TODO : 未设置定时保存
     public static void saveALL(){
-        Map<ConfigProjectsInt,ConfigValue> snapshot = new HashMap<>(CACHE_MAIN);
+        Map<ConfigProjectsInt, ConfigGetterValue> snapshot = new HashMap<>(CACHE_MAIN);
         snapshot.putAll(CACHE_AUTO);
         Map<String,Object> main_config = new HashMap<>();
         Map<String,Object> auto_config = new HashMap<>();
@@ -79,17 +79,17 @@ public class ConfigProjectManager {
         loadFormFile(AUTO_CONFIG,ConfigProjects.Auto.values(),CACHE_AUTO);
     }
     @SuppressWarnings("unchecked")
-    protected static <T extends ConfigProjectsInt> void loadFormFile(Path path, ConfigProjectsInt[] projects, Map<T, ConfigValue> entry){
+    protected static <T extends ConfigProjectsInt> void loadFormFile(Path path, T[] projects, Map<T, ConfigGetterValue> entry){
         if(!Files.exists(path)) return;
-        Map<String,ConfigProjectsInt> projectNames = new HashMap<>();
-        for(ConfigProjectsInt project:projects){
+        Map<String,T> projectNames = new HashMap<>();
+        for(T project:projects){
             projectNames.put(Base64.getEncoder().encodeToString(project.getName().getBytes(StandardCharsets.UTF_8)), project);
         }
         try (ObjectInputStream inputStream = new ObjectInputStream(Files.newInputStream(path))) {
             Map<String,Object> map = (Map<String,Object>) inputStream.readObject();
             map.forEach((k,v)->{
                 if (projectNames.containsKey(k)) {
-                    entry.put((T) projectNames.get(k),new ConfigValue(v));
+                    entry.put(projectNames.get(k),new ConfigGetterValue(v));
                 }else {
                     String decodedKey = k;
                     try {
@@ -135,28 +135,28 @@ public class ConfigProjectManager {
             case CHAR -> value.isEmpty() ? ' ' : value.charAt(0);
         };
     }
-    public static ParseValue parseValue(Object value, ConfigProjectsInt project) {
+    public static ConfigParserValue parseValue(Object value, ConfigProjectsInt project) {
         ConfigType configType = project.getConfigType();
         String validRange = project.getValidRangeAsString();
         if (configType == ConfigType.CHAR || configType == ConfigType.BOOLEAN || validRange == null || validRange.isEmpty()) {
-            return ParseValue.success();
+            return ConfigParserValue.success();
         }
         if (configType == ConfigType.STRING && value instanceof String strValue) {
             if (RegexUtil.isRegex(validRange))
-                return Pattern.matches(validRange, strValue) ? ParseValue.success() : ParseValue.failure();
+                return Pattern.matches(validRange, strValue) ? ConfigParserValue.success() : ConfigParserValue.failure();
             else
-                return ParseValue.failure("Regex syntax is invalid for config" + project.getName() + ":'" + validRange + "'");
+                return ConfigParserValue.failure("Regex syntax is invalid for config" + project.getName() + ":'" + validRange + "'");
         } else if (value instanceof Number numValue) {
             String[] split = validRange.split("-");
-            if (split.length != 2) return ParseValue.failure();
+            if (split.length != 2) return ConfigParserValue.failure();
             Double num1 = Doubles.tryParse(split[0]);
             Double num2 = Doubles.tryParse(split[1]);
             double currentNum = numValue.doubleValue();
             if (num1 == null || num2 == null) {
-                return ParseValue.failure("Not a legal range representation for config" + project.getName() + ":'" + validRange + "'");
+                return ConfigParserValue.failure("Not a legal range representation for config" + project.getName() + ":'" + validRange + "'");
             }
-            return ((currentNum >= num1 && currentNum <= num2) || (currentNum >= num2 && currentNum <= num1)) ? ParseValue.success() : ParseValue.failure();
+            return ((currentNum >= num1 && currentNum <= num2) || (currentNum >= num2 && currentNum <= num1)) ? ConfigParserValue.success() : ConfigParserValue.failure();
         }
-        return ParseValue.failure();
+        return ConfigParserValue.failure();
     }
 }

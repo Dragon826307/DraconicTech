@@ -19,19 +19,18 @@ public enum ChatFeatures {
         Matcher utf_matcher = Pattern.compile("^[\\dA-F]+$").matcher(raw_string);
         if (utf_matcher.find()) {
             String hex_string = utf_matcher.group();
-            System.out.println(Arrays.toString(BaseEncoding.base16().decode(hex_string)));
             String parse = new String(BaseEncoding.base16().decode(hex_string), StandardCharsets.UTF_8);
             if (DraconicTechClient.DEBUG) ClientChatHudHelper.sendDebugMessageInChat("UTF8 value:" + parse);
-            if (ClientConfigProjectManager.getConfig(ConfigProjects.Client.ALLOW_ILLEGAL_CHAT_CHARACTER).asBoolean()) return ParseResult.success(parse);
-            for (int i = 0; i < parse.length(); i++) if (!StringHelper.isValidChar(parse.charAt(i))) return ParseResult.error("dt.e_chat.utf.illegal_char", parse);
-            return ParseResult.success(parse);
-        }else return ParseResult.error("dt.e_chat.utf.format_err");
+            if (ClientConfigProjectManager.getConfig(ConfigProjects.Client.ALLOW_ILLEGAL_CHAT_CHARACTER).asBoolean()) return EnhancedChatParseResult.success(parse);
+            for (int i = 0; i < parse.length(); i++) if (!StringHelper.isValidChar(parse.charAt(i))) return EnhancedChatParseResult.error("dt.e_chat.utf.illegal_char", parse);
+            return EnhancedChatParseResult.success(parse);
+        }else return EnhancedChatParseResult.error("dt.e_chat.utf.format_err");
     })),
-    REVERSE("reverse",0,null, (raw_string, args) -> ParseResult.success(StringUtils.reverse(raw_string))),
+    REVERSE("reverse",0,null, (raw_string, args) -> EnhancedChatParseResult.success(StringUtils.reverse(raw_string))),
     REPEAT("repeat",1,new String[]{"1","2","3"}, (raw_string, args) -> {
         int repeat = args[0].matches("^[-+]?[0-9]+$")?Integer.parseInt(args[0]):-1;
-        if (repeat < 0) return ParseResult.error("dt.e_chat.repeat.invalid_num");
-        return ParseResult.success(raw_string.repeat(repeat));
+        if (repeat < 0) return EnhancedChatParseResult.error("dt.e_chat.repeat.invalid_num");
+        return EnhancedChatParseResult.success(raw_string.repeat(repeat));
     }),
     ;
     private final String ID;

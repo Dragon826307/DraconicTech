@@ -1,6 +1,7 @@
 package dragon826307.dt.client.command;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
 import dragon826307.dt.DraconicTech;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
@@ -9,13 +10,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ClientCommandHandler {
-    public static final LiteralArgumentBuilder<FabricClientCommandSource> commandRoot = ClientCommandManager.literal(DraconicTech.MOD_ID).executes(context -> {
-        DraconicTech.LOGGER.info("test");
-        return 1;
-    });
+    public static final LiteralArgumentBuilder<FabricClientCommandSource> commandRoot = ClientCommandManager.literal(DraconicTech.MOD_ID).executes(ClientCommandHandler::executeBaseCommand);
+    public static final LiteralArgumentBuilder<FabricClientCommandSource> commandRoot_copy = ClientCommandManager.literal("dt").executes(ClientCommandHandler::executeBaseCommand);
     private static final List<ClientCommandCallback> callbacks = new ArrayList<>();
     private static boolean initialized = false;
-
+    private static int executeBaseCommand(CommandContext<FabricClientCommandSource> context){
+        DraconicTech.LOGGER.info("test");
+        return 1;
+    }
     /**
      * @param c {@link ClientCommandCallback}
      */
@@ -31,6 +33,7 @@ public class ClientCommandHandler {
         }
         for(ClientCommandCallback c : callbacks){
             commandRoot.then(c.addClientCommandBranch(ClientCommandManager.literal(c.setBranchName())));
+            commandRoot_copy.then(c.addClientCommandBranch(ClientCommandManager.literal(c.setBranchName())));
         }
     }
 }

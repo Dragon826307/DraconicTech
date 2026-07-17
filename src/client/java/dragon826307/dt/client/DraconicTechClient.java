@@ -62,6 +62,7 @@ public class DraconicTechClient implements ClientModInitializer {
         });
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
             dispatcher.register(ClientCommandHandler.commandRoot);
+            dispatcher.register(ClientCommandHandler.commandRoot_copy);
         });
         WorldRenderEvents.END_MAIN.register(RenderManager::RenderAll);
         ClientTickEvents.START_WORLD_TICK.register(world -> RenderTask.init());

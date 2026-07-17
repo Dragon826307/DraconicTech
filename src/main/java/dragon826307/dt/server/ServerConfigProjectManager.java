@@ -4,7 +4,7 @@ import dragon826307.dt.DraconicTech;
 import dragon826307.dt.config.ConfigProjectManager;
 import dragon826307.dt.config.ConfigProjects;
 import dragon826307.dt.config.ConfigProjectsInt;
-import dragon826307.dt.config.ConfigValue;
+import dragon826307.dt.config.ConfigGetterValue;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 
@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ServerConfigProjectManager extends ConfigProjectManager {
-    private static final Map<ConfigProjects.Server,ConfigValue> CACHE = new ConcurrentHashMap<>();
+    private static final Map<ConfigProjects.Server, ConfigGetterValue> CACHE = new ConcurrentHashMap<>();
     public static void init() {
         if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
             return;
@@ -25,21 +25,21 @@ public class ServerConfigProjectManager extends ConfigProjectManager {
         loadALL();
         saveALL();
     }
-    public static ConfigValue getConfig(ConfigProjects.Server project) {
-        return CACHE.getOrDefault(project,new ConfigValue(project.getDefaultValue()));
+    public static ConfigGetterValue getConfig(ConfigProjects.Server project) {
+        return CACHE.getOrDefault(project,new ConfigGetterValue(project.getDefaultValue()));
     }
     public static boolean setConfig(ConfigProjects.Server project, Object value) {
         if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
             return false;
         }
         if (project.getConfigType().getClazz().isInstance(value)) {
-            CACHE.put(project, new ConfigValue(value));
+            CACHE.put(project, new ConfigGetterValue(value));
             return true;
         }
         return false;
     }
     public static void saveALL(){
-        Map<ConfigProjectsInt, ConfigValue> snapshot = new HashMap<>(CACHE);
+        Map<ConfigProjectsInt, ConfigGetterValue> snapshot = new HashMap<>(CACHE);
         Map<String,Object> server_config = new HashMap<>();
         StringBuilder server_config_string = new StringBuilder();
         server_config_string.append(getNote());
@@ -73,10 +73,10 @@ public class ServerConfigProjectManager extends ConfigProjectManager {
                 if (map.containsKey(key)) {
                     if (!value.isEmpty()) {
                         Object obj = parseValueFromString(value, map.get(key).getConfigType());
-                        if (obj != null) CACHE.put(map.get(key), new ConfigValue(obj));
+                        if (obj != null) CACHE.put(map.get(key), new ConfigGetterValue(obj));
                         else DraconicTech.LOGGER.warn("Failed to parse server config project '{}'", key);
                     } else {
-                        CACHE.put(map.get(key), new ConfigValue(map.get(key).getDefaultValue()));
+                        CACHE.put(map.get(key), new ConfigGetterValue(map.get(key).getDefaultValue()));
                     }
                 } else {
                     DraconicTech.LOGGER.warn("Unknow server config project '{}'", key);

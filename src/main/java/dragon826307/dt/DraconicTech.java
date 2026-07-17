@@ -34,7 +34,8 @@ public class DraconicTech implements ModInitializer {
     public void onInitialize() {
         DraconicTech.LOGGER.info("Initializing DraconicTech...");
         drawModLogoInLogger();
-//        ArgumentTypeRegistry.registerArgumentType(Identifier.of(MOD_ID,"config_value"), ConfigValueArgumentType.class, new ConfigValueArgumentSerializer());
+        //TODO : 注册表
+        ArgumentTypeRegistry.registerArgumentType(Identifier.of(MOD_ID,"config_value"), ConfigValueArgumentType.class, new ConfigValueArgumentSerializer());
         ConfigProjectManager.init();//ConfigProjectManager必须优先于ServerCommandHandler
         ServerCommandHandler.init();
         ModNetworkHandler.init();
@@ -52,6 +53,7 @@ public class DraconicTech implements ModInitializer {
         });
         CommandRegistrationCallback.EVENT.register((commandDispatcher, commandRegistryAccess, registrationEnvironment) -> {
             commandDispatcher.register(ServerCommandHandler.commandRoot);
+            commandDispatcher.register(ServerCommandHandler.commandRoot_copy);
         });
         ServerLifecycleEvents.BEFORE_SAVE.register((server, b1, b2) -> {
             DraconicTech.LOGGER.info("Saving all config...");

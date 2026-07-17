@@ -3,7 +3,7 @@ package dragon826307.dt.client;
 import dragon826307.dt.config.ConfigProjectManager;
 import dragon826307.dt.config.ConfigProjects;
 import dragon826307.dt.config.ConfigProjectsInt;
-import dragon826307.dt.config.ConfigValue;
+import dragon826307.dt.config.ConfigGetterValue;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 
@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class ClientConfigProjectManager extends ConfigProjectManager {
-    private static final Map<ConfigProjects.Client,ConfigValue> CACHE = new ConcurrentHashMap<>();
+    private static final Map<ConfigProjects.Client, ConfigGetterValue> CACHE = new ConcurrentHashMap<>();
     public static void init() {
         if (FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER) {
             throw new IllegalStateException("Cannot initialize ClientConfigManager on a physical Server!");
@@ -26,21 +26,21 @@ public final class ClientConfigProjectManager extends ConfigProjectManager {
         }catch (IOException e){
             throw new RuntimeException(e);
         }
-        for (ConfigProjects.Client project: ConfigProjects.Client.values()) CACHE.put(project, new ConfigValue(project.getDefaultValue()));
+        for (ConfigProjects.Client project: ConfigProjects.Client.values()) CACHE.put(project, new ConfigGetterValue(project.getDefaultValue()));
         loadALL();
     }
-    public static ConfigValue getConfig(ConfigProjects.Client project) {
+    public static ConfigGetterValue getConfig(ConfigProjects.Client project) {
         return CACHE.get(project);
     }
     public static boolean setConfig(ConfigProjects.Client project, Object value) {
         if (project.getConfigType().getClazz().isInstance(value)) {
-            CACHE.put(project, new ConfigValue(value));
+            CACHE.put(project, new ConfigGetterValue(value));
             return true;
         }
         return false;
     }
     public static void saveALL(){
-        Map<ConfigProjectsInt, ConfigValue> snapshot = new HashMap<>(CACHE);
+        Map<ConfigProjectsInt, ConfigGetterValue> snapshot = new HashMap<>(CACHE);
         Map<String,Object> client_config = new HashMap<>();
         snapshot.forEach((key, value)->{
             Object rawValue = value.value();
