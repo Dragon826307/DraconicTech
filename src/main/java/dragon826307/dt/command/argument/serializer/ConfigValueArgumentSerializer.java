@@ -6,14 +6,16 @@ import dragon826307.dt.command.argument.ConfigValueArgumentType;
 import dragon826307.dt.config.ConfigProjectsInt;
 import dragon826307.dt.config.ConfigStorageType;
 import dragon826307.dt.config.ConfigType;
+import io.netty.util.internal.UnstableApi;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.command.argument.serialize.ArgumentSerializer;
 import net.minecraft.network.PacketByteBuf;
 
 import java.util.List;
 
+@Deprecated
+@UnstableApi
 public final class ConfigValueArgumentSerializer implements ArgumentSerializer<ConfigValueArgumentType, ConfigValueArgumentSerializer.Properties> {
-    private static final Gson GSON = new Gson();
     @Override
     public void writePacket(Properties properties, PacketByteBuf buf) {
         ConfigProjectsInt config = properties.config;

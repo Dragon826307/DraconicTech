@@ -10,9 +10,12 @@ import dragon826307.dt.config.ConfigProjectManager;
 import dragon826307.dt.config.ConfigProjectsInt;
 import dragon826307.dt.config.ConfigType;
 import dragon826307.dt.config.ConfigParserValue;
+import io.netty.util.internal.UnstableApi;
 import net.minecraft.text.Text;
 import net.minecraft.util.Colors;
 
+@Deprecated
+@UnstableApi
 public record ConfigValueArgumentType(ConfigProjectsInt config) implements ArgumentType<Object> {
     private static final DynamicCommandExceptionType CONFIG_ERR = new DynamicCommandExceptionType(err -> Text.translatable("dt.config_value.invalid_range", err).withColor(Colors.RED));
 

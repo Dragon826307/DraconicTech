@@ -3,7 +3,7 @@
   "package": "dragon826307.dt.mixin.server",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "ServerCommonNetworkHandlerMixin"
+
   ],
   "injectors": {
     "defaultRequire": 1

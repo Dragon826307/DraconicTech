@@ -17,6 +17,9 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.fabricmc.fabric.mixin.command.ArgumentTypesAccessor;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -34,8 +37,6 @@ public class DraconicTech implements ModInitializer {
     public void onInitialize() {
         DraconicTech.LOGGER.info("Initializing DraconicTech...");
         drawModLogoInLogger();
-        //TODO : 注册表
-        ArgumentTypeRegistry.registerArgumentType(Identifier.of(MOD_ID,"config_value"), ConfigValueArgumentType.class, new ConfigValueArgumentSerializer());
         ConfigProjectManager.init();//ConfigProjectManager必须优先于ServerCommandHandler
         ServerCommandHandler.init();
         ModNetworkHandler.init();
