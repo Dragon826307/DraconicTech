@@ -1,28 +1,21 @@
 package dragon826307.dt;
 
 import dragon826307.dt.command.ServerCommandHandler;
-import dragon826307.dt.command.argument.ConfigValueArgumentType;
-import dragon826307.dt.command.argument.serializer.ConfigValueArgumentSerializer;
 import dragon826307.dt.config.ConfigProjectManager;
-import dragon826307.dt.network.Mod$CheckingModS2CPacket;
+import dragon826307.dt.network.Mod$HelloDraconicTechS2CPacket;
 import dragon826307.dt.network.ModNetworkHandler;
 import dragon826307.dt.project.analog_circuit.ContainerSignalModifier;
 import dragon826307.dt.project.microtick.WorldTickManager;
 import dragon826307.dt.util.TextColorHelper;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.command.v2.ArgumentTypeRegistry;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.fabricmc.fabric.mixin.command.ArgumentTypesAccessor;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +40,7 @@ public class DraconicTech implements ModInitializer {
             WorldTickManager.init();
         });
         ServerPlayConnectionEvents.JOIN.register((serverPlayNetworkHandler, packetSender, minecraftServer) -> {
-            packetSender.sendPacket(new Mod$CheckingModS2CPacket());
+            packetSender.sendPacket(new Mod$HelloDraconicTechS2CPacket());
         });
         ServerPlayConnectionEvents.DISCONNECT.register((serverPlayNetworkHandler, minecraftServer) -> {
             PlayerRecorder.removePlayer(serverPlayNetworkHandler.getPlayer().getUuid());

@@ -2,7 +2,6 @@ package dragon826307.dt.command;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.sun.management.OperatingSystemMXBean;
-import dragon826307.dt.config.ConfigProjectManager;
 import dragon826307.dt.config.ConfigProjects;
 import dragon826307.dt.server.ServerConfigProjectManager;
 import dragon826307.dt.util.ServerTranslationUtil;

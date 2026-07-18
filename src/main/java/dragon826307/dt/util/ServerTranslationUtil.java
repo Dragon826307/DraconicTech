@@ -5,8 +5,6 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Language;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.util.Arrays;
-
 public final class ServerTranslationUtil {
     private static final Language LANGUAGE = Language.getInstance();
     @Nullable

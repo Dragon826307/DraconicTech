@@ -1,9 +1,9 @@
 package dragon826307.dt.client;
 
+import dragon826307.dt.config.ConfigGetterValue;
 import dragon826307.dt.config.ConfigProjectManager;
 import dragon826307.dt.config.ConfigProjects;
 import dragon826307.dt.config.ConfigProjectsInt;
-import dragon826307.dt.config.ConfigGetterValue;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 

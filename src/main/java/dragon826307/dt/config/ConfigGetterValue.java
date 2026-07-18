@@ -1,7 +1,6 @@
 package dragon826307.dt.config;
 
 import dragon826307.dt.DraconicTech;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 public record ConfigGetterValue(Object value) {
     //TODO
