@@ -10,18 +10,15 @@ import dragon826307.dt.util.TextColorHelper;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.text.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class DraconicTech implements ModInitializer {
     public static boolean DEBUG = false;
-    public static MinecraftServer minecraftServer;
+    public static WorldTickManager worldTickManager;
     public static final Text MOD_PREFIX = TextColorHelper.gradientColor("[Draconic Tech]",0xB061F0,0x371C82).styled(style -> style.withBold(true));
     public static final String MOD_NAME = "DraconicTech";
 	public static final String MOD_ID = "draconictech";
@@ -33,11 +30,11 @@ public class DraconicTech implements ModInitializer {
         ConfigProjectManager.init();//ConfigProjectManager必须优先于ServerCommandHandler
         ServerCommandHandler.init();
         ModNetworkHandler.init();
-        ServerTickEvents.START_SERVER_TICK.register(server -> {
-            if (minecraftServer == null) minecraftServer = server;
+        ServerLifecycleEvents.SERVER_STARTING.register(server -> {
+            worldTickManager = new WorldTickManager(server);
         });
-        ServerWorldEvents.LOAD.register((server, world) -> {
-            WorldTickManager.init();
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+            worldTickManager.setTickFrozenLevel(0);
         });
         ServerPlayConnectionEvents.JOIN.register((serverPlayNetworkHandler, packetSender, minecraftServer) -> {
             packetSender.sendPacket(new Mod$HelloDraconicTechS2CPacket());
@@ -54,6 +51,9 @@ public class DraconicTech implements ModInitializer {
             ConfigProjectManager.saveALL();
         });
         UseBlockCallback.EVENT.register(new ContainerSignalModifier());
+    }
+    public static WorldTickManager getWorldTickManager(){
+        return worldTickManager;
     }
     private static void drawModLogoInLogger() {
         LOGGER.info("""

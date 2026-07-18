@@ -9,7 +9,6 @@ import dragon826307.dt.DraconicTech;
 import dragon826307.dt.config.ConfigParserValue;
 import dragon826307.dt.config.ConfigProjectManager;
 import dragon826307.dt.config.ConfigProjectsInt;
-import dragon826307.dt.config.ConfigType;
 import net.minecraft.text.Text;
 import net.minecraft.util.Colors;
 
@@ -30,7 +29,7 @@ public record ConfigValueArgumentType(ConfigProjectsInt config) implements Argum
             throw CONFIG_ERR.create("NULL Config");
         }
         Object parsedObject = ConfigProjectManager.parseValueFromString(rawString, config.getConfigType());
-        if (parsedObject == null && config.getConfigType() != ConfigType.STRING) {
+        if (parsedObject == null) {
             throw CONFIG_ERR.create(rawString);
         }
         ConfigParserValue validation = ConfigProjectManager.parseValue(parsedObject, config);

@@ -10,7 +10,7 @@ import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 public class ClientConfigCommand implements ClientCommandCallback{
     @Override
     public LiteralArgumentBuilder<FabricClientCommandSource> addClientCommandBranch(LiteralArgumentBuilder<FabricClientCommandSource> thisCommandBranch) {
-        return thisCommandBranch.then(ConfigCommandBuilder.buildIn(ClientCommandManager.literal("client"), FabricClientCommandSource::sendFeedback, ClientConfigProjectManager::setConfig, ClientConfigProjectManager::getConfig, ConfigProjects.Client.values()));
+        return thisCommandBranch.then(ConfigCommandBuilder.buildIn(ClientCommandManager.literal("client"), ((fabricClientCommandSource, text, b) -> fabricClientCommandSource.sendFeedback(text)), ClientConfigProjectManager::setConfig, ClientConfigProjectManager::getConfig, ConfigProjects.Client.values()));
     }
     @Override
     public String setBranchName() {

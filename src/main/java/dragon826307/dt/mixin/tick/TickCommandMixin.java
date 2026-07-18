@@ -1,5 +1,6 @@
 package dragon826307.dt.mixin.tick;
 
+import dragon826307.dt.DraconicTech;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.command.TickCommand;
 import org.spongepowered.asm.mixin.Mixin;
@@ -9,9 +10,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(TickCommand.class)
 public class TickCommandMixin {
-    @Inject(method = "executeFreeze",at = @At("HEAD"), cancellable = true)
+    @Inject(method = "executeFreeze",at = @At("RETURN"))
     private static void onExecuteFreeze(ServerCommandSource source, boolean frozen, CallbackInfoReturnable<Integer> cir) {
-        //TODO
-        cir.cancel();
+        if (frozen) DraconicTech.getWorldTickManager().setTickFrozenLevel(1);
+        else DraconicTech.getWorldTickManager().setTickFrozenLevel(0);
     }
 }

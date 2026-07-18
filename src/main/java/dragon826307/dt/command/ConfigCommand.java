@@ -10,7 +10,10 @@ import net.minecraft.server.command.ServerCommandSource;
 public class ConfigCommand implements ServerCommandCallback {
     @Override
     public LiteralArgumentBuilder<ServerCommandSource> addCommandBranch(LiteralArgumentBuilder<ServerCommandSource> thisCommandBranch) {
-        return thisCommandBranch.then(ConfigCommandBuilder.buildIn(CommandManager.literal("main"), ((serverCommandSource, text) -> serverCommandSource.sendFeedback(() -> text,true)), ConfigProjectManager::setConfig, ConfigProjectManager::getConfig, ConfigProjects.Main.values()));
+        return thisCommandBranch.then(ConfigCommandBuilder.buildIn(CommandManager.literal("main"), ((serverCommandSource, text, updateCommandTree) -> {
+            serverCommandSource.sendFeedback(() -> text, true);
+            if (updateCommandTree) serverCommandSource.getServer().getPlayerManager().sendCommandTree(serverCommandSource.getPlayer());
+        }), ConfigProjectManager::setConfig, ConfigProjectManager::getConfig, ConfigProjects.Main.values()));
     }
     @Override
     public String setBranchName() {

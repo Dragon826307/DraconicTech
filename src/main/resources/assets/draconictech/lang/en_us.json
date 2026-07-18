@@ -1,5 +1,4 @@
 {
-  "draconictech.chat.microtick.game_normal": "The game is running Normally",
   "draconictech.client_async_server_pinger.already_ping": "Server address is already pinging: %s",
   "draconictech.client_async_server_pinger.disconnected": "Ping:[%s] DISCONNECT",
   "draconictech.client_async_server_pinger.dns_latency": "DNS Latency:",

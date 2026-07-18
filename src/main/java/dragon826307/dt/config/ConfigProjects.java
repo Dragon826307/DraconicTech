@@ -1,6 +1,7 @@
 package dragon826307.dt.config;
 
 import io.netty.util.internal.EmptyArrays;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class ConfigProjects {
     private static final String[] booleanSuggestions = {
@@ -25,7 +26,7 @@ public final class ConfigProjects {
             this.defaultValue = defaultValue;
             this.validRange = validRange;
             this.shouldUpdateCommand = shouldUpdateCommand;
-            this.suggestions = suggestions;
+            this.suggestions = suggestions==null?EmptyArrays.EMPTY_STRINGS:suggestions;
         }
         @Override
         public String getName() {
@@ -44,7 +45,7 @@ public final class ConfigProjects {
             return defaultValue;
         }
         @Override
-        public String getValidRangeAsString() {
+        public @Nullable String getValidRangeAsString() {
             return validRange;
         }
         @Override
@@ -58,7 +59,9 @@ public final class ConfigProjects {
         }
     }
     public enum Main implements ConfigProjectsInt{
-        ALLOW_MODIFY_CONTAINER_SIGNAL("ContainerSignalModifier:allow_modify_container_signal",ConfigType.BOOLEAN,false,null,false,null);
+        ALLOW_MODIFY_CONTAINER_SIGNAL("ContainerSignalModifier:allow_modify_container_signal",ConfigType.BOOLEAN,false,null,false,null),
+        GLOBAL_TICK_FREEZE_ORIGIN("WorldTickManager:global_tick_freeze_origin",ConfigType.STRING,"before_network_update","^(?:before|after)_network_update$",false,new String[]{"before_network_update","after_network_update"}),
+        ;
         private final String name;
         private final ConfigType type;
         private final Object defaultValue;
@@ -71,7 +74,7 @@ public final class ConfigProjects {
             this.defaultValue = defaultValue;
             this.validRange = validRange;
             this.shouldUpdateCommand = shouldUpdateCommand;
-            this.suggestions = suggestions;
+            this.suggestions = suggestions==null?EmptyArrays.EMPTY_STRINGS:suggestions;
         }
         @Override
         public String getName() {
@@ -90,7 +93,7 @@ public final class ConfigProjects {
             return defaultValue;
         }
         @Override
-        public String getValidRangeAsString() {
+        public @Nullable String getValidRangeAsString() {
             return validRange;
         }
         @Override
@@ -133,7 +136,7 @@ public final class ConfigProjects {
             return defaultValue;
         }
         @Override
-        public String getValidRangeAsString() {
+        public @Nullable String getValidRangeAsString() {
             return validRange;
         }
         @Override
@@ -170,7 +173,7 @@ public final class ConfigProjects {
             return defaultValue;
         }
         @Override
-        public String getValidRangeAsString() {
+        public @Nullable String getValidRangeAsString() {
             return null;
         }
         @Override

@@ -8,6 +8,7 @@ import dragon826307.dt.config.ConfigType;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.command.argument.serialize.ArgumentSerializer;
 import net.minecraft.network.PacketByteBuf;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
 
@@ -34,7 +35,7 @@ public final class ConfigValueArgumentSerializer implements ArgumentSerializer<C
             @Override public ConfigType getConfigType() { return configType; }
             @Override public ConfigStorageType getStorageType() { return null; } // 客户端解析不需要用到存储类型
             @Override public Object getDefaultValue() { return null; }           // 客户端解析不需要用到默认值
-            @Override public String getValidRangeAsString() { return validRange; }
+            @Override public @Nullable String getValidRangeAsString() { return validRange; }
             @Override public boolean shouldUpdateCommandTree() { return false; }
             @Override public String[] getSuggestList() { return suggests; }
         };

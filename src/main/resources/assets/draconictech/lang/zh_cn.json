@@ -1,5 +1,4 @@
 {
-  "draconictech.chat.microtick.game_normal": "游戏正常以正常速率运行",
   "draconictech.client_async_server_pinger.already_ping": "服务器地址已经在ping了: %s",
   "draconictech.client_async_server_pinger.disconnected": "Ping:[%s] 断开连接",
   "draconictech.client_async_server_pinger.dns_latency": "DNS解析耗时:",
@@ -30,5 +29,8 @@
   "dt.e_chat.unclose_tag": "冗余或不匹配的标签：'%s'",
   "dt.e_chat.args_count_err": "参数数量错误！标签'%s'需要：%s个参数。",
   "dt.e_chat.unknow": "未知功能：'%s'",
-  "dt.e_chat.parsed_fail": "功能'%s'内部格式错误或缺少结束标签"
+  "dt.e_chat.parsed_fail": "功能'%s'内部格式错误或缺少结束标签",
+  "dt.e_chat.repeat.invalid_num": "参数不是一个有效数字",
+  "dt.e_chat.utf.format_err": "UTF8格式错误",
+  "dt.e_chat.utf.illegal_char": "非法字符：%s"
 }

@@ -143,7 +143,7 @@ public class ConfigProjectManager {
         }
         if (configType == ConfigType.STRING && value instanceof String strValue) {
             if (RegexUtil.isRegex(validRange))
-                return Pattern.matches(validRange, strValue) ? ConfigParserValue.success() : ConfigParserValue.failure();
+                return Pattern.matches(validRange, strValue) ? ConfigParserValue.success() : ConfigParserValue.failure(strValue);
             else
                 return ConfigParserValue.failure("Regex syntax is invalid for config" + project.getName() + ":'" + validRange + "'");
         } else if (value instanceof Number numValue) {
@@ -157,6 +157,6 @@ public class ConfigProjectManager {
             }
             return ((currentNum >= num1 && currentNum <= num2) || (currentNum >= num2 && currentNum <= num1)) ? ConfigParserValue.success() : ConfigParserValue.failure();
         }
-        return ConfigParserValue.failure();
+        return ConfigParserValue.failure(String.valueOf(value));
     }
 }

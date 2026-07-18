@@ -1,10 +1,12 @@
 package dragon826307.dt.project.microtick;
 
-import java.util.BitSet;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.ServerTickManager;
 
 public class WorldTickManager {
-    private static final BitSet TICK_FLAGS = new BitSet(WorldTickingFlags.values().length);
-    private static int tickFrozenLevel = 0;
+    private final ServerTickManager serverTickManager;
+    private int TICK_FLAGS = -1;
+    private int tickFrozenLevel = 0;
     // level:
     // 0 -> normal
     // 1 -> global
@@ -12,25 +14,32 @@ public class WorldTickManager {
     // 3 -> event
     // 4 -> update
     // 5 -> ???
-    public static WorldTickingFlags flag$frozenLevel0;
-    public static void init(){
-        TICK_FLAGS.set(0, WorldTickingFlags.values().length);
+    public static WorldTickingFlags flag$frozenLevel2;
+    public WorldTickManager(MinecraftServer server) {
+        this.serverTickManager = server.getTickManager();
     }
-    public static void setWorldTickFlag(WorldTickingFlags flag,boolean bl){
-        TICK_FLAGS.set(flag.ordinal(),bl);
+    public void setWorldTickFlag(WorldTickingFlags flag,boolean bl) {
+        TICK_FLAGS = ~(1 << flag.ordinal()) & TICK_FLAGS | (bl ? 1 << flag.ordinal() : 0);
     }
-    public static boolean getWorldTickFlag(WorldTickingFlags flag){
-        return TICK_FLAGS.get(flag.ordinal());
+    public boolean getWorldTickFlag(WorldTickingFlags flag) {
+        return ((TICK_FLAGS >>> flag.ordinal()) & 1) == 1;
     }
-    public static void setTickFrozenLevel(int lvl){
+    public int getWorldTickFlags() {
+        return TICK_FLAGS;
+    }
+    public void setTickFrozenLevel(int lvl){
         if (lvl < 0 || lvl > 5) {
             throw new IllegalArgumentException("Invalid value for WorldTickManager.tickFrozenLevel: " + lvl);
         }
-        WorldTickManager.tickFrozenLevel = lvl;
-        TICK_FLAGS.set(0,10, WorldTickManager.tickFrozenLevel == 0);
+        tickFrozenLevel = lvl;
+        if (lvl == 0) TICK_FLAGS |= 16383;
+        else if (lvl == 1) TICK_FLAGS &= -16384;
     }
-    public static int getTickFrozenLevel(){
-        return WorldTickManager.tickFrozenLevel;
+    public int getTickFrozenLevel(){
+        return tickFrozenLevel;
+    }
+    public ServerTickManager getServerTickManager() {
+        return serverTickManager;
     }
 }
 

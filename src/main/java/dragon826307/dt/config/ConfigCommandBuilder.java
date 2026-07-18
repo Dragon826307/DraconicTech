@@ -14,20 +14,20 @@ import dragon826307.dt.util.ServerTranslationUtil;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.Colors;
+import org.apache.logging.log4j.util.TriConsumer;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public final class ConfigCommandBuilder {
     private static final Text UNKNOW_ERR = ServerTranslationUtil.getTranslatedWithFallback("dt.config_value.unknow_err").withColor(Colors.RED);
     @SafeVarargs
-    public static <S, T extends ConfigProjectsInt> LiteralArgumentBuilder<S> buildIn(LiteralArgumentBuilder<S> command, BiConsumer<S, Text> feedbackSender, BiFunction<T, Object,@NonNull Boolean> setter, Function<T, ConfigGetterValue> getter, T... configProjectsInts) {
+    public static <S, T extends ConfigProjectsInt> LiteralArgumentBuilder<S> buildIn(LiteralArgumentBuilder<S> command, TriConsumer<S, Text, Boolean> feedbackSender, BiFunction<T, Object,@NonNull Boolean> setter, Function<T, ConfigGetterValue> getter, T... configProjectsInts) {
         for (T configProject : configProjectsInts) {
             LiteralArgumentBuilder<S> singleConfigNode = LiteralArgumentBuilder.<S>literal(configProject.getName()).executes(context -> {
-                feedbackSender.accept(context.getSource(), SendMessageHelper.getMessage(ServerTranslationUtil.getTranslatedWithFallback("dt.config_value.current_value", configProject.getName(), String.valueOf(getter.apply(configProject).value())).withColor(0x449CCC),true));
+                feedbackSender.accept(context.getSource(), SendMessageHelper.getMessage(ServerTranslationUtil.getTranslatedWithFallback("dt.config_value.current_value", configProject.getName(), String.valueOf(getter.apply(configProject).value())).withColor(0x449CCC),true),false);
                 return 1;
             });
             RequiredArgumentBuilder<S, Object> moddedArg = RequiredArgumentBuilder.<S, Object>argument("value",ConfigValueArgumentType.setConfig(configProject))
@@ -44,7 +44,7 @@ public final class ConfigCommandBuilder {
                         if (configParserValue.isSuccess()) {
                             return executeConfigChange(context.getSource(), configProject, newValue, feedbackSender, setter);
                         }else {
-                            feedbackSender.accept(context.getSource(), SendMessageHelper.getMessage(ServerTranslationUtil.getTranslatedWithFallback("dt.config_value.invalid_range", rawString),true));
+                            feedbackSender.accept(context.getSource(), SendMessageHelper.getMessage(ServerTranslationUtil.getTranslatedWithFallback("dt.config_value.invalid_range", rawString).withColor(Colors.RED),true), false);
                             return 0;
                         }
                     })
@@ -62,21 +62,25 @@ public final class ConfigCommandBuilder {
         }
         return command;
     }
-    private static <S, T extends ConfigProjectsInt> int executeConfigChange(S source, T configProject, Object parsedValue, BiConsumer<S, Text> feedbackSender, BiFunction<T, Object, Boolean> setter) {
+    private static <S, T extends ConfigProjectsInt> int executeConfigChange(S source, T configProject, Object parsedValue, TriConsumer<S, Text, Boolean> feedbackSender, BiFunction<T, Object, Boolean> setter) {
+        boolean updateCommand = configProject.shouldUpdateCommandTree();
         if (DraconicTech.DEBUG) {
-            feedbackSender.accept(source, SendMessageHelper.getDebug("Project:'" + configProject.getName() + "'   ParseValue:'" + parsedValue + "'"));
+            feedbackSender.accept(source, SendMessageHelper.getDebug("Project:'" + configProject.getName() + "'   ParseValue:'" + parsedValue + "'"),false);
         }
         boolean success = setter.apply(configProject, parsedValue);
         if (success) {
-            feedbackSender.accept(source, SendMessageHelper.getMessage(ServerTranslationUtil.getTranslatedWithFallback("dt.config_value.set_config_to", configProject.getName(), String.valueOf(parsedValue)).withColor(0x00AA00),true));
+            feedbackSender.accept(source, SendMessageHelper.getMessage(ServerTranslationUtil.getTranslatedWithFallback("dt.config_value.set_config_to", configProject.getName(), String.valueOf(parsedValue)).withColor(0x00AA00),true), updateCommand);
             return 1;
         } else {
-            feedbackSender.accept(source, SendMessageHelper.getMessage(UNKNOW_ERR,true));
+            feedbackSender.accept(source, SendMessageHelper.getMessage(UNKNOW_ERR,true), updateCommand);
             return 0;
         }
     }
     private static CompletableFuture<Suggestions> configSuggestion(SuggestionsBuilder builder, ConfigProjectsInt project) {
-        for (String s: project.getSuggestList()) builder.suggest(s);
+        String[] suggestions = project.getSuggestList();
+        if (suggestions != null) {
+            for (String s: suggestions) builder.suggest(s);
+        }
         return builder.buildFuture();
     }
 }

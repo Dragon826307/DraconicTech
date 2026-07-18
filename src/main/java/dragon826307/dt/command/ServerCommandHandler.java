@@ -29,15 +29,12 @@ public class ServerCommandHandler {
             addCommandBranch(new ConfigCommand());
             initialized = true;
         }
-        for(ServerCommandCallback c : callbacks){
+        for(ServerCommandCallback c : callbacks) {
             LiteralArgumentBuilder<ServerCommandSource> branch;
-            if (c instanceof FeatureCommandInt) {
-                branch = CommandManager.literal("feature").then(CommandManager.literal(c.setBranchName()));
-            }else {
-                branch = CommandManager.literal(c.setBranchName());
-            }
-            commandRoot.then(c.addCommandBranch(branch));
-            commandRoot_copy.then(c.addCommandBranch(branch));
+            if (c instanceof FeatureCommandInt) branch = CommandManager.literal("feature").then(c.addCommandBranch(CommandManager.literal(c.setBranchName())));
+            else branch = c.addCommandBranch(CommandManager.literal(c.setBranchName()));
+            commandRoot.then(branch);
+            commandRoot_copy.then(branch);
         }
     }
 }
