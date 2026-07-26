@@ -32,5 +32,6 @@
   "dt.e_chat.parsed_fail": "Feature '%s' inner format error or missing end tag.",
   "dt.e_chat.repeat.invalid_num": "The argument is not a valid number",
   "dt.e_chat.utf.format_err": "UTF8 format error",
-  "dt.e_chat.utf.illegal_char": "Illegal character: %s"
+  "dt.e_chat.utf.illegal_char": "Illegal character: %s",
+  "dt.e_chat.effect.unknow_arg": "Unknow chat effect"
 }

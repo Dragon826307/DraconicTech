@@ -10,9 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,6 +32,24 @@ public enum ChatFeatures {
         if (repeat < 0) return EnhancedChatParseResult.error("dt.e_chat.repeat.invalid_num");
         return EnhancedChatParseResult.success(raw_string.repeat(repeat));
     }),
+    EFFECT("effect",1,ChatFeaturesUtils.SIMPLE_EFFECTS,((raw_string, args) -> {
+        String effect = args[0];
+        int effect_index = new ArrayList<>(List.of(ChatFeaturesUtils.SIMPLE_EFFECTS)).indexOf(effect);
+        if (effect_index == -1) {
+            return EnhancedChatParseResult.error("dt.e_chat.effect.invalid_num");
+        }
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < raw_string.length(); i++) {
+            char c = raw_string.charAt(i);
+            if (32 < c && c < 127) {
+                //TODO : 字符表映射
+                builder.append((char) ChatFeaturesUtils.SIMPLE_MAP[c - 32 * effect_index + 1]);
+            }else {
+                builder.append(c);
+            }
+        }
+        return EnhancedChatParseResult.success(builder.toString());
+    }))
     ;
     private final String ID;
     private final int ARG_COUNT;
@@ -55,4 +71,8 @@ public enum ChatFeatures {
     @Nullable
     public static ChatFeatures getByID(String id) {return BY_NAME.get(id);}
     public static HashSet<String> getNames() {return new HashSet<>(BY_NAME.keySet());}
+    private static final class ChatFeaturesUtils {
+        private static final String[] SIMPLE_EFFECTS = new String[]{"invert","mirror"};
+        private static final int[] SIMPLE_MAP = new int[]{0};
+    }
 }

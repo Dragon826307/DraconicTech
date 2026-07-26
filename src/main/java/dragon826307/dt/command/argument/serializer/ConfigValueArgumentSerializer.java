@@ -17,38 +17,34 @@ public final class ConfigValueArgumentSerializer implements ArgumentSerializer<C
     public void writePacket(Properties properties, PacketByteBuf buf) {
         ConfigProjectsInt config = properties.config;
         buf.writeString(config.getName());
-        buf.writeEnumConstant(config.getConfigType());
-        buf.writeString(config.getValidRangeAsString() != null ? config.getValidRangeAsString() : "");
+        String validRange = config.getValidRangeAsString();
+        if (validRange != null) {
+            buf.writeBoolean(true);
+            buf.writeString(validRange);
+        }else buf.writeBoolean(false);
         buf.writeCollection(List.of(config.getSuggestList()), PacketByteBuf::writeString);
     }
 
     @Override
     public Properties fromPacket(PacketByteBuf buf) {
         String name = buf.readString();
-        ConfigType configType = buf.readEnumConstant(ConfigType.class);
-        String validRangeStr = buf.readString();
-        String validRange = validRangeStr.isEmpty() ? null : validRangeStr;
-        List<String> suggestList = buf.readList(PacketByteBuf::readString);
-        String[] suggests = suggestList.toArray(new String[0]);
+        String validRange = buf.readBoolean() ? buf.readString() : null;
+        String[] suggests = buf.readList(PacketByteBuf::readString).toArray(new String[0]);
         ConfigProjectsInt clientConfig = new ConfigProjectsInt() {
             @Override public String getName() { return name; }
-            @Override public ConfigType getConfigType() { return configType; }
-            @Override public ConfigStorageType getStorageType() { return null; } // 客户端解析不需要用到存储类型
-            @Override public Object getDefaultValue() { return null; }           // 客户端解析不需要用到默认值
+            @Override public ConfigType getConfigType() { return null; }
+            @Override public ConfigStorageType getStorageType() { return null; }
+            @Override public Object getDefaultValue() { return null; }
             @Override public @Nullable String getValidRangeAsString() { return validRange; }
             @Override public boolean shouldUpdateCommandTree() { return false; }
             @Override public String[] getSuggestList() { return suggests; }
         };
-
         return new Properties(clientConfig);
     }
 
     @Override
     public void writeJson(Properties properties, JsonObject json) {
-        ConfigProjectsInt config = properties.config;
-        json.addProperty("config_name", config.getName());
-        json.addProperty("config_type", config.getConfigType() != null ? config.getConfigType().name() : "UNKNOWN");
-        json.addProperty("valid_range", config.getValidRangeAsString());
+        json.addProperty("config_name", properties.config.getName());
     }
 
     @Override

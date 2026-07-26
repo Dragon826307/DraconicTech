@@ -8,7 +8,6 @@ import dragon826307.dt.project.analog_circuit.ContainerSignalModifier;
 import dragon826307.dt.project.microtick.WorldTickManager;
 import dragon826307.dt.util.TextColorHelper;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -27,10 +26,12 @@ public class DraconicTech implements ModInitializer {
     public void onInitialize() {
         DraconicTech.LOGGER.info("Initializing DraconicTech...");
         drawModLogoInLogger();
-        ConfigProjectManager.init();//ConfigProjectManager必须优先于ServerCommandHandler
-        ServerCommandHandler.init();
         ModNetworkHandler.init();
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
+            ConfigProjectManager.init();//ConfigProjectManager必须优先于ServerCommandHandler
+            ServerCommandHandler.init();
+            server.getCommandManager().getDispatcher().register(ServerCommandHandler.commandRoot);
+            server.getCommandManager().getDispatcher().register(ServerCommandHandler.commandRoot_copy);
             worldTickManager = new WorldTickManager(server);
         });
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
@@ -41,10 +42,6 @@ public class DraconicTech implements ModInitializer {
         });
         ServerPlayConnectionEvents.DISCONNECT.register((serverPlayNetworkHandler, minecraftServer) -> {
             PlayerRecorder.removePlayer(serverPlayNetworkHandler.getPlayer().getUuid());
-        });
-        CommandRegistrationCallback.EVENT.register((commandDispatcher, commandRegistryAccess, registrationEnvironment) -> {
-            commandDispatcher.register(ServerCommandHandler.commandRoot);
-            commandDispatcher.register(ServerCommandHandler.commandRoot_copy);
         });
         ServerLifecycleEvents.BEFORE_SAVE.register((server, b1, b2) -> {
             DraconicTech.LOGGER.info("Saving all config...");

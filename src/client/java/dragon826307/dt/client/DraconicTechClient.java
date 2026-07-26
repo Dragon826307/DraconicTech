@@ -15,6 +15,7 @@ import dragon826307.dt.network.Mod$DebugModeToggleC2SPacket;
 import dragon826307.dt.util.TextColorHelper;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
@@ -38,13 +39,15 @@ public class DraconicTechClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
         DraconicTech.LOGGER.info("Initializing DraconicTech Client...");
-        ClientConfigProjectManager.init();
-        ClientCommandHandler.init();
-        ClientModNetworkHandler.init();
-        ClientChatHudHelper.init();
         KeyBinding openMenuKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding("draconictech.key.open_menu", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_O, KeyBinding.Category.create(Identifier.of(DraconicTech.MOD_ID, DraconicTech.MOD_ID))));
         ArgumentTypeRegistry.registerArgumentType(Identifier.of(DraconicTech.MOD_ID,"enhanced_chat"), EnhancedChatArgumentType.class, ConstantArgumentSerializer.of(EnhancedChatArgumentType::eChatArgument));
         ArgumentTypeRegistry.registerArgumentType(Identifier.of(DraconicTech.MOD_ID,"config_value"), ConfigValueArgumentType.class, new ConfigValueArgumentSerializer());
+        ClientModNetworkHandler.init();
+        ClientChatHudHelper.init();
+        ClientLifecycleEvents.CLIENT_STARTED.register((client) -> {
+            ClientConfigProjectManager.init();
+            ClientCommandHandler.init();
+        });
         ServerLifecycleEvents.BEFORE_SAVE.register((minecraftServer, b, b1) -> ClientConfigProjectManager.saveALL());
         ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
             if (windowHandle == 114514) {

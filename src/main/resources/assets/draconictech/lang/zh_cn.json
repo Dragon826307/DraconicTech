@@ -32,5 +32,6 @@
   "dt.e_chat.parsed_fail": "功能'%s'内部格式错误或缺少结束标签",
   "dt.e_chat.repeat.invalid_num": "参数不是一个有效数字",
   "dt.e_chat.utf.format_err": "UTF8格式错误",
-  "dt.e_chat.utf.illegal_char": "非法字符：%s"
+  "dt.e_chat.utf.illegal_char": "非法字符：%s",
+  "dt.e_chat.effect.unknow_arg": "未知聊天效果"
 }
