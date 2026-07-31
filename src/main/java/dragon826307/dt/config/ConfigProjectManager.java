@@ -3,7 +3,10 @@ package dragon826307.dt.config;
 import com.google.common.primitives.Doubles;
 import com.google.common.primitives.Floats;
 import com.google.common.primitives.Longs;
+import dragon826307.dt.AutoInitialize;
 import dragon826307.dt.DraconicTech;
+import dragon826307.dt.InitializePhase;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.regex.util.RegexUtil;
@@ -32,7 +35,8 @@ public class ConfigProjectManager {
     protected static final Path AUTO_CONFIG = ROOT.resolve("auto.dat");
     protected static final Path SERVER_CONFIG = ROOT.resolve("server.dat");
     protected static final Path SERVER_CONFIG_STRING = ROOT.resolve("server_config.txt");
-    public static void init(){
+    @AutoInitialize(phase = InitializePhase.ON_SERVER_STARTING, priority = 999)
+    private static void init(){
         try {
             Files.createDirectories(ROOT);
         }catch (IOException e){
@@ -41,6 +45,10 @@ public class ConfigProjectManager {
         for (ConfigProjects.Main project: ConfigProjects.Main.values()) CACHE_MAIN.put(project, new ConfigGetterValue(project.getDefaultValue()));
         for (ConfigProjects.Auto project: ConfigProjects.Auto.values()) CACHE_AUTO.put(project, new ConfigGetterValue(project.getDefaultValue()));
         loadALL();
+        ServerLifecycleEvents.BEFORE_SAVE.register((server, b1, b2) -> {
+            DraconicTech.LOGGER.info("Saving all config...");
+            ConfigProjectManager.saveALL();
+        });
     }
     public static ConfigGetterValue getConfig(ConfigProjects.Main project){
         return CACHE_MAIN.get(project);

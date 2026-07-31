@@ -45,5 +45,8 @@
     "recommends": {
         "iris": "*",
         "sodium": "*"
+    },
+    "custom": {
+        "draconictech:auto_init": ["dragon826307.dt"]
     }
 }

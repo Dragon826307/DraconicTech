@@ -2,8 +2,11 @@ package dragon826307.dt.command;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
+import dragon826307.dt.AutoInitialize;
 import dragon826307.dt.DraconicTech;
+import dragon826307.dt.InitializePhase;
 import dragon826307.dt.util.marker_int.FeatureCommandInt;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 
@@ -22,7 +25,8 @@ public class ServerCommandHandler {
         DraconicTech.LOGGER.info("test");
         return 1;
     }
-    public static void init(){
+    @AutoInitialize(phase = InitializePhase.ON_SERVER_STARTING)
+    private static void init(){
         if (!initialized){
             addCommandBranch(new TickHaltCommand());
             addCommandBranch(new StatusCommand());
@@ -31,10 +35,15 @@ public class ServerCommandHandler {
         }
         for(ServerCommandCallback c : callbacks) {
             LiteralArgumentBuilder<ServerCommandSource> branch;
-            if (c instanceof FeatureCommandInt) branch = CommandManager.literal("feature").then(c.addCommandBranch(CommandManager.literal(c.setBranchName())));
+            if (c instanceof FeatureCommandInt) branch = CommandManager.literal("features").then(c.addCommandBranch(CommandManager.literal(c.setBranchName())));
             else branch = c.addCommandBranch(CommandManager.literal(c.setBranchName()));
             commandRoot.then(branch);
             commandRoot_copy.then(branch);
         }
+    }
+    @AutoInitialize(phase = InitializePhase.ON_SERVER_STARTING, priority = 1001)
+    private static void registerAllCommands(MinecraftServer server){
+        server.getCommandManager().getDispatcher().register(ServerCommandHandler.commandRoot);
+        server.getCommandManager().getDispatcher().register(ServerCommandHandler.commandRoot_copy);
     }
 }

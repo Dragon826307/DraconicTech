@@ -1,9 +1,12 @@
 package dragon826307.dt.network;
 
+import dragon826307.dt.AutoInitialize;
 import dragon826307.dt.DraconicTech;
+import dragon826307.dt.InitializePhase;
 import dragon826307.dt.PlayerRecorder;
 import dragon826307.dt.util.SendMessageHelper;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.text.Text;
 import net.minecraft.util.Colors;
@@ -12,7 +15,10 @@ import net.minecraft.util.Identifier;
 public class ModNetworkHandler {
     public static final Identifier DEBUG_ID = Identifier.of(DraconicTech.MOD_ID, "debug");
     public static final Identifier HELLO_ID = Identifier.of(DraconicTech.MOD_ID, "hello");
-    public static void init() {
+
+    @AutoInitialize(phase = InitializePhase.ON_MOD_INIT_MAIN, priority = 999)
+    private static void init() {
+        DraconicTech.LOGGER.info("Initializing ModNetworkHandler...");
         PayloadTypeRegistry.playS2C().register(Mod$HelloDraconicTechS2CPacket.ID,Mod$HelloDraconicTechS2CPacket.CODEC);
         PayloadTypeRegistry.playC2S().register(Mod$HelloDraconicTechC2SPacket.ID,Mod$HelloDraconicTechC2SPacket.CODEC);
         PayloadTypeRegistry.playC2S().register(Mod$DebugModeToggleC2SPacket.ID,Mod$DebugModeToggleC2SPacket.CODEC);
@@ -28,5 +34,7 @@ public class ModNetworkHandler {
                 context.player().sendMessage(SendMessageHelper.getMessage("Server-Side DEBUG MODE:" + (DraconicTech.DEBUG ? "§aON" : "§cOFF"),true));
             }else context.player().sendMessage(Text.translatable("command.failed").withColor(Colors.LIGHT_RED));
         }));
+        ServerPlayConnectionEvents.JOIN.register((serverPlayNetworkHandler, packetSender, minecraftServer) -> packetSender.sendPacket(new Mod$HelloDraconicTechS2CPacket()));
+        ServerPlayConnectionEvents.DISCONNECT.register((serverPlayNetworkHandler, minecraftServer) -> PlayerRecorder.removePlayer(serverPlayNetworkHandler.getPlayer().getUuid()));
     }
 }

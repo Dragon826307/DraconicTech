@@ -1,7 +1,7 @@
 package dragon826307.dt.mixin.tick;
 
 import dragon826307.dt.DraconicTech;
-import dragon826307.dt.project.microtick.WorldTickingFlags;
+import dragon826307.dt.features.microtick.WorldTickingFlags;
 import net.minecraft.server.world.ServerEntityManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

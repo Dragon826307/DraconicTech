@@ -1,33 +1,23 @@
 package dragon826307.dt.client;
 
+import dragon826307.dt.AutoInitializeManager;
 import dragon826307.dt.DraconicTech;
-import dragon826307.dt.client.command.ClientCommandHandler;
-import dragon826307.dt.client.command.argument.EnhancedChatArgumentType;
-import dragon826307.dt.client.network.ClientAsyncServerPinger;
-import dragon826307.dt.client.network.ClientModNetworkHandler;
+import dragon826307.dt.InitializePhase;
 import dragon826307.dt.client.util.ClientChatHudHelper;
 import dragon826307.dt.client.util.click_event.CommandBaseClickEvent;
 import dragon826307.dt.client.util.render.RenderManager;
 import dragon826307.dt.client.util.render.RenderTask;
-import dragon826307.dt.command.argument.ConfigValueArgumentType;
-import dragon826307.dt.command.argument.serializer.ConfigValueArgumentSerializer;
 import dragon826307.dt.network.Mod$DebugModeToggleC2SPacket;
 import dragon826307.dt.util.TextColorHelper;
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
-import net.fabricmc.fabric.api.command.v2.ArgumentTypeRegistry;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
-import net.minecraft.command.argument.serialize.ConstantArgumentSerializer;
 import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWKeyCallback;
@@ -39,16 +29,10 @@ public class DraconicTechClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
         DraconicTech.LOGGER.info("Initializing DraconicTech Client...");
+        AutoInitializeManager.scanAndRegister(name -> name.contains(".client."));
+        AutoInitializeManager.trigger(InitializePhase.ON_MOD_INIT_CLIENT);
+        ClientLifecycleEvents.CLIENT_STARTED.register((client) -> AutoInitializeManager.trigger(InitializePhase.ON_CLIENT_STARTED, client));
         KeyBinding openMenuKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding("draconictech.key.open_menu", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_O, KeyBinding.Category.create(Identifier.of(DraconicTech.MOD_ID, DraconicTech.MOD_ID))));
-        ArgumentTypeRegistry.registerArgumentType(Identifier.of(DraconicTech.MOD_ID,"enhanced_chat"), EnhancedChatArgumentType.class, ConstantArgumentSerializer.of(EnhancedChatArgumentType::eChatArgument));
-        ArgumentTypeRegistry.registerArgumentType(Identifier.of(DraconicTech.MOD_ID,"config_value"), ConfigValueArgumentType.class, new ConfigValueArgumentSerializer());
-        ClientModNetworkHandler.init();
-        ClientChatHudHelper.init();
-        ClientLifecycleEvents.CLIENT_STARTED.register((client) -> {
-            ClientConfigProjectManager.init();
-            ClientCommandHandler.init();
-        });
-        ServerLifecycleEvents.BEFORE_SAVE.register((minecraftServer, b, b1) -> ClientConfigProjectManager.saveALL());
         ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
             if (windowHandle == 114514) {
                 windowHandle = MinecraftClient.getInstance().getWindow().getHandle();
@@ -59,16 +43,6 @@ public class DraconicTechClient implements ClientModInitializer {
                 RenderManager.Render3DBoxTask(0,0,0,2,2,2).setRainbow(false).setLifetime_millisSecond(5000).setColor(0x8000FFFF);
                 RenderManager.Render3DBoxTask(4,0,4,6,2,6).setRainbow(true).setLifetime_millisSecond(5000).setColor(0x8000FFFF);
             }
-        });
-        ClientPlayConnectionEvents.DISCONNECT.register((clientPlayNetworkHandler, minecraftClient) -> {
-            ClientAsyncServerPinger.shutdownAndClear();
-        });
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register((minecraftClient, clientWorld) -> {
-            serverHadDraconicTech = false;
-        });
-        ClientCommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
-            dispatcher.register(ClientCommandHandler.commandRoot);
-            dispatcher.register(ClientCommandHandler.commandRoot_copy);
         });
         WorldRenderEvents.END_MAIN.register(RenderManager::RenderAll);
         ClientTickEvents.START_WORLD_TICK.register(world -> RenderTask.init());

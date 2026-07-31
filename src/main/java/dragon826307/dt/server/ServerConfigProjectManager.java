@@ -1,6 +1,8 @@
 package dragon826307.dt.server;
 
+import dragon826307.dt.AutoInitialize;
 import dragon826307.dt.DraconicTech;
+import dragon826307.dt.InitializePhase;
 import dragon826307.dt.config.ConfigGetterValue;
 import dragon826307.dt.config.ConfigProjectManager;
 import dragon826307.dt.config.ConfigProjects;
@@ -18,7 +20,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ServerConfigProjectManager extends ConfigProjectManager {
     private static final Map<ConfigProjects.Server, ConfigGetterValue> CACHE = new ConcurrentHashMap<>();
-    public static void init() {
+    @AutoInitialize(phase = InitializePhase.ON_SERVER_STARTING)
+    private static void init() {
         if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
             return;
         }

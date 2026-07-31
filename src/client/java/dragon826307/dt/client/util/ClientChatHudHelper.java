@@ -1,16 +1,19 @@
 package dragon826307.dt.client.util;
 
+import dragon826307.dt.AutoInitialize;
+import dragon826307.dt.InitializePhase;
 import dragon826307.dt.util.SendMessageHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
 
 public final class ClientChatHudHelper {
-    private static MinecraftClient mc;
-    public static void init() {
-        mc = MinecraftClient.getInstance();
+    private static MinecraftClient client;
+    @AutoInitialize(phase = InitializePhase.ON_CLIENT_STARTED)
+    private static void init(MinecraftClient client) {
+        ClientChatHudHelper.client = client;
     }
     private static void send(Text text) {
-        mc.execute(() -> mc.inGameHud.getChatHud().addMessage(text));
+        client.execute(() -> client.inGameHud.getChatHud().addMessage(text));
     }
     public static void addMessageInChat(Text text) {
         send(SendMessageHelper.getMessage(text));

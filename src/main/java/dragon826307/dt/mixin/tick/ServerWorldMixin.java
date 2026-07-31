@@ -3,7 +3,7 @@ package dragon826307.dt.mixin.tick;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import dragon826307.dt.DraconicTech;
-import dragon826307.dt.project.microtick.WorldTickingFlags;
+import dragon826307.dt.features.microtick.WorldTickingFlags;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.border.WorldBorder;
@@ -24,16 +24,16 @@ public class ServerWorldMixin {
     private static int frozenLevel = -1;
     @Inject(method = "tick(Ljava/util/function/BooleanSupplier;)V",at = @At("HEAD"))
     private void onTick(BooleanSupplier supplier, CallbackInfo ci){
-//        if (DraconicTech.getWorldTickManager().getServerTickManager().getStepTicks() > 0) {
-//            if (frozenLevel == -1) {
-//                frozenLevel = DraconicTech.getWorldTickManager().getTickFrozenLevel();
-//                DraconicTech.getWorldTickManager().setTickFrozenLevel(0);
-//            }
-//        }else {
-//            if (frozenLevel != -1) DraconicTech.getWorldTickManager().setTickFrozenLevel(frozenLevel);
-//            frozenLevel = -1;
-//        }
-        //TODO : 不兼容原版/tick step
+        if (DraconicTech.getWorldTickManager().getServerTickManager() == null) return;
+        if (DraconicTech.getWorldTickManager().getServerTickManager().shouldTick()) {
+            if (frozenLevel == -1) {
+                frozenLevel = DraconicTech.getWorldTickManager().getTickFrozenLevel();
+                DraconicTech.getWorldTickManager().setTickFrozenLevel(0);
+            }
+        }else {
+            if (frozenLevel != -1) DraconicTech.getWorldTickManager().setTickFrozenLevel(frozenLevel);
+            frozenLevel = -1;
+        }
     }
     @ModifyVariable(method = "tick(Ljava/util/function/BooleanSupplier;)V",at = @At(value = "LOAD",ordinal = 0),ordinal = 0)
     private boolean shouldTickWorldStatus(boolean original){

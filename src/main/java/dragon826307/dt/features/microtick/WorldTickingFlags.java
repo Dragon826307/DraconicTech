@@ -1,4 +1,4 @@
-package dragon826307.dt.project.microtick;
+package dragon826307.dt.features.microtick;
 
 public enum WorldTickingFlags{
     COMMAND_FUNCTION(1),//指令函数

@@ -1,7 +1,10 @@
 package dragon826307.dt.client.network;
 
+import dragon826307.dt.AutoInitialize;
 import dragon826307.dt.DraconicTech;
+import dragon826307.dt.InitializePhase;
 import dragon826307.dt.client.util.ChatHudTracker;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.Address;
 import net.minecraft.client.network.AllowedAddressResolver;
@@ -153,6 +156,7 @@ public class ClientAsyncServerPinger {
                             if (conn != null && conn.isOpen()) {
                                 conn.tick();
                             }
+                            //noinspection BusyWait
                             Thread.sleep(256);
                         }
                     }
@@ -173,5 +177,9 @@ public class ClientAsyncServerPinger {
         executor = createExecutor();
         RUNNING_TASK.clear();
         DraconicTech.LOGGER.info("ServerPinger Thread Pool Shutdown And Clear All Task");
+    }
+    @AutoInitialize(phase = InitializePhase.ON_MOD_INIT_CLIENT)
+    private static void auto(){
+        ClientPlayConnectionEvents.DISCONNECT.register((clientPlayNetworkHandler, minecraftClient) -> shutdownAndClear());
     }
 }

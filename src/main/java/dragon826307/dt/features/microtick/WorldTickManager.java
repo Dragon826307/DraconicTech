@@ -1,6 +1,9 @@
-package dragon826307.dt.project.microtick;
+package dragon826307.dt.features.microtick;
 
-import net.minecraft.server.MinecraftServer;
+import dragon826307.dt.AutoInitialize;
+import dragon826307.dt.DraconicTech;
+import dragon826307.dt.InitializePhase;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.server.ServerTickManager;
 
 public class WorldTickManager {
@@ -14,9 +17,12 @@ public class WorldTickManager {
     // 3 -> event
     // 4 -> update
     // 5 -> ???
-    public static WorldTickingFlags flag$frozenLevel2;
-    public WorldTickManager(MinecraftServer server) {
-        this.serverTickManager = server.getTickManager();
+    @AutoInitialize(phase = InitializePhase.ON_MOD_INIT_MAIN)
+    private static void init() {
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> DraconicTech.getWorldTickManager().tickFrozenLevel = 0);
+    }
+    public WorldTickManager(ServerTickManager serverTickManager) {
+        this.serverTickManager = serverTickManager;
     }
     public void setWorldTickFlag(WorldTickingFlags flag,boolean bl) {
         TICK_FLAGS = ~(1 << flag.ordinal()) & TICK_FLAGS | (bl ? 1 << flag.ordinal() : 0);

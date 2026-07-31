@@ -1,10 +1,13 @@
 package dragon826307.dt.client;
 
+import dragon826307.dt.AutoInitialize;
+import dragon826307.dt.InitializePhase;
 import dragon826307.dt.config.ConfigGetterValue;
 import dragon826307.dt.config.ConfigProjectManager;
 import dragon826307.dt.config.ConfigProjects;
 import dragon826307.dt.config.ConfigProjectsInt;
 import net.fabricmc.api.EnvType;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.IOException;
@@ -17,7 +20,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class ClientConfigProjectManager extends ConfigProjectManager {
     private static final Map<ConfigProjects.Client, ConfigGetterValue> CACHE = new ConcurrentHashMap<>();
-    public static void init() {
+    @AutoInitialize(phase = InitializePhase.ON_CLIENT_STARTED,priority = 999)
+    private static void init() {
         if (FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER) {
             throw new IllegalStateException("Cannot initialize ClientConfigManager on a physical Server!");
         }
@@ -28,6 +32,7 @@ public final class ClientConfigProjectManager extends ConfigProjectManager {
         }
         for (ConfigProjects.Client project: ConfigProjects.Client.values()) CACHE.put(project, new ConfigGetterValue(project.getDefaultValue()));
         loadALL();
+        ServerLifecycleEvents.BEFORE_SAVE.register((minecraftServer, b, b1) -> ClientConfigProjectManager.saveALL());
     }
     public static ConfigGetterValue getConfig(ConfigProjects.Client project) {
         return CACHE.get(project);

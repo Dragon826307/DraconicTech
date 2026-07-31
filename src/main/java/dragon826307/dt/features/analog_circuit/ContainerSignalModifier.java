@@ -1,5 +1,7 @@
-package dragon826307.dt.project.analog_circuit;
+package dragon826307.dt.features.analog_circuit;
 
+import dragon826307.dt.AutoInitialize;
+import dragon826307.dt.InitializePhase;
 import dragon826307.dt.config.ConfigProjectManager;
 import dragon826307.dt.config.ConfigProjects;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
@@ -23,6 +25,10 @@ public class ContainerSignalModifier implements UseBlockCallback{
             Blocks.COMPOSTER,
             Blocks.LAVA_CAULDRON,Blocks.WATER_CAULDRON,Blocks.POWDER_SNOW_CAULDRON,Blocks.CAULDRON
     ));
+    @AutoInitialize(phase = InitializePhase.ON_MOD_INIT_MAIN)
+    private static void init() {
+        UseBlockCallback.EVENT.register(new ContainerSignalModifier());
+    }
     @Override
     public ActionResult interact(PlayerEntity playerEntity, World world, Hand hand, BlockHitResult blockHitResult) {
         if (!ConfigProjectManager.getConfig(ConfigProjects.Main.ALLOW_MODIFY_CONTAINER_SIGNAL).asBoolean() || hand != Hand.MAIN_HAND || !playerEntity.isPlayer() || playerEntity.getGameMode() == null || !playerEntity.getMainHandStack().isEmpty() || !playerEntity.getGameMode().isCreative()) return ActionResult.PASS;
