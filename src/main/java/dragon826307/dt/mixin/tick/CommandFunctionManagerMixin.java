@@ -1,7 +1,5 @@
 package dragon826307.dt.mixin.tick;
 
-import dragon826307.dt.DraconicTech;
-import dragon826307.dt.features.microtick.WorldTickingFlags;
 import net.minecraft.server.function.CommandFunctionManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -12,6 +10,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class CommandFunctionManagerMixin {
     @Inject(method = "tick",at = @At("HEAD"),cancellable = true)
     private void onTick(CallbackInfo ci) {
-        if(!DraconicTech.getWorldTickManager().getWorldTickFlag(WorldTickingFlags.COMMAND_FUNCTION)) ci.cancel();
+
     }
 }

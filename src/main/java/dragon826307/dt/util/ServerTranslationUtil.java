@@ -8,8 +8,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public final class ServerTranslationUtil {
     private static final Language LANGUAGE = Language.getInstance();
     @Nullable
-    public static String get(String key) {
+    public static String getOrNull(String key, Object... args) {
         if (LANGUAGE.hasTranslation(key)) {
+            if (args.length != 0) {
+                return String.format(LANGUAGE.get(key), args);
+            }
             return LANGUAGE.get(key);
         }else return null;
     }

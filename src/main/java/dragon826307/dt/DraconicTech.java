@@ -1,7 +1,6 @@
 package dragon826307.dt;
 
-import dragon826307.dt.events.ObjectCreatedEvents;
-import dragon826307.dt.features.microtick.WorldTickManager;
+import dragon826307.dt.features.microtick.MicroTickManager;
 import dragon826307.dt.util.TextColorHelper;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -11,7 +10,6 @@ import org.slf4j.LoggerFactory;
 
 public class DraconicTech implements ModInitializer {
     public static boolean DEBUG = false;
-    public static WorldTickManager worldTickManager;
     public static final Text MOD_PREFIX = TextColorHelper.gradientColor("[Draconic Tech]",0xB061F0,0x371C82).styled(style -> style.withBold(true));
     public static final String MOD_NAME = "DraconicTech";
 	public static final String MOD_ID = "draconictech";
@@ -22,11 +20,10 @@ public class DraconicTech implements ModInitializer {
         AutoInitializeManager.scanAndRegister(name -> !name.contains(".client.") && !name.contains(".server."));
         AutoInitializeManager.trigger(InitializePhase.ON_MOD_INIT_MAIN);
         ServerLifecycleEvents.SERVER_STARTING.register(server -> AutoInitializeManager.trigger(InitializePhase.ON_SERVER_STARTING, server));
-        ObjectCreatedEvents.SERVER_TICK_MANAGER.register(manager -> worldTickManager = new WorldTickManager(manager));
         drawModLogoInLogger();
     }
-    public static WorldTickManager getWorldTickManager(){
-        return worldTickManager;
+    public static MicroTickManager getMicroTickManager(){
+        return MicroTickManager.INSTANCE;
     }
     private static void drawModLogoInLogger() {
         LOGGER.info("""

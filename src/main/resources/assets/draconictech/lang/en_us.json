@@ -33,5 +33,8 @@
   "dt.e_chat.repeat.invalid_num": "The argument is not a valid number",
   "dt.e_chat.utf.format_err": "UTF8 format error",
   "dt.e_chat.utf.illegal_char": "Illegal character: %s",
-  "dt.e_chat.effect.unknow_arg": "Unknow chat effect"
+  "dt.e_chat.effect.unknow_arg": "Unknow chat effect",
+  "dt.micro_tick.fail_null": "§c[MicroTickManager] Failed to freeze because server is NULL",
+  "dt.micro_tick.prepare_fail": "§c[MicroTickManager] Thread 'MicroTick-Manager-Thread' preparation timed out! Skipping freeze.",
+  "dt.micro_tick.cant_halt_in_freeze": "§cCAN NOT using tickhalt feature when game is frozen"
 }

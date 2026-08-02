@@ -69,7 +69,7 @@ public final class ConfigProjects {
             return REGISTRY.toArray(new Main[0]);
         }
         public static final Main ALLOW_MODIFY_CONTAINER_SIGNAL = register(new Main("ContainerSignalModifier:allow_modify_container_signal", ConfigType.BOOLEAN, false, null, false, null));
-        public static final Main GLOBAL_TICK_FREEZE_ORIGIN = register(new Main("WorldTickManager:global_tick_freeze_origin", ConfigType.STRING, "before_network_update", "^(?:before|after)_network_update$", false, new String[]{"before_network_update", "after_network_update"}));
+        public static final Main GLOBAL_TICK_FREEZE_ORIGIN = register(new Main("MicroTickManager:global_tick_freeze_origin", ConfigType.STRING, "before_network_update", "^(?:before|after)_network_update$", false, new String[]{"before_network_update", "after_network_update"}));
         private final String name;
         private final ConfigType type;
         private final Object defaultValue;

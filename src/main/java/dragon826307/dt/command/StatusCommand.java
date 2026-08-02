@@ -30,11 +30,11 @@ public class StatusCommand implements ServerCommandCallback{
     public LiteralArgumentBuilder<ServerCommandSource> addCommandBranch(LiteralArgumentBuilder<ServerCommandSource> thisCommandBranch) {
         return thisCommandBranch.then(CommandManager.literal("java").executes(context -> {
             updateJVMInfo();
-            context.getSource().sendFeedback(() -> Text.translatableWithFallback("status_command.jvm_info", ServerTranslationUtil.get("status_command.jvm_info"),JVM_INFO_LIST).withColor(0x55FFFF),false);
+            context.getSource().sendFeedback(() -> Text.translatableWithFallback("status_command.jvm_info", ServerTranslationUtil.getOrNull("status_command.jvm_info"),JVM_INFO_LIST).withColor(0x55FFFF),false);
             return 1;
         })).then(CommandManager.literal("system").executes(context -> {
             updateSystemInfo();
-            context.getSource().sendFeedback(() -> Text.translatableWithFallback("status_command.system_info", ServerTranslationUtil.get("status_command.system_info"),SYSTEM_INFO_LIST).withColor(0x55FFFF),false);
+            context.getSource().sendFeedback(() -> Text.translatableWithFallback("status_command.system_info", ServerTranslationUtil.getOrNull("status_command.system_info"),SYSTEM_INFO_LIST).withColor(0x55FFFF),false);
             return 1;
         })).then(CommandManager.literal("minecraft")).requires(source -> source.hasPermissionLevel(ServerConfigProjectManager.getConfig(ConfigProjects.Server.STATUS_COMMAND_PERMISSION).asInt()));
     }

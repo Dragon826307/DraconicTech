@@ -12,7 +12,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class TickCommandMixin {
     @Inject(method = "executeFreeze",at = @At("RETURN"))
     private static void onExecuteFreeze(ServerCommandSource source, boolean frozen, CallbackInfoReturnable<Integer> cir) {
-        if (frozen) DraconicTech.getWorldTickManager().setTickFrozenLevel(1);
-        else DraconicTech.getWorldTickManager().setTickFrozenLevel(0);
+
     }
 }

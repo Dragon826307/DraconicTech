@@ -7,11 +7,12 @@
     "tick.MinecraftServerMixin",
     "tick.ServerChunkManagerMixin",
     "tick.ServerEntityManagerMixin",
+    "tick.ServerNetworkIoMixin",
+    "tick.ServerPlayNetworkHandlerMixin",
     "tick.ServerTickManagerMixin",
     "tick.ServerWorldMixin",
     "tick.TickCommandMixin",
-    "tick.TickManagerMixin",
-    "tick.WorldMixin"
+    "tick.TickManagerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

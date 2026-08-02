@@ -1,7 +1,5 @@
 package dragon826307.dt.mixin.tick;
 
-import dragon826307.dt.DraconicTech;
-import dragon826307.dt.features.microtick.WorldTickingFlags;
 import net.minecraft.server.world.ServerChunkManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -14,6 +12,6 @@ import java.util.function.BooleanSupplier;
 public class ServerChunkManagerMixin {
     @Inject(method = "tick",at = @At("HEAD"),cancellable = true)
     private void onTick(BooleanSupplier shouldKeepTicking, boolean tickChunks, CallbackInfo ci){
-        if (!DraconicTech.getWorldTickManager().getWorldTickFlag(WorldTickingFlags.CHUNK)) ci.cancel();
+
     }
 }
