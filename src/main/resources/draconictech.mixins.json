@@ -6,10 +6,10 @@
     "tick.CommandFunctionManagerMixin",
     "tick.MinecraftServerMixin",
     "tick.ServerChunkManagerMixin",
+    "tick.ServerCommonNetworkHandlerAccessor",
     "tick.ServerEntityManagerMixin",
     "tick.ServerNetworkIoMixin",
     "tick.ServerPlayNetworkHandlerMixin",
-    "tick.ServerTickManagerMixin",
     "tick.ServerWorldMixin",
     "tick.TickCommandMixin",
     "tick.TickManagerMixin"

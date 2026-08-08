@@ -33,5 +33,9 @@
   "dt.e_chat.repeat.invalid_num": "参数不是一个有效数字",
   "dt.e_chat.utf.format_err": "UTF8格式错误",
   "dt.e_chat.utf.illegal_char": "非法字符：%s",
-  "dt.e_chat.effect.unknow_arg": "未知聊天效果"
+  "dt.e_chat.effect.unknow_arg": "未知聊天效果",
+  "dt.micro_tick.fail_null": "§c[微时序管理器]冻结失败！因为服务器为NULL",
+  "dt.micro_tick.prepare_fail": "§c[微时序管理器]线程 'MicroTick-Manager-Thread' 准备超时！跳过冻结任务",
+  "dt.micro_tick.cant_halt_in_freeze": "§c游戏刻冻结时不能使用tickhalt功能",
+  "dt.micro_tick.already_halt": "§c[微时序管理器]游戏逻辑线程已经被暂停了！"
 }

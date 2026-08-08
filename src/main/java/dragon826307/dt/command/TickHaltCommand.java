@@ -20,17 +20,21 @@ public class TickHaltCommand implements ServerCommandCallback, FeatureCommandInt
             //TODO : 冻结等级查询
             return 1;
         }).then(CommandManager.argument("halt level", IntegerArgumentType.integer(0,5)).executes(context -> {
+            int lvl = IntegerArgumentType.getInteger(context,"halt level");
+            if (lvl == 0) {
+                if (MicroTickManager.INSTANCE.isFreeze()) MicroTickManager.INSTANCE.unfreeze();
+                return Integer.MIN_VALUE;
+            }
             ServerTickManager serverTickManager = context.getSource().getServer().getTickManager();
             if (serverTickManager.isFrozen()) {
                 context.getSource().sendFeedback(() -> CANT_FREEZE,false);
                 return 0;
             }
             MicroTickManager.INSTANCE.setCommandSource(context.getSource());
-            int lvl = IntegerArgumentType.getInteger(context,"halt level");
             DraconicTech.getMicroTickManager().setTickFrozenLevel(lvl);
             serverTickManager.stopSprinting();
-            return 1;
-        }));
+            return Integer.MIN_VALUE;
+        }).requires(serverCommandSource -> serverCommandSource.hasPermissionLevel(4)));
     }
 
     @Override

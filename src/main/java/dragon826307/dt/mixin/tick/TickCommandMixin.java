@@ -1,6 +1,5 @@
 package dragon826307.dt.mixin.tick;
 
-import dragon826307.dt.DraconicTech;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.command.TickCommand;
 import org.spongepowered.asm.mixin.Mixin;

@@ -3,16 +3,17 @@ package dragon826307.dt.features.microtick;
 import dragon826307.dt.AutoInitialize;
 import dragon826307.dt.DraconicTech;
 import dragon826307.dt.InitializePhase;
-import dragon826307.dt.events.ObjectCreatedEvents;
+import dragon826307.dt.mixin.tick.ServerCommonNetworkHandlerAccessor;
 import dragon826307.dt.util.SendMessageHelper;
 import dragon826307.dt.util.ServerTranslationUtil;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.minecraft.network.packet.s2c.common.KeepAliveS2CPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Colors;
+import net.minecraft.util.profiler.Profilers;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.concurrent.*;
@@ -22,19 +23,22 @@ public class MicroTickManager {
     private static final Text FAIL_NULL_T = SendMessageHelper.getMessage(ServerTranslationUtil.getTranslatedWithFallback("dt.micro_tick.fail_null"),true);
     private static final String PREPARE_FAIL = ServerTranslationUtil.getOrNull("dt.micro_tick.prepare_fail");
     private static final Text PREPARE_FAIL_T = SendMessageHelper.getMessage(ServerTranslationUtil.getTranslatedWithFallback("dt.micro_tick.prepare_fail"),true);
+    private static final String ALREADY_HALT = ServerTranslationUtil.getOrNull("dt.micro_tick.already_halt");
+    private static final Text ALREADY_HALT_T = SendMessageHelper.getMessage(ServerTranslationUtil.getTranslatedWithFallback("dt.micro_tick.already_halt"),true);
 
-    public static MicroTickManager INSTANCE;
+    public static @NonNull MicroTickManager INSTANCE = new MicroTickManager();
 
     private final ScheduledExecutorService MicroTickManagerThread = Executors.newSingleThreadScheduledExecutor(runnable -> {
         Thread thread = new Thread(runnable, "MicroTick-Manager-Thread");
         thread.setDaemon(true);
         return thread;
     });
-    private ServerCommandSource source = null;
-    private final MinecraftServer server;
+    private @Nullable ServerCommandSource source;
+    private @Nullable MinecraftServer server;
     private volatile CountDownLatch unfreezeLatch;
     private ScheduledFuture<?> keepAliveTask;
-    private int TICK_FLAGS = -1;
+    private boolean isFreeze = false;
+    private int TICK_FLAGS = 0b1111_1111_1111_1111_1111_1111_1111_1000;
     private int tickFrozenLevel = 0;
     // level:
     // 0 -> normal
@@ -49,27 +53,28 @@ public class MicroTickManager {
     }
     @AutoInitialize(phase = InitializePhase.ON_SERVER_STARTING)
     private static void getServer(MinecraftServer server) {
-        INSTANCE = new MicroTickManager(server);
+        INSTANCE.server = server;
     }
-    public MicroTickManager(MinecraftServer server) {
-        this.server = server;
+    public boolean isFreeze() {
+        return isFreeze;
     }
     public void setMicroTickFlag(int flag, boolean bl) {
         TICK_FLAGS = (TICK_FLAGS | flag) & (bl ? -1 : ~flag);
     }
     public boolean getMicroTickFlag(int flag) {
-        return (TICK_FLAGS & flag) != 0;
+        return ((TICK_FLAGS & flag) ^ flag) == 0;
     }
     public int getMicroTickFlags() {
         return TICK_FLAGS;
     }
     public void setTickFrozenLevel(int lvl){
         if (lvl < 0 || lvl > 5) {
-            throw new IllegalArgumentException("Invalid value for MicroTickManager.tickFrozenLevel: " + lvl);
+            DraconicTech.LOGGER.error("Invalid value for MicroTickManager.tickFrozenLevel: {}", lvl);
+            return;
         }
         tickFrozenLevel = lvl;
-        if (lvl == 0) TICK_FLAGS |= 16383;
-        else if (lvl == 1) TICK_FLAGS &= -16384;
+        if (lvl == 0) TICK_FLAGS |= 4194048;
+        else if (lvl == 1) TICK_FLAGS &= -4194304;
     }
     public int getTickFrozenLevel(){
         return tickFrozenLevel;
@@ -80,24 +85,30 @@ public class MicroTickManager {
     }
     //游戏逻辑线程
     public void tryFreeze() {
+        if (isFreeze) {
+            sendFeedback(ALREADY_HALT_T);
+            DraconicTech.LOGGER.warn(ALREADY_HALT);
+            return;
+        }
         if (server == null) {
             sendFeedback(FAIL_NULL_T);
             DraconicTech.LOGGER.warn(FAIL_NULL);
             return;
         }
-        CompletableFuture<Void> prepareFuture = CompletableFuture.runAsync(() -> {
+        CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+            Profilers.get().push("prepare");
             //MicroTickManagerThread 线程
             keepAliveTask = MicroTickManagerThread.scheduleAtFixedRate(() -> {
-                long currentTime = System.currentTimeMillis();
                 for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-                    player.networkHandler.sendPacket(new KeepAliveS2CPacket(currentTime));
+                    ((ServerCommonNetworkHandlerAccessor)player.networkHandler).runBaseTick();
                 }
-            }, 0, 5, TimeUnit.SECONDS);
+            }, 5, 5, TimeUnit.SECONDS);
+            Profilers.get().pop();
         }, MicroTickManagerThread);
         try {
-            prepareFuture.get(1, TimeUnit.SECONDS);
+            future.get(1, TimeUnit.SECONDS);
         } catch (TimeoutException e) {
-            prepareFuture.cancel(true);
+            future.cancel(true);
             DraconicTech.LOGGER.warn(PREPARE_FAIL);
             sendFeedback(PREPARE_FAIL_T);
             return;
@@ -108,8 +119,10 @@ public class MicroTickManager {
         }
         unfreezeLatch = new CountDownLatch(1);
         try {
+            isFreeze = true;
             unfreezeLatch.await();
         } catch (InterruptedException e) {
+            isFreeze = false;
             Thread.currentThread().interrupt();
         }
     }
@@ -122,12 +135,18 @@ public class MicroTickManager {
 
     //Netty Worker 线程
     public void unfreeze() {
+        if (!isFreeze) {
+            DraconicTech.LOGGER.warn("[MicroTickManager] The game logic thread is not halt");
+            return;
+        }
         if (keepAliveTask != null && !keepAliveTask.isCancelled()) {
             keepAliveTask.cancel(true);
         }
         if (unfreezeLatch != null) {
             unfreezeLatch.countDown();
         }
+        setTickFrozenLevel(0);
+        isFreeze = false;
     }
 }
 
