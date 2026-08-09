@@ -1,9 +1,9 @@
 {
   "required": true,
-  "package": "dragon826307.dt.mixin.server",
+  "package": "dragon826307.dt.server.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-
+    "DedicatedServerWatchdogMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -3,6 +3,8 @@ package dragon826307.dt.features.microtick;
 import dragon826307.dt.AutoInitialize;
 import dragon826307.dt.DraconicTech;
 import dragon826307.dt.InitializePhase;
+import dragon826307.dt.config.ConfigProjectManager;
+import dragon826307.dt.config.ConfigProjects;
 import dragon826307.dt.mixin.tick.ServerCommonNetworkHandlerAccessor;
 import dragon826307.dt.util.SendMessageHelper;
 import dragon826307.dt.util.ServerTranslationUtil;
@@ -37,19 +39,20 @@ public class MicroTickManager {
     private @Nullable MinecraftServer server;
     private volatile CountDownLatch unfreezeLatch;
     private ScheduledFuture<?> keepAliveTask;
+    private boolean onTickPostProcessing = false;
     private boolean isFreeze = false;
     private int TICK_FLAGS = 0b1111_1111_1111_1111_1111_1111_1111_1000;
-    private int tickFrozenLevel = 0;
     // level:
-    // 0 -> normal
-    // 1 -> global
-    // 2 -> phase
-    // 3 -> event
-    // 4 -> update
-    // 5 -> ???
+    // 000 -> normal
+    // 001 -> global(before_nu)
+    // 010 -> phase
+    // 011 -> event
+    // 100 -> update
+    // 101 -> ???
+    // 110 -> global(after_nu)
     @AutoInitialize(phase = InitializePhase.ON_MOD_INIT_MAIN)
     private static void init() {
-        ServerLifecycleEvents.SERVER_STOPPING.register(server -> DraconicTech.getMicroTickManager().tickFrozenLevel = 0);
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> MicroTickManager.INSTANCE.TICK_FLAGS &= -8);
     }
     @AutoInitialize(phase = InitializePhase.ON_SERVER_STARTING)
     private static void getServer(MinecraftServer server) {
@@ -57,6 +60,9 @@ public class MicroTickManager {
     }
     public boolean isFreeze() {
         return isFreeze;
+    }
+    public boolean isOnTickPostProcessing() {
+        return onTickPostProcessing;
     }
     public void setMicroTickFlag(int flag, boolean bl) {
         TICK_FLAGS = (TICK_FLAGS | flag) & (bl ? -1 : ~flag);
@@ -72,12 +78,17 @@ public class MicroTickManager {
             DraconicTech.LOGGER.error("Invalid value for MicroTickManager.tickFrozenLevel: {}", lvl);
             return;
         }
-        tickFrozenLevel = lvl;
-        if (lvl == 0) TICK_FLAGS |= 4194048;
-        else if (lvl == 1) TICK_FLAGS &= -4194304;
+        int flag = lvl;
+        if (flag == 1 && !ConfigProjectManager.getConfig(ConfigProjects.Main.GLOBAL_TICK_FREEZE_ORIGIN).asString().equals(ConfigProjects.Main.GLOBAL_TICK_FREEZE_ORIGIN.getDefaultValue())) flag += 5;
+        TICK_FLAGS = TICK_FLAGS & -8 | flag;
+    }
+    public void onEndTick() {
+        onTickPostProcessing = false;
     }
     public int getTickFrozenLevel(){
-        return tickFrozenLevel;
+        int flag = TICK_FLAGS & 7;
+        if (flag == 6) return 1;
+        return flag;
     }
     //游戏逻辑线程-指令
     public void setCommandSource(ServerCommandSource source) {
@@ -120,6 +131,7 @@ public class MicroTickManager {
         unfreezeLatch = new CountDownLatch(1);
         try {
             isFreeze = true;
+            onTickPostProcessing = true;
             unfreezeLatch.await();
         } catch (InterruptedException e) {
             isFreeze = false;

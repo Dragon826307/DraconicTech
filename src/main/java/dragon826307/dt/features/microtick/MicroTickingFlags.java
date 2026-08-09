@@ -1,6 +1,8 @@
 package dragon826307.dt.features.microtick;
 
 public final class MicroTickingFlags {
+
+
     public static final int COMMAND_FUNCTION = 8;//指令函数
     public static final int WORLD_BORDER = 16;//世界边界
     public static final int WEATHER = 32;//天气状态

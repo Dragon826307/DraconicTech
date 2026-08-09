@@ -7,13 +7,19 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(MinecraftServer.class)
+import java.util.function.BooleanSupplier;
+
+@Mixin(value = MinecraftServer.class,priority = 999)
 public class MinecraftServerMixin {
-    //TODO : 看门狗重置 & 堆积数据包处理 & keepAliveC2S包处理
+    //TODO : 堆积数据包处理 & keepAliveC2S包处理
     @Inject(method = "tick",at = @At("HEAD"))
     private void onTick(CallbackInfo ci) {
         if (MicroTickManager.INSTANCE.getTickFrozenLevel() != 0) {
             MicroTickManager.INSTANCE.tryFreeze();
         }
+    }
+    @Inject(method = "tick",at = @At("TAIL"))
+    private void onTickEnd(BooleanSupplier shouldKeepTicking, CallbackInfo ci) {
+        MicroTickManager.INSTANCE.onEndTick();
     }
 }
