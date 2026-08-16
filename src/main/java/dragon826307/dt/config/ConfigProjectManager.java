@@ -34,7 +34,6 @@ public class ConfigProjectManager {
     protected static final Path MAIN_CONFIG = ROOT.resolve("main.dat");
     protected static final Path AUTO_CONFIG = ROOT.resolve("auto.dat");
     protected static final Path SERVER_CONFIG = ROOT.resolve("server.dat");
-    protected static final Path SERVER_CONFIG_STRING = ROOT.resolve("server_config.txt");
     @AutoInitialize(phase = InitializePhase.ON_SERVER_STARTING, priority = 999)
     private static void init(){
         try {
@@ -69,18 +68,18 @@ public class ConfigProjectManager {
     }
     //TODO : 未设置定时保存
     public static void saveALL(){
-        Map<ConfigProjectsInt, ConfigGetterValue> snapshot = new HashMap<>(CACHE_MAIN);
-        snapshot.putAll(CACHE_AUTO);
-        Map<String,Object> main_config = new HashMap<>();
-        Map<String,Object> auto_config = new HashMap<>();
+        atomicWrite(MAIN_CONFIG,copyALL(CACHE_MAIN));
+        atomicWrite(AUTO_CONFIG,copyALL(CACHE_AUTO));
+    }
+    protected static <T extends ConfigProjectsInt> Map<String,Object> copyALL(Map<T,ConfigGetterValue> cache){
+        Map<ConfigProjectsInt, ConfigGetterValue> snapshot = new HashMap<>(cache);
+        Map<String,Object> config = new HashMap<>();
         snapshot.forEach((key, value)->{
             Object rawValue = value.value();
             String base64key = Base64.getEncoder().encodeToString(key.getName().getBytes(StandardCharsets.UTF_8));
-            if (key.getStorageType() == ConfigStorageType.MAIN) main_config.put(base64key, rawValue);
-            else auto_config.put(base64key, rawValue);
+            config.put(base64key, rawValue);
         });
-        atomicWrite(MAIN_CONFIG,main_config);
-        atomicWrite(AUTO_CONFIG,auto_config);
+        return config;
     }
     private static void loadALL(){
         loadFormFile(MAIN_CONFIG,ConfigProjects.Main.values(),CACHE_MAIN);
@@ -121,16 +120,6 @@ public class ConfigProjectManager {
             Files.move(tmp,target, StandardCopyOption.REPLACE_EXISTING,StandardCopyOption.ATOMIC_MOVE);
         }catch (IOException ignored){}
     }
-    protected static void atomicWrite(String value){
-        Path tmp = SERVER_CONFIG_STRING.resolveSibling(SERVER_CONFIG_STRING.getFileName() + ".tmp");
-        try {
-            Files.writeString(tmp,value);
-            try (FileChannel channel = FileChannel.open(tmp,StandardOpenOption.WRITE)) {
-                channel.force(true);
-            }
-            Files.move(tmp, SERVER_CONFIG_STRING,StandardCopyOption.REPLACE_EXISTING,StandardCopyOption.ATOMIC_MOVE);
-        }catch (IOException ignored){}
-    }
     @Nullable
     public static Object parseValueFromString(String value, ConfigType configType) {
         return switch (configType){
@@ -150,10 +139,12 @@ public class ConfigProjectManager {
             return ConfigParserValue.success();
         }
         if (configType == ConfigType.STRING && value instanceof String strValue) {
-            if (RegexUtil.isRegex(validRange))
+            if (RegexUtil.isRegex(validRange)) {
                 return Pattern.matches(validRange, strValue) ? ConfigParserValue.success() : ConfigParserValue.failure(strValue);
-            else
+            }
+            else {
                 return ConfigParserValue.failure("Regex syntax is invalid for config" + project.getName() + ":'" + validRange + "'");
+            }
         } else if (value instanceof Number numValue) {
             String[] split = validRange.split("-");
             if (split.length != 2) return ConfigParserValue.failure();

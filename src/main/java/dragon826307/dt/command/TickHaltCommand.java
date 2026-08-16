@@ -6,37 +6,60 @@ import dragon826307.dt.DraconicTech;
 import dragon826307.dt.features.microtick.MicroTickManager;
 import dragon826307.dt.util.SendMessageHelper;
 import dragon826307.dt.util.ServerTranslationUtil;
+import dragon826307.dt.util.TextColorHelper;
 import dragon826307.dt.util.marker_int.FeatureCommandInt;
 import net.minecraft.server.ServerTickManager;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
+import net.minecraft.util.Colors;
 
 public class TickHaltCommand implements ServerCommandCallback, FeatureCommandInt {
+    private static final Text PREFIX = TextColorHelper.gradientColor("[MicroTickManager]", 14609141, 3820121);
     private static final Text CANT_FREEZE = SendMessageHelper.getMessage(ServerTranslationUtil.getTranslatedWithFallback("dt.micro_tick.cant_halt_in_freeze"),true);
+    private static final Text CANT_STEP = ServerTranslationUtil.getTranslatedWithFallback("dt.micro_tick.cant_step").withColor(Colors.RED);
     @Override
     public LiteralArgumentBuilder<ServerCommandSource> addCommandBranch(LiteralArgumentBuilder<ServerCommandSource> thisCommandBranch) {
         return thisCommandBranch.executes(context -> {
-            //TODO : 冻结等级查询
-            return 1;
-        }).then(CommandManager.argument("halt level", IntegerArgumentType.integer(0,5)).executes(context -> {
-            int lvl = IntegerArgumentType.getInteger(context,"halt level");
+            int lvl = MicroTickManager.INSTANCE.getTickFrozenLevel();
+            context.getSource().sendFeedback(() -> Text.empty().append(PREFIX).append(ServerTranslationUtil.getTranslatedWithFallback("dt.micro_tick.frozen_lvl",switch (lvl){
+                case 0 -> "normal(0)";
+                case 1 -> "global(1)";
+                case 2 -> "phase(2)";
+                case 3 -> "event(3)";
+                case 4 -> "update(4)";
+                case 5 -> "(5)";
+                default -> "unknow";
+            }).withColor(7574450)),false);
+            return Integer.MIN_VALUE;
+        }).then(CommandManager.literal("halt").then(CommandManager.argument("level",IntegerArgumentType.integer(0,5)).executes(commandContext -> {
+            int lvl = IntegerArgumentType.getInteger(commandContext,"level");
             if (lvl == 0) {
                 if (MicroTickManager.INSTANCE.isFreeze()) MicroTickManager.INSTANCE.unfreeze();
                 return Integer.MIN_VALUE;
             }
-            ServerTickManager serverTickManager = context.getSource().getServer().getTickManager();
+            ServerTickManager serverTickManager = commandContext.getSource().getServer().getTickManager();
             if (serverTickManager.isFrozen()) {
-                context.getSource().sendFeedback(() -> CANT_FREEZE,false);
-                return 0;
+                commandContext.getSource().sendFeedback(() -> CANT_FREEZE,false);
+                return Integer.MIN_VALUE;
             }
-            MicroTickManager.INSTANCE.setCommandSource(context.getSource());
+            MicroTickManager.INSTANCE.setCommandSource(commandContext.getSource());
             DraconicTech.getMicroTickManager().setTickFrozenLevel(lvl);
             serverTickManager.stopSprinting();
             return Integer.MIN_VALUE;
-        }).requires(serverCommandSource -> serverCommandSource.hasPermissionLevel(4)));
+        })).requires(s -> s.hasPermissionLevel(4))).then(CommandManager.literal("step").then(CommandManager.argument("step",IntegerArgumentType.integer(1)).executes(commandContext -> {
+            int step = IntegerArgumentType.getInteger(commandContext,"step");
+            if (!MicroTickManager.INSTANCE.isFreeze()) {
+                commandContext.getSource().sendFeedback(() -> Text.empty().append(PREFIX).append(CANT_STEP),false);
+                return Integer.MIN_VALUE;
+            }
+            MicroTickManager.INSTANCE.setCommandSource(commandContext.getSource());
+            MicroTickManager.INSTANCE.setStep(step);
+            commandContext.getSource().sendFeedback(() -> Text.empty().append(PREFIX).append(ServerTranslationUtil.getTranslatedWithFallback("dt.micro_tick.step",step)),false);
+            MicroTickManager.INSTANCE.resumeForStep();
+            return Integer.MIN_VALUE;
+        })).requires(s -> s.hasPermissionLevel(4)));
     }
-
     @Override
     public String setBranchName() {
         return "tickhalt";

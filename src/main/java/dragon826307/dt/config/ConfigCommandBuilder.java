@@ -30,7 +30,7 @@ public final class ConfigCommandBuilder {
                 feedbackSender.accept(context.getSource(), SendMessageHelper.getMessage(ServerTranslationUtil.getTranslatedWithFallback("dt.config_value.current_value", configProject.getName(), String.valueOf(getter.apply(configProject).value())).withColor(0x449CCC),true),false);
                 return 1;
             });
-            RequiredArgumentBuilder<S, Object> moddedArg = RequiredArgumentBuilder.<S, Object>argument("value",ConfigValueArgumentType.setConfig(configProject))
+            RequiredArgumentBuilder<S, Object> moddedArg = RequiredArgumentBuilder.<S, Object>argument("value",ConfigValueArgumentType.config(configProject))
                     .executes(context -> {
                         Object newValue = ConfigValueArgumentType.getValueOrThrow(context, "value");
                         return executeConfigChange(context.getSource(), configProject, newValue, feedbackSender, setter);
@@ -68,6 +68,10 @@ public final class ConfigCommandBuilder {
             feedbackSender.accept(source, SendMessageHelper.getDebug("Project:'" + configProject.getName() + "'   ParseValue:'" + parsedValue + "'"),false);
         }
         boolean success = setter.apply(configProject, parsedValue);
+        ConfigPostProcessing postProcessing = configProject.getPostProcessing();
+        if (postProcessing != null) {
+            postProcessing.run();
+        }
         if (success) {
             feedbackSender.accept(source, SendMessageHelper.getMessage(ServerTranslationUtil.getTranslatedWithFallback("dt.config_value.set_config_to", configProject.getName(), String.valueOf(parsedValue)).withColor(0x00AA00),true), updateCommand);
             return 1;

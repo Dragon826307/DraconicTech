@@ -10,6 +10,7 @@
     "tick.ServerEntityManagerMixin",
     "tick.ServerNetworkIoMixin",
     "tick.ServerPlayNetworkHandlerMixin",
+    "tick.ServerTickManagerMixin",
     "tick.ServerWorldMixin",
     "tick.TickCommandMixin",
     "tick.TickManagerMixin"

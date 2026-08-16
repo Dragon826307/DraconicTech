@@ -3,6 +3,7 @@ package dragon826307.dt.client.util.enhanced_chat;
 import com.google.common.io.BaseEncoding;
 import dragon826307.dt.client.ClientConfigProjectManager;
 import dragon826307.dt.client.DraconicTechClient;
+import dragon826307.dt.client.config.ClientConfigProjects;
 import dragon826307.dt.client.util.ClientChatHudHelper;
 import dragon826307.dt.config.ConfigProjects;
 import net.minecraft.util.StringHelper;
@@ -21,7 +22,7 @@ public enum ChatFeatures {
             String hex_string = utf_matcher.group();
             String parse = new String(BaseEncoding.base16().decode(hex_string), StandardCharsets.UTF_8);
             if (DraconicTechClient.DEBUG) ClientChatHudHelper.sendDebugMessageInChat("UTF8 value:" + parse);
-            if (ClientConfigProjectManager.getConfig(ConfigProjects.Client.ALLOW_ILLEGAL_CHAT_CHARACTER).asBoolean()) return EnhancedChatParseResult.success(parse);
+            if (ClientConfigProjectManager.getConfig(ClientConfigProjects.ALLOW_ILLEGAL_CHAT_CHARACTER).asBoolean()) return EnhancedChatParseResult.success(parse);
             for (int i = 0; i < parse.length(); i++) if (!StringHelper.isValidChar(parse.charAt(i))) return EnhancedChatParseResult.error("dt.e_chat.utf.illegal_char", parse);
             return EnhancedChatParseResult.success(parse);
         }else return EnhancedChatParseResult.error("dt.e_chat.utf.format_err");

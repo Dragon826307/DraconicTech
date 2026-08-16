@@ -15,7 +15,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Colors;
 import net.minecraft.util.profiler.Profilers;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.concurrent.*;
@@ -28,7 +27,7 @@ public class MicroTickManager {
     private static final String ALREADY_HALT = ServerTranslationUtil.getOrNull("dt.micro_tick.already_halt");
     private static final Text ALREADY_HALT_T = SendMessageHelper.getMessage(ServerTranslationUtil.getTranslatedWithFallback("dt.micro_tick.already_halt"),true);
 
-    public static @NonNull MicroTickManager INSTANCE = new MicroTickManager();
+    public static MicroTickManager INSTANCE;
 
     private final ScheduledExecutorService MicroTickManagerThread = Executors.newSingleThreadScheduledExecutor(runnable -> {
         Thread thread = new Thread(runnable, "MicroTick-Manager-Thread");
@@ -36,12 +35,14 @@ public class MicroTickManager {
         return thread;
     });
     private @Nullable ServerCommandSource source;
-    private @Nullable MinecraftServer server;
+    private final MinecraftServer server;
     private volatile CountDownLatch unfreezeLatch;
     private ScheduledFuture<?> keepAliveTask;
     private boolean onTickPostProcessing = false;
     private boolean isFreeze = false;
-    private int TICK_FLAGS = 0b1111_1111_1111_1111_1111_1111_1111_1000;
+    private int remainStep = 0;
+    private int tick_flags = -1;
+    private int frozen_lvl = 0;
     // level:
     // 000 -> normal
     // 001 -> global(before_nu)
@@ -52,11 +53,11 @@ public class MicroTickManager {
     // 110 -> global(after_nu)
     @AutoInitialize(phase = InitializePhase.ON_MOD_INIT_MAIN)
     private static void init() {
-        ServerLifecycleEvents.SERVER_STOPPING.register(server -> MicroTickManager.INSTANCE.TICK_FLAGS &= -8);
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> MicroTickManager.INSTANCE.tick_flags &= -1);
     }
-    @AutoInitialize(phase = InitializePhase.ON_SERVER_STARTING)
-    private static void getServer(MinecraftServer server) {
-        INSTANCE.server = server;
+    public MicroTickManager(MinecraftServer server) {
+        this.server = server;
+        INSTANCE = this;
     }
     public boolean isFreeze() {
         return isFreeze;
@@ -65,30 +66,40 @@ public class MicroTickManager {
         return onTickPostProcessing;
     }
     public void setMicroTickFlag(int flag, boolean bl) {
-        TICK_FLAGS = (TICK_FLAGS | flag) & (bl ? -1 : ~flag);
+        tick_flags = (tick_flags | flag) & (bl ? -1 : ~flag);
     }
     public boolean getMicroTickFlag(int flag) {
-        return ((TICK_FLAGS & flag) ^ flag) == 0;
+        return ((tick_flags & flag) ^ flag) == 0;
     }
     public int getMicroTickFlags() {
-        return TICK_FLAGS;
+        return tick_flags;
     }
     public void setTickFrozenLevel(int lvl){
         if (lvl < 0 || lvl > 5) {
-            DraconicTech.LOGGER.error("Invalid value for MicroTickManager.tickFrozenLevel: {}", lvl);
-            return;
+            throw new IllegalArgumentException("Invalid value for MicroTickManager.frozen_lvl: " + lvl);
         }
-        int flag = lvl;
-        if (flag == 1 && !ConfigProjectManager.getConfig(ConfigProjects.Main.GLOBAL_TICK_FREEZE_ORIGIN).asString().equals(ConfigProjects.Main.GLOBAL_TICK_FREEZE_ORIGIN.getDefaultValue())) flag += 5;
-        TICK_FLAGS = TICK_FLAGS & -8 | flag;
+        frozen_lvl = lvl;
+    }
+    public void setStep(int step) {
+        if (step <= 0) {
+            throw new IllegalArgumentException("Invalid value for step: " + step);
+        }
+        remainStep = step;
+    }
+    public void countDownStep() {
+        if (remainStep > 0) {
+            remainStep--;
+        }
     }
     public void onEndTick() {
         onTickPostProcessing = false;
     }
+    public void checkConfig() {
+        String config = ConfigProjectManager.getConfig(ConfigProjects.Main.GLOBAL_TICK_FREEZE_ORIGIN).asString();
+        setMicroTickFlag(MicroTickingFlags.ORIGIN_BEFORE_NU, config.equals(ConfigProjects.Main.GLOBAL_TICK_FREEZE_ORIGIN.getDefaultValue()));
+    }
     public int getTickFrozenLevel(){
-        int flag = TICK_FLAGS & 7;
-        if (flag == 6) return 1;
-        return flag;
+        return frozen_lvl;
     }
     //游戏逻辑线程-指令
     public void setCommandSource(ServerCommandSource source) {
@@ -96,6 +107,11 @@ public class MicroTickManager {
     }
     //游戏逻辑线程
     public void tryFreeze() {
+        if (remainStep > 0) {
+            countDownStep();
+            if (DraconicTech.DEBUG) DraconicTech.LOGGER.info("remain:{}", remainStep);
+            return;
+        }
         if (isFreeze) {
             sendFeedback(ALREADY_HALT_T);
             DraconicTech.LOGGER.warn(ALREADY_HALT);
@@ -158,6 +174,20 @@ public class MicroTickManager {
             unfreezeLatch.countDown();
         }
         setTickFrozenLevel(0);
+        isFreeze = false;
+        remainStep = 0;
+    }
+    public void resumeForStep() {
+        if (!isFreeze) {
+            DraconicTech.LOGGER.warn("[MicroTickManager] Cannot step: The game logic thread is not halted");
+            return;
+        }
+        if (keepAliveTask != null && !keepAliveTask.isCancelled()) {
+            keepAliveTask.cancel(true);
+        }
+        if (unfreezeLatch != null) {
+            unfreezeLatch.countDown();
+        }
         isFreeze = false;
     }
 }

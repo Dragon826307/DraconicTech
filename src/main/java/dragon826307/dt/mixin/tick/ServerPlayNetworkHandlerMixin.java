@@ -1,8 +1,10 @@
 package dragon826307.dt.mixin.tick;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import dragon826307.dt.DraconicTech;
+import dragon826307.dt.features.microtick.MicroTickManager;
 import net.minecraft.network.packet.c2s.play.CommandExecutionC2SPacket;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
@@ -12,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(ServerPlayNetworkHandler.class)
+@Mixin(value = ServerPlayNetworkHandler.class)
 public abstract class ServerPlayNetworkHandlerMixin {
     @Shadow
     protected abstract ParseResults<ServerCommandSource> parse(String command);
@@ -25,5 +27,9 @@ public abstract class ServerPlayNetworkHandlerMixin {
                 if (execute_value == Integer.MIN_VALUE) ci.cancel();
             } catch (CommandSyntaxException ignored) {}
         }
+    }
+    @ModifyExpressionValue(method = "onPlayerMove", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/tick/TickManager;shouldTick()Z"))
+    private boolean onOnPlayerMove(boolean original){
+        return original && !MicroTickManager.INSTANCE.isOnTickPostProcessing();
     }
 }

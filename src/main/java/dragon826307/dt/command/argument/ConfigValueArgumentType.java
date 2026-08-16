@@ -15,7 +15,7 @@ import net.minecraft.util.Colors;
 public record ConfigValueArgumentType(ConfigProjectsInt config) implements ArgumentType<Object> {
     private static final DynamicCommandExceptionType CONFIG_ERR = new DynamicCommandExceptionType(err -> Text.translatable("dt.config_value.invalid_range", err).withColor(Colors.RED));
 
-    public static ConfigValueArgumentType setConfig(ConfigProjectsInt config) {
+    public static ConfigValueArgumentType config(ConfigProjectsInt config) {
         return new ConfigValueArgumentType(config);
     }
 

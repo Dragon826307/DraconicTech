@@ -11,4 +11,6 @@ public interface ConfigProjectsInt {
     String getValidRangeAsString();
     boolean shouldUpdateCommandTree();
     String[] getSuggestList();
+    @Nullable
+    ConfigPostProcessing getPostProcessing();
 }

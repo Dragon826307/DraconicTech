@@ -35,6 +35,7 @@ public class ClientCommandHandler {
     }
     @AutoInitialize(phase = InitializePhase.ON_CLIENT_STARTED)
     private static void init(){
+        DraconicTech.LOGGER.info("Initializing ClientCommandHandler");
         if (!initialized){
             addCommandBranch(new PingCommand());
             addCommandBranch(new EnhancedChatCommand());

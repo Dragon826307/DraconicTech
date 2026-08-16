@@ -1,7 +1,7 @@
 package dragon826307.dt.features.microtick;
 
 public final class MicroTickingFlags {
-
+    public static final int ORIGIN_BEFORE_NU = 4;//冻结原点是否在NU之前
 
     public static final int COMMAND_FUNCTION = 8;//指令函数
     public static final int WORLD_BORDER = 16;//世界边界
