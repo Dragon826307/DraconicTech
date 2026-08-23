@@ -1,9 +1,14 @@
 package dragon826307.dt.command;
 
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import dragon826307.dt.DraconicTech;
+import dragon826307.dt.command.argument.TickHaltFlagArgumentType;
 import dragon826307.dt.features.microtick.MicroTickManager;
+import dragon826307.dt.features.microtick.MicroTickingFlags;
 import dragon826307.dt.util.SendMessageHelper;
 import dragon826307.dt.util.ServerTranslationUtil;
 import dragon826307.dt.util.TextColorHelper;
@@ -13,6 +18,8 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.Colors;
+
+import java.lang.reflect.Field;
 
 public class TickHaltCommand implements ServerCommandCallback, FeatureCommandInt {
     private static final Text PREFIX = TextColorHelper.gradientColor("[MicroTickManager]", 14609141, 3820121);
@@ -54,14 +61,36 @@ public class TickHaltCommand implements ServerCommandCallback, FeatureCommandInt
                 return Integer.MIN_VALUE;
             }
             MicroTickManager.INSTANCE.setCommandSource(commandContext.getSource());
-            MicroTickManager.INSTANCE.setStep(step);
+            MicroTickManager.INSTANCE.step(step);
             commandContext.getSource().sendFeedback(() -> Text.empty().append(PREFIX).append(ServerTranslationUtil.getTranslatedWithFallback("dt.micro_tick.step",step)),false);
-            MicroTickManager.INSTANCE.resumeForStep();
             return Integer.MIN_VALUE;
-        })).requires(s -> s.hasPermissionLevel(4)));
+        })).requires(s -> s.hasPermissionLevel(4))).then(Util.flagCommand());
     }
     @Override
     public String setBranchName() {
         return "tickhalt";
+    }
+    private static final class Util {
+        private final static Field[] flags = MicroTickingFlags.class.getFields();
+        private static LiteralArgumentBuilder<ServerCommandSource> flagCommand() {
+            LiteralArgumentBuilder<ServerCommandSource> node = CommandManager.literal("flag");
+            for (Field field : flags) {
+                int flag;
+                try {
+                    flag = field.getInt(Integer.class);
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+                String name = field.getName();
+                RequiredArgumentBuilder<ServerCommandSource,String> moddedArg = RequiredArgumentBuilder.<ServerCommandSource,String>argument("flag name", TickHaltFlagArgumentType.flags(name))
+                        .executes(commandContext -> {
+                            boolean bl = MicroTickManager.INSTANCE.getMicroTickFlag(flag);
+                            commandContext.getSource().sendFeedback(() -> Text.of(String.valueOf(bl)),false);
+                            return Integer.MIN_VALUE;
+                        });
+                node.then(moddedArg);
+            }
+            return node;
+        }
     }
 }

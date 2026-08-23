@@ -1,0 +1,8 @@
+{
+  "en_us": {
+    "tick_arg_err": "Unknow flag: %s"
+  },
+  "zh_cn": {
+    "tick_arg_err": "未知标签：%s"
+  }
+}

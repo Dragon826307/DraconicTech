@@ -12,6 +12,9 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.HoverEvent;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Colors;
 import net.minecraft.util.profiler.Profilers;
@@ -53,7 +56,17 @@ public class MicroTickManager {
     // 110 -> global(after_nu)
     @AutoInitialize(phase = InitializePhase.ON_MOD_INIT_MAIN)
     private static void init() {
-        ServerLifecycleEvents.SERVER_STOPPING.register(server -> MicroTickManager.INSTANCE.tick_flags &= -1);
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+            INSTANCE.setMicroTickFlag(-1,true);
+            INSTANCE.setTickFrozenLevel(0);
+            if (INSTANCE.isFreeze()) {
+                INSTANCE.unfreeze();
+            }
+        });
+    }
+    @AutoInitialize(phase = InitializePhase.ON_SERVER_STARTED)
+    private static void flagInit() {
+        INSTANCE.checkConfig();
     }
     public MicroTickManager(MinecraftServer server) {
         this.server = server;
@@ -80,16 +93,12 @@ public class MicroTickManager {
         }
         frozen_lvl = lvl;
     }
-    public void setStep(int step) {
+    public void step(int step) {
         if (step <= 0) {
             throw new IllegalArgumentException("Invalid value for step: " + step);
         }
         remainStep = step;
-    }
-    public void countDownStep() {
-        if (remainStep > 0) {
-            remainStep--;
-        }
+        unfreeze();
     }
     public void onEndTick() {
         onTickPostProcessing = false;
@@ -106,9 +115,15 @@ public class MicroTickManager {
         this.source = source;
     }
     //游戏逻辑线程
+    public void tryFreeze(Text t) {
+        MutableText text = (MutableText) t;
+        text.styled(style -> style.withHoverEvent(new HoverEvent.ShowText(text)));
+        server.getPlayerManager().getPlayerList().forEach(player -> player.sendMessage(text));
+        tryFreeze();
+    }
     public void tryFreeze() {
         if (remainStep > 0) {
-            countDownStep();
+            remainStep--;
             if (DraconicTech.DEBUG) DraconicTech.LOGGER.info("remain:{}", remainStep);
             return;
         }
@@ -154,10 +169,10 @@ public class MicroTickManager {
             Thread.currentThread().interrupt();
         }
     }
+
     private void sendFeedback(Text text) {
         if (source != null) {
             source.sendFeedback(() -> text,true);
-            source = null;
         }
     }
 
@@ -173,22 +188,11 @@ public class MicroTickManager {
         if (unfreezeLatch != null) {
             unfreezeLatch.countDown();
         }
-        setTickFrozenLevel(0);
         isFreeze = false;
-        remainStep = 0;
-    }
-    public void resumeForStep() {
-        if (!isFreeze) {
-            DraconicTech.LOGGER.warn("[MicroTickManager] Cannot step: The game logic thread is not halted");
+        if (remainStep > 0) {
             return;
         }
-        if (keepAliveTask != null && !keepAliveTask.isCancelled()) {
-            keepAliveTask.cancel(true);
-        }
-        if (unfreezeLatch != null) {
-            unfreezeLatch.countDown();
-        }
-        isFreeze = false;
+        setTickFrozenLevel(0);
     }
 }
 

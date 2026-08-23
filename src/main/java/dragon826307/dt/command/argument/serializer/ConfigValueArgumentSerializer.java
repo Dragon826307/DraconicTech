@@ -23,6 +23,7 @@ public final class ConfigValueArgumentSerializer implements ArgumentSerializer<C
             buf.writeBoolean(true);
             buf.writeString(validRange);
         }else buf.writeBoolean(false);
+        buf.writeEnumConstant(config.getConfigType());
         buf.writeCollection(List.of(config.getSuggestList()), PacketByteBuf::writeString);
     }
 
@@ -30,10 +31,11 @@ public final class ConfigValueArgumentSerializer implements ArgumentSerializer<C
     public Properties fromPacket(PacketByteBuf buf) {
         String name = buf.readString();
         String validRange = buf.readBoolean() ? buf.readString() : null;
+        ConfigType configType = buf.readEnumConstant(ConfigType.class);
         String[] suggests = buf.readList(PacketByteBuf::readString).toArray(new String[0]);
         ConfigProjectsInt clientConfig = new ConfigProjectsInt() {
             @Override public String getName() { return name; }
-            @Override public ConfigType getConfigType() { return null; }
+            @Override public ConfigType getConfigType() { return configType; }
             @Override public ConfigStorageType getStorageType() { return null; }
             @Override public Object getDefaultValue() { return null; }
             @Override public @Nullable String getValidRangeAsString() { return validRange; }

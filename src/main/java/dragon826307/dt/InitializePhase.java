@@ -31,6 +31,10 @@ public enum InitializePhase {
      */
     ON_SERVER_STARTING,
     /**
+     * 在{@link ServerLifecycleEvents#SERVER_STARTED}被调用时触发，上下文：{@link MinecraftServer}
+     */
+    ON_SERVER_STARTED,
+    /**
      * 在{@code ClientLifecycleEvents.CLIENT_STARTED}被调用时触发，上下文：{@code MinecraftClient}
      */
     ON_CLIENT_STARTED,

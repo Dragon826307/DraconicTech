@@ -2,7 +2,10 @@ package dragon826307.dt.mixin.tick;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import dragon826307.dt.features.microtick.MicroTickManager;
+import dragon826307.dt.features.microtick.MicroTickingFlags;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.tick.WorldTickScheduler;
@@ -13,18 +16,21 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.function.BiConsumer;
+import java.util.function.BooleanSupplier;
 
-@Mixin(ServerWorld.class)
+@Mixin(value = ServerWorld.class,priority = 999)
 public class ServerWorldMixin {
-    @ModifyVariable(method = "tick(Ljava/util/function/BooleanSupplier;)V",at = @At(value = "LOAD",ordinal = 0),ordinal = 0)
-    private boolean shouldTickWorldStatus(boolean original){
-        return original;
+    @Inject(method = "tick(Ljava/util/function/BooleanSupplier;)V",at = @At(value = "INVOKE", target = "Lnet/minecraft/world/border/WorldBorder;tick()V"))
+    private void shouldTickWorldStatus(BooleanSupplier shouldKeepTicking, CallbackInfo ci){
+        if (MicroTickManager.INSTANCE.getTickFrozenLevel() == 2 && !MicroTickManager.INSTANCE.getMicroTickFlag(MicroTickingFlags.WORLD_BORDER)) {
+            MicroTickManager.INSTANCE.tryFreeze(Text.of("test"));
+        }
     }
     @WrapOperation(method = "tick(Ljava/util/function/BooleanSupplier;)V",at = @At(value = "INVOKE", target = "Lnet/minecraft/world/border/WorldBorder;tick()V"))
     private void shouldTickWorldBorder(WorldBorder instance, Operation<Void> original){
         original.call(instance);
     }
-    @Inject(method = "tickWeather",at = @At("HEAD"),cancellable = true)
+    @Inject(method = "tickWeather",at = @At("HEAD"))
     private void shouldTick(CallbackInfo ci){
 
     }

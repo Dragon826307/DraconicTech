@@ -19,4 +19,8 @@ public final class ServerTranslationUtil {
     public static MutableText getTranslatedWithFallback(String key, Object... args) {
         return Text.translatableWithFallback(key, LANGUAGE.get(key), args);
     }
+    public static String getFullKey(String key) {
+        String callerPackage = StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE).getCallerClass().getPackageName();
+        return callerPackage + "." + key;
+    }
 }

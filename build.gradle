@@ -1,9 +1,10 @@
+import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
+
 plugins {
 	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
 	id 'maven-publish'
 }
-
-
 
 version = "v" + project.mod_version
 group = project.maven_group
@@ -46,13 +47,70 @@ afterEvaluate {
     }
 }
 
+def generatedLangDir = layout.buildDirectory.dir("generated/lang_resources").get().asFile
+
+tasks.register('mergeFragmentedLang') {
+    def javaSrcDir = file("src/main/java")
+    def resourcesLangDir = file("src/main/resources/assets/draconictech/lang")
+    inputs.dir(javaSrcDir)
+    inputs.dir(resourcesLangDir).optional()
+    outputs.dir(generatedLangDir)
+    doLast {
+        def slurper = new JsonSlurper()
+        def mergedLang = [:]
+        if (resourcesLangDir.exists()) {
+            resourcesLangDir.eachFileMatch(~/.*\.json/) { file ->
+                def langName = file.name.replace(".json", "")
+                def jsonContent = slurper.parse(file)
+                if (!mergedLang.containsKey(langName)) {
+                    mergedLang[langName] = [:]
+                }
+                mergedLang[langName].putAll(jsonContent)
+            }
+        }
+        javaSrcDir.eachFileRecurse { file ->
+            if (file.name == 'lang.json') {
+                def relativePath = javaSrcDir.toPath().relativize(file.toPath()).toString()
+                def pkgPath = relativePath.replace(File.separator, "/").replaceAll("/lang\\.json\$", "")
+                def pkgName = pkgPath.replace("/", ".")
+                def jsonContent = slurper.parse(file)
+                jsonContent.each { langName, translations ->
+                    if (!mergedLang.containsKey(langName)) {
+                        mergedLang[langName] = [:]
+                    }
+                    translations.each { key, value ->
+                        def fullKey = "${pkgName}.${key}"
+                        mergedLang[langName][fullKey] = value
+                    }
+                }
+            }
+        }
+        def targetLangDir = new File(generatedLangDir, "assets/draconictech/lang")
+        targetLangDir.mkdirs()
+        mergedLang.each { langName, translations ->
+            def outFile = new File(targetLangDir, "${langName}.json")
+            outFile.text = JsonOutput.prettyPrint(JsonOutput.toJson(translations))
+        }
+        println "Merged fragmented lang.json files into ${targetLangDir}"
+    }
+}
+
+sourceSets.main.resources.srcDir(mergeFragmentedLang)
+
 processResources {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    dependsOn mergeFragmentedLang
+
 	def version = project.version
 	inputs.property "version", version
 
 	filesMatching("fabric.mod.json") {
 		expand "version": version
 	}
+}
+
+tasks.matching { it.name == 'sourcesJar'}.configureEach {
+    dependsOn mergeFragmentedLang
 }
 
 tasks.withType(JavaCompile).configureEach {

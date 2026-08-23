@@ -7,7 +7,9 @@ import dragon826307.dt.DraconicTech;
 import dragon826307.dt.InitializePhase;
 import dragon826307.dt.client.command.argument.EnhancedChatArgumentType;
 import dragon826307.dt.command.argument.ConfigValueArgumentType;
+import dragon826307.dt.command.argument.TickHaltFlagArgumentType;
 import dragon826307.dt.command.argument.serializer.ConfigValueArgumentSerializer;
+import dragon826307.dt.command.argument.serializer.TickHaltFlagArgumentSerializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
@@ -55,5 +57,6 @@ public class ClientCommandHandler {
     private static void register() {
         ArgumentTypeRegistry.registerArgumentType(Identifier.of(DraconicTech.MOD_ID,"enhanced_chat"), EnhancedChatArgumentType.class, ConstantArgumentSerializer.of(EnhancedChatArgumentType::eChatArgument));
         ArgumentTypeRegistry.registerArgumentType(Identifier.of(DraconicTech.MOD_ID,"config_value"), ConfigValueArgumentType.class, new ConfigValueArgumentSerializer());
+        ArgumentTypeRegistry.registerArgumentType(Identifier.of(DraconicTech.MOD_ID,"tick_halt_flag"), TickHaltFlagArgumentType.class, new TickHaltFlagArgumentSerializer());
     }
 }
