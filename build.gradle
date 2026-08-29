@@ -95,11 +95,10 @@ tasks.register('mergeFragmentedLang') {
     }
 }
 
-sourceSets.main.resources.srcDir(mergeFragmentedLang)
-
 processResources {
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
     dependsOn mergeFragmentedLang
+    from(generatedLangDir)
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 
 	def version = project.version
 	inputs.property "version", version
@@ -110,7 +109,7 @@ processResources {
 }
 
 tasks.matching { it.name == 'sourcesJar'}.configureEach {
-    dependsOn mergeFragmentedLang
+
 }
 
 tasks.withType(JavaCompile).configureEach {
