@@ -4,6 +4,7 @@ import dragon826307.dt.features.microtick.MicroTickManager;
 import io.netty.util.internal.EmptyArrays;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,8 +33,8 @@ public final class ConfigProjects {
         private final String validRange;
         private final boolean shouldUpdateCommand;
         private final String[] suggestions;
-        private final ConfigPostProcessing postProcessing;
-        public Client(String name, ConfigType type, Object defaultValue, String validRange, boolean shouldUpdateCommand, String[] suggestions, ConfigPostProcessing configPostProcessing) {
+        private final Runnable postProcessing;
+        public Client(String name, ConfigType type, Object defaultValue, String validRange, boolean shouldUpdateCommand, String[] suggestions, Runnable configPostProcessing) {
             this.name = name;
             this.type = type;
             this.defaultValue = defaultValue;
@@ -60,7 +61,7 @@ public final class ConfigProjects {
             else return suggestions;
         }
         @Override
-        public @Nullable ConfigPostProcessing getPostProcessing() {return postProcessing;}
+        public @Nullable Runnable getPostProcessing() {return postProcessing;}
     }
     @SuppressWarnings("ClassCanBeRecord")
     public static final class Main implements ConfigProjectsInt {
@@ -80,8 +81,8 @@ public final class ConfigProjects {
         private final String validRange;
         private final boolean shouldUpdateCommand;
         private final String[] suggestions;
-        private final ConfigPostProcessing postProcessing;
-        public Main(String name, ConfigType type, Object defaultValue, String validRange, boolean shouldUpdateCommand, String[] suggestions, ConfigPostProcessing configPostProcessing) {
+        private final Runnable postProcessing;
+        public Main(String name, ConfigType type, Object defaultValue, String validRange, boolean shouldUpdateCommand, String[] suggestions, Runnable configPostProcessing) {
             this.name = name;
             this.type = type;
             this.defaultValue = defaultValue;
@@ -108,7 +109,7 @@ public final class ConfigProjects {
             else return suggestions;
         }
         @Override
-        public @Nullable ConfigPostProcessing getPostProcessing() {return postProcessing;}
+        public @Nullable Runnable getPostProcessing() {return postProcessing;}
     }
     @SuppressWarnings("ClassCanBeRecord")
     public static final class Server implements ConfigProjectsInt {
@@ -126,8 +127,8 @@ public final class ConfigProjects {
         private final ConfigType type;
         private final Object defaultValue;
         private final String validRange;
-        private final ConfigPostProcessing postProcessing;
-        public Server(String name, ConfigType type, Object defaultValue, String validRange,ConfigPostProcessing configPostProcessing) {
+        private final Runnable postProcessing;
+        public Server(String name, ConfigType type, Object defaultValue, String validRange,Runnable configPostProcessing) {
             this.name = name;
             this.type = type;
             this.defaultValue = defaultValue;
@@ -149,7 +150,7 @@ public final class ConfigProjects {
         @Override
         public String[] getSuggestList() { return EmptyArrays.EMPTY_STRINGS; }
         @Override
-        public @Nullable ConfigPostProcessing getPostProcessing() {return postProcessing; }
+        public @Nullable Runnable getPostProcessing() {return postProcessing; }
     }
     @SuppressWarnings("ClassCanBeRecord")
     public static final class Auto implements ConfigProjectsInt {
@@ -182,6 +183,6 @@ public final class ConfigProjects {
         @Override
         public String[] getSuggestList() { return EmptyArrays.EMPTY_STRINGS; }
         @Override
-        public @Nullable ConfigPostProcessing getPostProcessing() {return null;}
+        public @Nullable Runnable getPostProcessing() {return null;}
     }
 }

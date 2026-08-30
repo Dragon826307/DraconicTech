@@ -2,7 +2,6 @@ package dragon826307.dt.command.argument.serializer;
 
 import com.google.gson.JsonObject;
 import dragon826307.dt.command.argument.ConfigValueArgumentType;
-import dragon826307.dt.config.ConfigPostProcessing;
 import dragon826307.dt.config.ConfigProjectsInt;
 import dragon826307.dt.config.ConfigStorageType;
 import dragon826307.dt.config.ConfigType;
@@ -41,7 +40,7 @@ public final class ConfigValueArgumentSerializer implements ArgumentSerializer<C
             @Override public @Nullable String getValidRangeAsString() { return validRange; }
             @Override public boolean shouldUpdateCommandTree() { return false; }
             @Override public String[] getSuggestList() { return suggests; }
-            @Override public @Nullable ConfigPostProcessing getPostProcessing() {return null;}
+            @Override public @Nullable Runnable getPostProcessing() {return null;}
         };
         return new Properties(clientConfig);
     }

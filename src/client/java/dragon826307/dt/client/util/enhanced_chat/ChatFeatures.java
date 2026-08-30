@@ -1,11 +1,10 @@
 package dragon826307.dt.client.util.enhanced_chat;
 
 import com.google.common.io.BaseEncoding;
-import dragon826307.dt.client.ClientConfigProjectManager;
+import dragon826307.dt.client.config.ClientConfigProjectManager;
 import dragon826307.dt.client.DraconicTechClient;
 import dragon826307.dt.client.config.ClientConfigProjects;
 import dragon826307.dt.client.util.ClientChatHudHelper;
-import dragon826307.dt.config.ConfigProjects;
 import net.minecraft.util.StringHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;

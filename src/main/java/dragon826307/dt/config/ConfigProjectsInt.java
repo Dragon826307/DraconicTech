@@ -12,5 +12,5 @@ public interface ConfigProjectsInt {
     boolean shouldUpdateCommandTree();
     String[] getSuggestList();
     @Nullable
-    ConfigPostProcessing getPostProcessing();
+    Runnable getPostProcessing();
 }

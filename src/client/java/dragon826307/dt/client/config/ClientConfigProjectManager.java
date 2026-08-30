@@ -1,4 +1,4 @@
-package dragon826307.dt.client;
+package dragon826307.dt.client.config;
 
 import dragon826307.dt.AutoInitialize;
 import dragon826307.dt.DraconicTech;
@@ -28,8 +28,8 @@ public final class ClientConfigProjectManager extends ConfigProjectManager {
         }catch (IOException e){
             throw new RuntimeException(e);
         }
-        for (ConfigProjects.Client project: ConfigProjects.Client.values()) CACHE.put(project, new ConfigGetterValue(project.getDefaultValue()));
         loadALL();
+        for (ConfigProjects.Client project: ConfigProjects.Client.values()) CACHE.putIfAbsent(project, new ConfigGetterValue(project.getDefaultValue()));
         ServerLifecycleEvents.BEFORE_SAVE.register((minecraftServer, b, b1) -> ClientConfigProjectManager.saveALL());
     }
     public static ConfigGetterValue getConfig(ConfigProjects.Client project) {

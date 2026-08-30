@@ -1,6 +1,6 @@
 package dragon826307.dt.client.mixin;
 
-import dragon826307.dt.client.util.render.RenderManager;
+import dragon826307.dt.client.render.RenderManager;
 import net.minecraft.client.render.GameRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

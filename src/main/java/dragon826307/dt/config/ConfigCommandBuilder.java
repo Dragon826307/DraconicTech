@@ -53,8 +53,7 @@ public final class ConfigCommandBuilder {
                 if (s instanceof ServerCommandSource serverCommandSource) {
                     return serverCommandSource.hasPermissionLevel(ServerConfigProjectManager.getConfig(ConfigProjects.Server.STATUS_COMMAND_PERMISSION).asInt()) && PlayerRecorder.isPlayerWithMod(serverCommandSource.getPlayer());
                 }else return true;
-            })));
-            command.then(singleConfigNode.then(vanillaArg.requires(s -> {
+            })).then(vanillaArg.requires(s -> {
                 if (s instanceof ServerCommandSource serverCommandSource) {
                     return serverCommandSource.hasPermissionLevel(ServerConfigProjectManager.getConfig(ConfigProjects.Server.STATUS_COMMAND_PERMISSION).asInt()) && !PlayerRecorder.isPlayerWithMod(serverCommandSource.getPlayer()) && ServerConfigProjectManager.getConfig(ConfigProjects.Server.ALLOW_PLAYER_WITH_NO_MOD_CHANGE_CONFIG).asBoolean();
                 }else return false;
@@ -68,11 +67,9 @@ public final class ConfigCommandBuilder {
             feedbackSender.accept(source, SendMessageHelper.getDebug("Project:'" + configProject.getName() + "'   ParseValue:'" + parsedValue + "'"),false);
         }
         boolean success = setter.apply(configProject, parsedValue);
-        ConfigPostProcessing postProcessing = configProject.getPostProcessing();
-        if (postProcessing != null) {
-            postProcessing.run();
-        }
         if (success) {
+            Runnable postProcessing = configProject.getPostProcessing();
+            if (postProcessing != null) postProcessing.run();
             feedbackSender.accept(source, SendMessageHelper.getMessage(ServerTranslationUtil.getTranslatedWithFallback("dt.config_value.set_config_to", configProject.getName(), String.valueOf(parsedValue)).withColor(0x00AA00),true), updateCommand);
             return 1;
         } else {

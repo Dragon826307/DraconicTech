@@ -2,6 +2,7 @@ package dragon826307.dt.config;
 
 import com.google.common.primitives.Doubles;
 import com.google.common.primitives.Floats;
+import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import dragon826307.dt.AutoInitialize;
 import dragon826307.dt.DraconicTech;
@@ -41,13 +42,10 @@ public class ConfigProjectManager {
         }catch (IOException e){
             throw new RuntimeException(e);
         }
-        for (ConfigProjects.Main project: ConfigProjects.Main.values()) CACHE_MAIN.put(project, new ConfigGetterValue(project.getDefaultValue()));
-        for (ConfigProjects.Auto project: ConfigProjects.Auto.values()) CACHE_AUTO.put(project, new ConfigGetterValue(project.getDefaultValue()));
         loadALL();
-        ServerLifecycleEvents.BEFORE_SAVE.register((server, b1, b2) -> {
-            DraconicTech.LOGGER.info("Saving all config...");
-            ConfigProjectManager.saveALL();
-        });
+        for (ConfigProjects.Main project: ConfigProjects.Main.values()) CACHE_MAIN.putIfAbsent(project, new ConfigGetterValue(project.getDefaultValue()));
+        for (ConfigProjects.Auto project: ConfigProjects.Auto.values()) CACHE_AUTO.putIfAbsent(project, new ConfigGetterValue(project.getDefaultValue()));
+        ServerLifecycleEvents.BEFORE_SAVE.register((server, b1, b2) -> ConfigProjectManager.saveALL());
     }
     public static ConfigGetterValue getConfig(ConfigProjects.Main project){
         return CACHE_MAIN.get(project);
@@ -117,15 +115,23 @@ public class ConfigProjectManager {
         }catch (IOException e){return;}
         try (FileChannel channel = FileChannel.open(tmp, StandardOpenOption.WRITE)) {
             channel.force(true);
-            Files.move(tmp,target, StandardCopyOption.REPLACE_EXISTING,StandardCopyOption.ATOMIC_MOVE);
         }catch (IOException ignored){}
+        try {
+            try {
+                Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (IOException e) {
+                Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING);
+            }
+        } catch (IOException e) {
+            DraconicTech.LOGGER.error("Failed to replace config file: {}", target, e);
+        }
     }
     @Nullable
     public static Object parseValueFromString(String value, ConfigType configType) {
         return switch (configType){
             case STRING -> value;
-            case BOOLEAN -> value.equals("true") || value.equals("false") ? value.equals("true") : null;
-            case INT -> value.matches("^[-+]?[0-9]+$")?Integer.parseInt(value):null;
+            case BOOLEAN -> value.equalsIgnoreCase("true") ? Boolean.TRUE : (value.equalsIgnoreCase("false") ? Boolean.FALSE : null);
+            case INT -> Ints.tryParse(value);
             case DOUBLE -> Doubles.tryParse(value);
             case FLOAT -> Floats.tryParse(value);
             case LONG -> Longs.tryParse(value);
@@ -146,15 +152,18 @@ public class ConfigProjectManager {
                 return ConfigParserValue.failure("Regex syntax is invalid for config" + project.getName() + ":'" + validRange + "'");
             }
         } else if (value instanceof Number numValue) {
-            String[] split = validRange.split("-");
-            if (split.length != 2) return ConfigParserValue.failure();
-            Double num1 = Doubles.tryParse(split[0]);
-            Double num2 = Doubles.tryParse(split[1]);
-            double currentNum = numValue.doubleValue();
-            if (num1 == null || num2 == null) {
-                return ConfigParserValue.failure("Not a legal range representation for config" + project.getName() + ":'" + validRange + "'");
+            Pattern rangePattern = Pattern.compile("^([-+]?\\d+(?:\\.\\d+)?)-([-+]?\\d+(?:\\.\\d+)?)$");
+            var matcher = rangePattern.matcher(validRange.trim());
+            if (!matcher.matches()) {
+                return ConfigParserValue.failure("Not a legal range representation for config " + project.getName() + ": '" + validRange + "'");
             }
-            return ((currentNum >= num1 && currentNum <= num2) || (currentNum >= num2 && currentNum <= num1)) ? ConfigParserValue.success() : ConfigParserValue.failure();
+            Double num1 = Doubles.tryParse(matcher.group(1));
+            Double num2 = Doubles.tryParse(matcher.group(2));
+            if (num1 == null || num2 == null) return ConfigParserValue.failure();
+            double currentNum = numValue.doubleValue();
+            double min = Math.min(num1, num2);
+            double max = Math.max(num1, num2);
+            return (currentNum >= min && currentNum <= max) ? ConfigParserValue.success() : ConfigParserValue.failure();
         }
         return ConfigParserValue.failure(String.valueOf(value));
     }

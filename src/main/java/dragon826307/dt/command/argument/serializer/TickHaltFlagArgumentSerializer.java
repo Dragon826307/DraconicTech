@@ -1,7 +1,6 @@
 package dragon826307.dt.command.argument.serializer;
 
 import com.google.gson.JsonObject;
-import com.mojang.brigadier.arguments.ArgumentType;
 import dragon826307.dt.command.argument.TickHaltFlagArgumentType;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.command.argument.serialize.ArgumentSerializer;

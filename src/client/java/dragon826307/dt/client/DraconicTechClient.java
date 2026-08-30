@@ -3,10 +3,10 @@ package dragon826307.dt.client;
 import dragon826307.dt.AutoInitializeManager;
 import dragon826307.dt.DraconicTech;
 import dragon826307.dt.InitializePhase;
+import dragon826307.dt.client.render.RenderManager;
+import dragon826307.dt.client.render.RenderTask;
 import dragon826307.dt.client.util.ClientChatHudHelper;
 import dragon826307.dt.client.util.click_event.CommandBaseClickEvent;
-import dragon826307.dt.client.util.render.RenderManager;
-import dragon826307.dt.client.util.render.RenderTask;
 import dragon826307.dt.network.Mod$DebugModeToggleC2SPacket;
 import dragon826307.dt.util.TextColorHelper;
 import net.fabricmc.api.ClientModInitializer;
@@ -40,12 +40,11 @@ public class DraconicTechClient implements ClientModInitializer {
             }
             while (openMenuKeyBinding.wasPressed()) {
                 //TODO
-                RenderManager.Render3DBoxTask(0,0,0,2,2,2).setRainbow(false).setLifetime_millisSecond(5000).setColor(0x8000FFFF);
-                RenderManager.Render3DBoxTask(4,0,4,6,2,6).setRainbow(true).setLifetime_millisSecond(5000).setColor(0x8000FFFF);
+                RenderManager.Render3DBoxTask(114, 0,0,0,2,2,2).setRainbow(false).setLifetimeMs(5000).setColor(0x8000FFFF);
+                RenderManager.Render3DBoxTask(514, 4,0,4,6,2,6).setRainbow(true).setLifetimeMs(5000).setColor(0x8000FFFF);
             }
         });
         WorldRenderEvents.END_MAIN.register(RenderManager::RenderAll);
-        ClientTickEvents.START_WORLD_TICK.register(world -> RenderTask.init());
     }
     private static final class Debug {
         private static final int[] SEQUENCE = {GLFW.GLFW_KEY_UP,GLFW.GLFW_KEY_UP,GLFW.GLFW_KEY_DOWN,GLFW.GLFW_KEY_DOWN,GLFW.GLFW_KEY_LEFT,GLFW.GLFW_KEY_RIGHT,GLFW.GLFW_KEY_LEFT,GLFW.GLFW_KEY_RIGHT,GLFW.GLFW_KEY_B,GLFW.GLFW_KEY_A,GLFW.GLFW_KEY_B,GLFW.GLFW_KEY_A};
