@@ -1,0 +1,24 @@
+{
+  "required": true,
+  "package": "io.github.dragon826307.draconictech.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "tick.CommandFunctionManagerMixin",
+    "tick.MinecraftServerMixin",
+    "tick.ServerChunkManagerMixin",
+    "tick.ServerCommonNetworkHandlerAccessor",
+    "tick.ServerEntityManagerMixin",
+    "tick.ServerNetworkIoMixin",
+    "tick.ServerPlayNetworkHandlerMixin",
+    "tick.ServerTickManagerMixin",
+    "tick.ServerWorldMixin",
+    "tick.TickCommandMixin",
+    "tick.TickManagerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+	}
+}

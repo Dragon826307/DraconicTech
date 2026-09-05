@@ -30,7 +30,7 @@ bin/
 
 # fabric
 
-run/
+fabric/run/
 
 # java
 
@@ -39,5 +39,5 @@ replay_*.log
 *.hprof
 *.jfr
 
-libs
+fabric/libs
 logs

@@ -39,12 +39,12 @@ jobs:
       - name: make gradle wrapper executable
         run: chmod +x ./gradlew
       - name: build
-        run: ./gradlew build
+        run: ./gradlew :fabric:build -Pmod_version="${GITHUB_REF_NAME}"
       - name: upload ${{matrix.mc_version}} artifacts
         uses: actions/upload-artifact@v4
         with:
           name: artifacts-${{ matrix.mc_version }}
-          path: build/libs/*.jar
+          path: fabric/build/libs/*.jar
   create-release:
     needs: build-matrix
     runs-on: ubuntu-latest
