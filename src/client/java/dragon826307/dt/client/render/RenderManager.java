@@ -30,8 +30,8 @@ import java.util.List;
 public class RenderManager {
     public static final long ID_ONE_SHOT = 0L;
 
-    private static final Map<Long, RenderTask<?>> PERSISTENT_TASKS = new HashMap<>();
-    private static final List<RenderTask<?>> ONE_SHOT_TASKS = new ArrayList<>();
+    private static final Map<Long, RenderTask<?>> PERSISTENT_TASKS = Collections.synchronizedMap(new LinkedHashMap<>());
+    private static final List<RenderTask<?>> ONE_SHOT_TASKS = Collections.synchronizedList(new ArrayList<>());
 
     private static final BufferAllocator ALLOCATOR = new BufferAllocator(RenderLayer.CUTOUT_BUFFER_SIZE);
     private static final Vector4f COLOR_MODULATOR = new Vector4f(1f, 1f, 1f, 1f);
@@ -56,14 +56,16 @@ public class RenderManager {
         if (PERSISTENT_TASKS.isEmpty() && ONE_SHOT_TASKS.isEmpty()) return;
         rainbowColor += rainbowSpeed;
         int currentRainbowRGB = Color.HSBtoRGB(rainbowColor, 1f, 1f) & 0x00FFFFFF;
-        Map<RenderPipeline, List<RenderTask<?>>> pipelineGroup = new HashMap<>();
-        PERSISTENT_TASKS.values().removeIf(renderTask -> {
-            if (renderTask.isExpired()) return true;
-            if (renderTask.isVisible()) {
-                pipelineGroup.computeIfAbsent(renderTask.getPipeline(), k -> new ArrayList<>()).add(renderTask);
-            }
-            return false;
-        });
+        Map<RenderPipeline, List<RenderTask<?>>> pipelineGroup = new LinkedHashMap<>();
+        synchronized (PERSISTENT_TASKS) {
+            PERSISTENT_TASKS.values().removeIf(renderTask -> {
+                if (renderTask.isExpired()) return true;
+                if (renderTask.isVisible()) {
+                    pipelineGroup.computeIfAbsent(renderTask.getPipeline(), k -> new ArrayList<>()).add(renderTask);
+                }
+                return false;
+            });
+        }
         synchronized (ONE_SHOT_TASKS) {
             for (RenderTask<?> task : ONE_SHOT_TASKS) {
                 if (!task.isExpired() && task.isVisible()) {

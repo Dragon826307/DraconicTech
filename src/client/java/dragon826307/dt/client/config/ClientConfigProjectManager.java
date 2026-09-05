@@ -30,7 +30,7 @@ public final class ClientConfigProjectManager extends ConfigProjectManager {
         }
         loadALL();
         for (ConfigProjects.Client project: ConfigProjects.Client.values()) CACHE.putIfAbsent(project, new ConfigGetterValue(project.getDefaultValue()));
-        ServerLifecycleEvents.BEFORE_SAVE.register((minecraftServer, b, b1) -> ClientConfigProjectManager.saveALL());
+        onConfigSave(ClientConfigProjectManager::saveALL);
     }
     public static ConfigGetterValue getConfig(ConfigProjects.Client project) {
         return CACHE.get(project);

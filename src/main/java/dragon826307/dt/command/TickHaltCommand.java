@@ -1,10 +1,9 @@
 package dragon826307.dt.command;
 
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import dragon826307.dt.DraconicTech;
-import dragon826307.dt.command.argument.TickHaltFlagArgumentType;
 import dragon826307.dt.features.microtick.MicroTickManager;
 import dragon826307.dt.features.microtick.MicroTickingFlags;
 import dragon826307.dt.util.SendMessageHelper;
@@ -16,8 +15,6 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.Colors;
-
-import java.lang.reflect.Field;
 
 public class TickHaltCommand implements ServerCommandCallback, FeatureCommandInt {
     private static final Text PREFIX = TextColorHelper.gradientColor("[MicroTickManager]", 14609141, 3820121);
@@ -69,25 +66,19 @@ public class TickHaltCommand implements ServerCommandCallback, FeatureCommandInt
         return "tickhalt";
     }
     private static final class Util {
-        private final static Field[] flags = MicroTickingFlags.class.getFields();
         private static LiteralArgumentBuilder<ServerCommandSource> flagCommand() {
             LiteralArgumentBuilder<ServerCommandSource> node = CommandManager.literal("flag");
-            for (Field field : flags) {
-                int flag;
-                try {
-                    flag = field.getInt(Integer.class);
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException(e);
-                }
-                String name = field.getName();
-                RequiredArgumentBuilder<ServerCommandSource,String> moddedArg = RequiredArgumentBuilder.<ServerCommandSource,String>argument("flag name", TickHaltFlagArgumentType.flags(name))
-                        .executes(commandContext -> {
-                            boolean bl = MicroTickManager.INSTANCE.getMicroTickFlag(flag);
-                            commandContext.getSource().sendFeedback(() -> Text.of(String.valueOf(bl)),false);
-                            return Integer.MIN_VALUE;
-                        });
-                node.then(moddedArg);
-            }
+            MicroTickingFlags.getFlags().forEach((i, s) -> {
+                node.then(CommandManager.literal(s).executes(context -> {
+                    context.getSource().sendFeedback(() -> ServerTranslationUtil.getFullKeyAndTryTranslate("current_micro_tick_flag",String.valueOf(MicroTickManager.INSTANCE.getMicroTickFlag(i))).withColor(6750130),false);
+                    return Integer.MIN_VALUE;
+                }).then(CommandManager.argument("flag", BoolArgumentType.bool()).executes(context -> {
+                    MicroTickManager.INSTANCE.setCommandSource(context.getSource());
+                    MicroTickManager.INSTANCE.setMicroTickFlag(i,BoolArgumentType.getBool(context,"flag"));
+                    context.getSource().sendFeedback(() -> ServerTranslationUtil.getFullKeyAndTryTranslate("set_micro_tick_flag",s,String.valueOf(MicroTickManager.INSTANCE.getMicroTickFlag(i))).withColor(6750130),true);
+                    return Integer.MIN_VALUE;
+                })));
+            });
             return node;
         }
     }

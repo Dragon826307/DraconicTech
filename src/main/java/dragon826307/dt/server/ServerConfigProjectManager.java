@@ -19,7 +19,7 @@ public class ServerConfigProjectManager extends ConfigProjectManager {
             return;
         }
         loadALL();
-        saveALL();
+        ConfigProjectManager.onConfigSave(ServerConfigProjectManager::saveALL);
     }
     public static ConfigGetterValue getConfig(ConfigProjects.Server project) {
         return CACHE.getOrDefault(project,new ConfigGetterValue(project.getDefaultValue()));

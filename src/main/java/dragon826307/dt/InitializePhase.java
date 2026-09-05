@@ -14,11 +14,8 @@ public enum InitializePhase {
     ON_MOD_INIT_CLIENT,
     /**
      * 在{@link DraconicTechServer}初始化时触发，无上下文
-     * <p>
-     *     备注：只应在{@code server}包中声明
-     * </p>
      */
-    ON_MOD_INIT_SERVER,
+    ON_MOD_INIT_DEDICATED_SERVER,
     /**
      * 在{@link DraconicTech}初始化时触发，无上下文
      * <p>

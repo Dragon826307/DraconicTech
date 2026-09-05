@@ -17,7 +17,7 @@ public class DraconicTech implements ModInitializer {
     @Override
     public void onInitialize() {
         DraconicTech.LOGGER.info("Initializing DraconicTech...");
-        AutoInitializeManager.scanAndRegister(name -> !name.contains(".client.") && !name.contains(".server."));
+        AutoInitializeManager.scanAndRegister(name -> !name.contains(".client."));
         AutoInitializeManager.trigger(InitializePhase.ON_MOD_INIT_MAIN);
         ServerLifecycleEvents.SERVER_STARTING.register(server -> AutoInitializeManager.trigger(InitializePhase.ON_SERVER_STARTING, server));
         ServerLifecycleEvents.SERVER_STARTED.register(server -> AutoInitializeManager.trigger(InitializePhase.ON_SERVER_STARTED, server));

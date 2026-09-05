@@ -4,7 +4,6 @@ import dragon826307.dt.AutoInitializeManager;
 import dragon826307.dt.DraconicTech;
 import dragon826307.dt.InitializePhase;
 import dragon826307.dt.client.render.RenderManager;
-import dragon826307.dt.client.render.RenderTask;
 import dragon826307.dt.client.util.ClientChatHudHelper;
 import dragon826307.dt.client.util.click_event.CommandBaseClickEvent;
 import dragon826307.dt.network.Mod$DebugModeToggleC2SPacket;

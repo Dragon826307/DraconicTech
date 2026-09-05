@@ -9,7 +9,6 @@ public class DraconicTechServer implements DedicatedServerModInitializer {
     @Override
     public void onInitializeServer() {
         DraconicTech.LOGGER.info("Initializing DraconicTech Server...");
-        AutoInitializeManager.scanAndRegister(name -> name.contains(".server."));
-        AutoInitializeManager.trigger(InitializePhase.ON_MOD_INIT_SERVER);
+        AutoInitializeManager.trigger(InitializePhase.ON_MOD_INIT_DEDICATED_SERVER);
     }
 }

@@ -1,8 +1,8 @@
 package dragon826307.dt.client.util.enhanced_chat;
 
 import com.google.common.io.BaseEncoding;
-import dragon826307.dt.client.config.ClientConfigProjectManager;
 import dragon826307.dt.client.DraconicTechClient;
+import dragon826307.dt.client.config.ClientConfigProjectManager;
 import dragon826307.dt.client.config.ClientConfigProjects;
 import dragon826307.dt.client.util.ClientChatHudHelper;
 import net.minecraft.util.StringHelper;

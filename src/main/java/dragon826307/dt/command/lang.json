@@ -1,0 +1,10 @@
+{
+  "en_us": {
+    "current_micro_tick_flag": "§3Current flag: %s",
+    "set_micro_tick_flag": "§3Set micro tick manager flag '%s§3' as '%s§3'"
+  },
+  "zh_cn": {
+    "current_micro_tick_flag": "§3当前标签：%s",
+    "set_micro_tick_flag": "§3将微时序管理器标志'%s§3'设置为'%s§3'"
+  }
+}

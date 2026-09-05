@@ -4,7 +4,6 @@ import dragon826307.dt.features.microtick.MicroTickManager;
 import io.netty.util.internal.EmptyArrays;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -74,7 +73,7 @@ public final class ConfigProjects {
             return REGISTRY.toArray(new Main[0]);
         }
         public static final Main ALLOW_MODIFY_CONTAINER_SIGNAL = register(new Main("ContainerSignalModifier:allow_modify_container_signal", ConfigType.BOOLEAN, false, null, false, null, null));
-        public static final Main GLOBAL_TICK_FREEZE_ORIGIN = register(new Main("MicroTickManager:global_tick_freeze_origin", ConfigType.STRING, "before_network_update", "^(?:before|after)_network_update$", false, new String[]{"before_network_update", "after_network_update"}, () -> MicroTickManager.INSTANCE.checkConfig()));
+        public static final Main GLOBAL_TICK_FREEZE_ORIGIN = register(new Main("MicroTickManager:default_global_tick_freeze_origin", ConfigType.STRING, "before_network_update", "^(?:before|after)_network_update$", false, new String[]{"before_network_update", "after_network_update"}, () -> MicroTickManager.INSTANCE.checkConfig()));
         private final String name;
         private final ConfigType type;
         private final Object defaultValue;

@@ -1,6 +1,23 @@
 package dragon826307.dt.features.microtick;
 
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
+
 public final class MicroTickingFlags {
+    public static final HashMap<Integer, String> VALUES;
+    static {
+        VALUES = new HashMap<>();
+        for (Field field : MicroTickingFlags.class.getFields()) {
+            try {
+                VALUES.put(field.getInt(Integer.class), field.getName());
+            }catch (Exception ignored) {}
+        }
+    }
+    public static Map<Integer,String> getFlags() {
+        return VALUES;
+    }
+
     public static final int ORIGIN_BEFORE_NU = 4;//冻结原点是否在NU之前
 
     public static final int COMMAND_FUNCTION = 8;//指令函数

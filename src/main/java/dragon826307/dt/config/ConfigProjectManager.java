@@ -21,10 +21,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.regex.Pattern;
 
 public class ConfigProjectManager {
@@ -35,6 +33,16 @@ public class ConfigProjectManager {
     protected static final Path MAIN_CONFIG = ROOT.resolve("main.dat");
     protected static final Path AUTO_CONFIG = ROOT.resolve("auto.dat");
     protected static final Path SERVER_CONFIG = ROOT.resolve("server.dat");
+
+    private static ScheduledFuture<?> saver_task = null;
+    private static final ScheduledExecutorService CONFIG_SAVER_THREAD = Executors.newSingleThreadScheduledExecutor(runnable -> {
+        Thread thread = new Thread(runnable, "ConfigSaverThread");
+        thread.setDaemon(true);
+        return thread;
+    });
+
+    private static final List<Runnable> ON_SAVING_CONFIG = new ArrayList<>();
+
     @AutoInitialize(phase = InitializePhase.ON_SERVER_STARTING, priority = 999)
     private static void init(){
         try {
@@ -45,8 +53,25 @@ public class ConfigProjectManager {
         loadALL();
         for (ConfigProjects.Main project: ConfigProjects.Main.values()) CACHE_MAIN.putIfAbsent(project, new ConfigGetterValue(project.getDefaultValue()));
         for (ConfigProjects.Auto project: ConfigProjects.Auto.values()) CACHE_AUTO.putIfAbsent(project, new ConfigGetterValue(project.getDefaultValue()));
-        ServerLifecycleEvents.BEFORE_SAVE.register((server, b1, b2) -> ConfigProjectManager.saveALL());
+        if (saver_task == null) {
+            saver_task = CONFIG_SAVER_THREAD.scheduleAtFixedRate(() -> {
+                saveALL();
+                for (Runnable runnable : ON_SAVING_CONFIG) {
+                    runnable.run();
+                }
+            },3,1, TimeUnit.MINUTES);
+        }
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+            if (saver_task != null && !saver_task.isCancelled()) {
+                saver_task.cancel(false);
+            }
+        });
     }
+
+    public static void onConfigSave(Runnable runnable){
+        ON_SAVING_CONFIG.add(runnable);
+    }
+
     public static ConfigGetterValue getConfig(ConfigProjects.Main project){
         return CACHE_MAIN.get(project);
     }
@@ -64,7 +89,6 @@ public class ConfigProjectManager {
         CACHE_AUTO.put(project, new ConfigGetterValue(value));
         return true;
     }
-    //TODO : 未设置定时保存
     public static void saveALL(){
         atomicWrite(MAIN_CONFIG,copyALL(CACHE_MAIN));
         atomicWrite(AUTO_CONFIG,copyALL(CACHE_AUTO));

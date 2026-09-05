@@ -20,7 +20,10 @@ public final class ServerTranslationUtil {
         return Text.translatableWithFallback(key, LANGUAGE.get(key), args);
     }
     public static String getFullKey(String key) {
-        String callerPackage = StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE).getCallerClass().getPackageName();
+        String callerPackage = StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE).walk(s -> s.filter(f -> f.getDeclaringClass() != ServerTranslationUtil.class).findFirst().map(f -> f.getDeclaringClass().getPackageName())).orElse("UNKNOWN.PACKAGE");
         return callerPackage + "." + key;
+    }
+    public static MutableText getFullKeyAndTryTranslate(String key, Object... args) {
+        return getTranslatedWithFallback(getFullKey(key), args);
     }
 }
