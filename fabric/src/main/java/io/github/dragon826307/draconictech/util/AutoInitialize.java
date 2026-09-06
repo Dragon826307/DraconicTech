@@ -1,4 +1,4 @@
-package io.github.dragon826307.draconictech;
+package io.github.dragon826307.draconictech.util;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

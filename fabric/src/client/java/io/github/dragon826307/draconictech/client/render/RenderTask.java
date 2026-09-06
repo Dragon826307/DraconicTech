@@ -2,9 +2,9 @@ package io.github.dragon826307.draconictech.client.render;
 
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.DepthTestFunction;
-import io.github.dragon826307.draconictech.AutoInitialize;
 import io.github.dragon826307.draconictech.DraconicTech;
-import io.github.dragon826307.draconictech.InitializePhase;
+import io.github.dragon826307.draconictech.util.AutoInitialize;
+import io.github.dragon826307.draconictech.util.InitializePhase;
 import net.fabricmc.loader.api.FabricLoader;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.api.v0.IrisApi;

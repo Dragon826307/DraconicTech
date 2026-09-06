@@ -2,30 +2,56 @@ package io.github.dragon826307.draconictech.mixin.tick;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.mojang.brigadier.ParseResults;
+import com.mojang.brigadier.context.ParsedCommandNode;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.tree.CommandNode;
 import io.github.dragon826307.draconictech.DraconicTech;
 import io.github.dragon826307.draconictech.features.microtick.MicroTickManager;
+import io.github.dragon826307.draconictech.features.microtick.mixin_int.InstantCommandNode;
 import net.minecraft.network.packet.c2s.play.CommandExecutionC2SPacket;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.List;
+
 @Mixin(value = ServerPlayNetworkHandler.class)
 public abstract class ServerPlayNetworkHandlerMixin {
     @Shadow
     protected abstract ParseResults<ServerCommandSource> parse(String command);
+
+    @Shadow
+    protected abstract void executeCommand(String command);
+
+    @Shadow
+    public ServerPlayerEntity player;
+
     @Inject(method = "onCommandExecution",at = @At("HEAD"),cancellable = true)
     private void onOnCommandExecution(CommandExecutionC2SPacket packet, CallbackInfo ci){
-        String[] args = packet.command().split(" ");
-        if (args.length > 2 && (args[0].equals("dt") || args[0].equals(DraconicTech.MOD_ID)) && args[1].equals("features") && args[2].equals("tickhalt")) {
-            try {
-                int execute_value = ((ServerCommonNetworkHandlerAccessor) this).getServer().getCommandManager().getDispatcher().execute(parse(packet.command()));
-                if (execute_value == Integer.MIN_VALUE) ci.cancel();
-            } catch (CommandSyntaxException ignored) {}
+        MinecraftServer server = MicroTickManager.INSTANCE.getServer();
+        ParseResults<ServerCommandSource> parseResults = this.parse(packet.command());
+        List<ParsedCommandNode<ServerCommandSource>> nodes = parseResults.getContext().getNodes();
+        if (!nodes.isEmpty()){
+            CommandNode<ServerCommandSource> commandNode = nodes.getLast().getNode();
+            if (((InstantCommandNode) commandNode).draconictech$isInstant()) {
+                try {
+                    server.getCommandManager().getDispatcher().execute(parseResults);
+                } catch (Exception e) {
+                    player.sendMessage(Text.literal(e.getMessage()).formatted(Formatting.RED));
+                    if (!(e instanceof CommandSyntaxException)) {
+                        DraconicTech.LOGGER.error("Error while executing command: '{}'",packet.command(),e);
+                    }
+                }
+                ci.cancel();
+            }
         }
     }
     @ModifyExpressionValue(method = "onPlayerMove", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/tick/TickManager;shouldTick()Z"))

@@ -2,6 +2,8 @@ package io.github.dragon826307.draconictech.client.command;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.github.dragon826307.draconictech.client.command.argument.EnhancedChatArgumentType;
+import io.github.dragon826307.draconictech.util.AutoInitialize;
+import io.github.dragon826307.draconictech.util.InitializePhase;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.client.MinecraftClient;
@@ -9,6 +11,10 @@ import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.text.Text;
 
 public class EnhancedChatCommand implements ClientCommandCallback{
+    @AutoInitialize(phase = InitializePhase.ON_MOD_INIT_CLIENT)
+    private static void init() {
+        ClientCommandHandler.registerCommand(new EnhancedChatCommand());
+    }
     @Override
     public LiteralArgumentBuilder<FabricClientCommandSource> addClientCommandBranch(LiteralArgumentBuilder<FabricClientCommandSource> thisCommandBranch) {
         return thisCommandBranch.then(ClientCommandManager.argument("chat message", EnhancedChatArgumentType.eChatArgument()).executes(context -> {

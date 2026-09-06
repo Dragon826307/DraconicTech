@@ -1,6 +1,8 @@
 package io.github.dragon826307.draconictech;
 
 import io.github.dragon826307.draconictech.features.microtick.MicroTickManager;
+import io.github.dragon826307.draconictech.util.AutoInitializeManager;
+import io.github.dragon826307.draconictech.util.InitializePhase;
 import io.github.dragon826307.draconictech.util.TextColorHelper;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;

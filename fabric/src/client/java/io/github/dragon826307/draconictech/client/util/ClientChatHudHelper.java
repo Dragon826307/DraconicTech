@@ -1,7 +1,7 @@
 package io.github.dragon826307.draconictech.client.util;
 
-import io.github.dragon826307.draconictech.AutoInitialize;
-import io.github.dragon826307.draconictech.InitializePhase;
+import io.github.dragon826307.draconictech.util.AutoInitialize;
+import io.github.dragon826307.draconictech.util.InitializePhase;
 import io.github.dragon826307.draconictech.util.SendMessageHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;

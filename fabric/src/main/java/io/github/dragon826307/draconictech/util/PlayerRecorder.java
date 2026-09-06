@@ -1,4 +1,4 @@
-package io.github.dragon826307.draconictech;
+package io.github.dragon826307.draconictech.util;
 
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.checkerframework.checker.nullness.qual.Nullable;

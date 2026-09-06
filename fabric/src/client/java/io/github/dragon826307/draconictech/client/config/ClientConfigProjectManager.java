@@ -1,11 +1,11 @@
 package io.github.dragon826307.draconictech.client.config;
 
-import io.github.dragon826307.draconictech.AutoInitialize;
 import io.github.dragon826307.draconictech.DraconicTech;
-import io.github.dragon826307.draconictech.InitializePhase;
 import io.github.dragon826307.draconictech.config.ConfigGetterValue;
 import io.github.dragon826307.draconictech.config.ConfigProjectManager;
 import io.github.dragon826307.draconictech.config.ConfigProjects;
+import io.github.dragon826307.draconictech.util.AutoInitialize;
+import io.github.dragon826307.draconictech.util.InitializePhase;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 

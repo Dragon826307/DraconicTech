@@ -4,6 +4,8 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.sun.management.OperatingSystemMXBean;
 import io.github.dragon826307.draconictech.config.ConfigProjects;
 import io.github.dragon826307.draconictech.server.ServerConfigProjectManager;
+import io.github.dragon826307.draconictech.util.AutoInitialize;
+import io.github.dragon826307.draconictech.util.InitializePhase;
 import io.github.dragon826307.draconictech.util.ServerTranslationUtil;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
@@ -26,6 +28,12 @@ public class StatusCommand implements ServerCommandCallback{
     private static final Runtime RUNTIME = Runtime.getRuntime();
     private static final Object[] JVM_INFO_LIST = new Object[]{System.getProperty("java.vm.name"),null,null,null,null,null,null};
     private static final Object[] SYSTEM_INFO_LIST = new Object[]{OPERATING.toString(),null,null,null,null,PROCESSOR.getProcessorIdentifier().getName(),null,null,null,new File(".").getTotalSpace()/1073741824};
+
+    @AutoInitialize(phase = InitializePhase.ON_MOD_INIT_MAIN)
+    private static void init() {
+        ServerCommandHandler.registerCommand(new StatusCommand());
+    }
+
     @Override
     public LiteralArgumentBuilder<ServerCommandSource> addCommandBranch(LiteralArgumentBuilder<ServerCommandSource> thisCommandBranch) {
         return thisCommandBranch.then(CommandManager.literal("java").executes(context -> {

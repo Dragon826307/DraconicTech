@@ -1,17 +1,23 @@
 package io.github.dragon826307.draconictech.features.microtick;
 
-import io.github.dragon826307.draconictech.AutoInitialize;
 import io.github.dragon826307.draconictech.DraconicTech;
-import io.github.dragon826307.draconictech.InitializePhase;
 import io.github.dragon826307.draconictech.config.ConfigProjectManager;
 import io.github.dragon826307.draconictech.config.ConfigProjects;
+import io.github.dragon826307.draconictech.mixin.tick.ChunkHolderInvoker;
+import io.github.dragon826307.draconictech.mixin.tick.EntityTrackerInvoker;
+import io.github.dragon826307.draconictech.mixin.tick.ServerChunkLoadingManagerAccessor;
 import io.github.dragon826307.draconictech.mixin.tick.ServerCommonNetworkHandlerAccessor;
+import io.github.dragon826307.draconictech.util.AutoInitialize;
+import io.github.dragon826307.draconictech.util.InitializePhase;
 import io.github.dragon826307.draconictech.util.SendMessageHelper;
 import io.github.dragon826307.draconictech.util.ServerTranslationUtil;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ChunkHolder;
+import net.minecraft.server.world.ServerChunkLoadingManager;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.HoverEvent;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
@@ -63,35 +69,42 @@ public class MicroTickManager {
             }
         });
     }
+
     @AutoInitialize(phase = InitializePhase.ON_SERVER_STARTED)
     private static void flagInit() {
         INSTANCE.checkConfig();
     }
+
     public MicroTickManager(MinecraftServer server) {
         this.server = server;
         INSTANCE = this;
     }
+
+    public MinecraftServer getServer() {return this.server;}
+
     public boolean isFreeze() {
         return isFreeze;
     }
+
     public boolean isOnTickPostProcessing() {
         return onTickPostProcessing;
     }
+
     public void setMicroTickFlag(int flag, boolean bl) {
         tick_flags = (tick_flags | flag) & (bl ? -1 : ~flag);
     }
+
     public boolean getMicroTickFlag(int flag) {
         return ((tick_flags & flag) ^ flag) == 0;
     }
-    public int getMicroTickFlags() {
-        return tick_flags;
-    }
+
     public void setTickFrozenLevel(int lvl){
         if (lvl < 0 || lvl > 5) {
             throw new IllegalArgumentException("Invalid value for MicroTickManager.frozen_lvl: " + lvl);
         }
         frozen_lvl = lvl;
     }
+
     public void step(int step) {
         if (step <= 0) {
             throw new IllegalArgumentException("Invalid value for step: " + step);
@@ -99,9 +112,11 @@ public class MicroTickManager {
         remainStep = step;
         unfreeze();
     }
+
     public void onEndTick() {
         onTickPostProcessing = false;
     }
+
     public void checkConfig() {
         String config = ConfigProjectManager.getConfig(ConfigProjects.Main.GLOBAL_TICK_FREEZE_ORIGIN).asString();
         setMicroTickFlag(MicroTickingFlags.ORIGIN_BEFORE_NU, config.equals(ConfigProjects.Main.GLOBAL_TICK_FREEZE_ORIGIN.getDefaultValue()));
@@ -120,6 +135,7 @@ public class MicroTickManager {
         server.getPlayerManager().getPlayerList().forEach(player -> player.sendMessage(text));
         tryFreeze();
     }
+
     public void tryFreeze() {
         if (remainStep > 0) {
             remainStep--;
@@ -162,6 +178,9 @@ public class MicroTickManager {
         try {
             isFreeze = true;
             onTickPostProcessing = true;
+            if (getTickFrozenLevel() > 1) {
+                syncToClientImmediately();
+            }
             unfreezeLatch.await();
         } catch (InterruptedException e) {
             isFreeze = false;
@@ -172,6 +191,24 @@ public class MicroTickManager {
     private void sendFeedback(Text text) {
         if (source != null) {
             source.sendFeedback(() -> text,true);
+        }
+    }
+
+    private void syncToClientImmediately() {
+        for (ServerWorld world : server.getWorlds()) {
+            ServerChunkLoadingManager serverChunkLoadingManager = world.getChunkManager().chunkLoadingManager;
+            Iterable<ChunkHolder> chunkHolders = ((ServerChunkLoadingManagerAccessor) serverChunkLoadingManager).getChunkHolders().values();
+            for (ChunkHolder chunkHolder : chunkHolders) {
+                if (chunkHolder != null) {
+                    ((ChunkHolderInvoker) chunkHolder).flushAllUpdates(chunkHolder.getWorldChunk());
+                }
+            }
+            var entityTrackers = ((ServerChunkLoadingManagerAccessor) serverChunkLoadingManager).getEntityTrackers();
+            for (Object tracker : entityTrackers.values()) {
+                if (tracker != null) {
+                    ((EntityTrackerInvoker) tracker).updateAllTrackedStatus(server.getPlayerManager().getPlayerList());
+                }
+            }
         }
     }
 

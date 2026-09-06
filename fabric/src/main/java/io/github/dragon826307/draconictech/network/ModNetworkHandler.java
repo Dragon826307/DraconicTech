@@ -1,9 +1,9 @@
 package io.github.dragon826307.draconictech.network;
 
-import io.github.dragon826307.draconictech.AutoInitialize;
 import io.github.dragon826307.draconictech.DraconicTech;
-import io.github.dragon826307.draconictech.InitializePhase;
-import io.github.dragon826307.draconictech.PlayerRecorder;
+import io.github.dragon826307.draconictech.util.AutoInitialize;
+import io.github.dragon826307.draconictech.util.InitializePhase;
+import io.github.dragon826307.draconictech.util.PlayerRecorder;
 import io.github.dragon826307.draconictech.util.SendMessageHelper;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;

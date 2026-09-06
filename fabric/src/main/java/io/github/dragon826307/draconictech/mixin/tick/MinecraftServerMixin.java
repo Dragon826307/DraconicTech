@@ -18,7 +18,7 @@ public class MinecraftServerMixin {
     //TODO : 堆积数据包处理 & keepAliveC2S包处理
     @WrapOperation(method = "tickWorlds",at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;tickNetworkIo()V"))
     private void onTickNetworkIo(MinecraftServer instance, Operation<Void> original) {
-        if (MicroTickManager.INSTANCE.getTickFrozenLevel() == 1) {
+        if (MicroTickManager.INSTANCE.getTickFrozenLevel() > 0) {
             if (MicroTickManager.INSTANCE.getMicroTickFlag(MicroTickingFlags.ORIGIN_BEFORE_NU)) {
                 MicroTickManager.INSTANCE.tryFreeze();
             }
@@ -28,7 +28,7 @@ public class MinecraftServerMixin {
     @WrapOperation(method = "tickWorlds",at = @At(value = "INVOKE", target = "Lnet/minecraft/server/PlayerManager;updatePlayerLatency()V"))
     private void onUpdatePlayerLatency(PlayerManager instance, Operation<Void> original) {
         original.call(instance);
-        if (MicroTickManager.INSTANCE.getTickFrozenLevel() == 1) {
+        if (MicroTickManager.INSTANCE.getTickFrozenLevel() > 0) {
             if (!MicroTickManager.INSTANCE.getMicroTickFlag(MicroTickingFlags.ORIGIN_BEFORE_NU)) {
                 MicroTickManager.INSTANCE.tryFreeze();
             }

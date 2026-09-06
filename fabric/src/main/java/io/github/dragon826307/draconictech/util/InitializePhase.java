@@ -1,5 +1,6 @@
-package io.github.dragon826307.draconictech;
+package io.github.dragon826307.draconictech.util;
 
+import io.github.dragon826307.draconictech.DraconicTech;
 import io.github.dragon826307.draconictech.server.DraconicTechServer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.server.MinecraftServer;

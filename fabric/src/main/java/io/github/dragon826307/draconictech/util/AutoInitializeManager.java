@@ -1,9 +1,10 @@
-package io.github.dragon826307.draconictech;
+package io.github.dragon826307.draconictech.util;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import io.github.dragon826307.draconictech.DraconicTech;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.CustomValue;

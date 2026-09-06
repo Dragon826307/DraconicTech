@@ -22,9 +22,7 @@ import java.util.function.BooleanSupplier;
 public class ServerWorldMixin {
     @Inject(method = "tick(Ljava/util/function/BooleanSupplier;)V",at = @At(value = "INVOKE", target = "Lnet/minecraft/world/border/WorldBorder;tick()V"))
     private void shouldTickWorldStatus(BooleanSupplier shouldKeepTicking, CallbackInfo ci){
-        if (MicroTickManager.INSTANCE.getTickFrozenLevel() == 2 && !MicroTickManager.INSTANCE.getMicroTickFlag(MicroTickingFlags.WORLD_BORDER)) {
-            MicroTickManager.INSTANCE.tryFreeze(Text.of("test"));
-        }
+
     }
     @WrapOperation(method = "tick(Ljava/util/function/BooleanSupplier;)V",at = @At(value = "INVOKE", target = "Lnet/minecraft/world/border/WorldBorder;tick()V"))
     private void shouldTickWorldBorder(WorldBorder instance, Operation<Void> original){
@@ -45,10 +43,16 @@ public class ServerWorldMixin {
     @WrapOperation(method = "tick(Ljava/util/function/BooleanSupplier;)V",at = @At(value = "INVOKE", target = "Lnet/minecraft/world/tick/WorldTickScheduler;tick(JILjava/util/function/BiConsumer;)V",ordinal = 0))
     private <T> void shouldTickPendingBlocks(WorldTickScheduler<?> instance, long time, int maxTicks, BiConsumer<BlockPos, T> ticker, Operation<Void> original){
         original.call(instance, time, maxTicks, ticker);
+        if (MicroTickManager.INSTANCE.getTickFrozenLevel() > 1 && !MicroTickManager.INSTANCE.getMicroTickFlag(MicroTickingFlags.PENDING_BLOCK)) {
+            MicroTickManager.INSTANCE.tryFreeze(Text.of("test"));
+        }
     }
     @WrapOperation(method = "tick(Ljava/util/function/BooleanSupplier;)V",at = @At(value = "INVOKE", target = "Lnet/minecraft/world/tick/WorldTickScheduler;tick(JILjava/util/function/BiConsumer;)V",ordinal = 1))
     private <T> void shouldTickPendingFluid(WorldTickScheduler<?> instance, long time, int maxTicks, BiConsumer<BlockPos, T> ticker, Operation<Void> original){
         original.call(instance, time, maxTicks, ticker);
+        if (MicroTickManager.INSTANCE.getTickFrozenLevel() > 1 && !MicroTickManager.INSTANCE.getMicroTickFlag(MicroTickingFlags.PENDING_FLUID)) {
+            MicroTickManager.INSTANCE.tryFreeze(Text.of("test2"));
+        }
     }
     @ModifyVariable(method = "tick(Ljava/util/function/BooleanSupplier;)V",at = @At(value = "LOAD",ordinal = 3),ordinal = 0)
     private boolean shouldTickRaid(boolean original){

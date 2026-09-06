@@ -1,12 +1,12 @@
 package io.github.dragon826307.draconictech.client;
 
-import io.github.dragon826307.draconictech.AutoInitializeManager;
 import io.github.dragon826307.draconictech.DraconicTech;
-import io.github.dragon826307.draconictech.InitializePhase;
 import io.github.dragon826307.draconictech.client.render.RenderManager;
 import io.github.dragon826307.draconictech.client.util.ClientChatHudHelper;
 import io.github.dragon826307.draconictech.client.util.click_event.CommandBaseClickEvent;
 import io.github.dragon826307.draconictech.network.Mod$DebugModeToggleC2SPacket;
+import io.github.dragon826307.draconictech.util.AutoInitializeManager;
+import io.github.dragon826307.draconictech.util.InitializePhase;
 import io.github.dragon826307.draconictech.util.TextColorHelper;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
