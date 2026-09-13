@@ -5,7 +5,6 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import io.github.dragon826307.draconictech.features.microtick.MicroTickManager;
 import io.github.dragon826307.draconictech.features.microtick.MicroTickingFlags;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.tick.WorldTickScheduler;
@@ -43,24 +42,30 @@ public class ServerWorldMixin {
     @WrapOperation(method = "tick(Ljava/util/function/BooleanSupplier;)V",at = @At(value = "INVOKE", target = "Lnet/minecraft/world/tick/WorldTickScheduler;tick(JILjava/util/function/BiConsumer;)V",ordinal = 0))
     private <T> void shouldTickPendingBlocks(WorldTickScheduler<?> instance, long time, int maxTicks, BiConsumer<BlockPos, T> ticker, Operation<Void> original){
         original.call(instance, time, maxTicks, ticker);
-        if (MicroTickManager.INSTANCE.getTickFrozenLevel() > 1 && !MicroTickManager.INSTANCE.getMicroTickFlag(MicroTickingFlags.PENDING_BLOCK)) {
-            MicroTickManager.INSTANCE.tryFreeze(Text.of("test"));
+        if (MicroTickManager.getInstance().getTickFrozenLevel() > 1 && !MicroTickManager.getInstance().getMicroTickFlag(MicroTickingFlags.PENDING_BLOCK)) {
+            System.out.println("PENDING_BLOCK");
+            MicroTickManager.getInstance().tryFreeze();
         }
     }
     @WrapOperation(method = "tick(Ljava/util/function/BooleanSupplier;)V",at = @At(value = "INVOKE", target = "Lnet/minecraft/world/tick/WorldTickScheduler;tick(JILjava/util/function/BiConsumer;)V",ordinal = 1))
     private <T> void shouldTickPendingFluid(WorldTickScheduler<?> instance, long time, int maxTicks, BiConsumer<BlockPos, T> ticker, Operation<Void> original){
         original.call(instance, time, maxTicks, ticker);
-        if (MicroTickManager.INSTANCE.getTickFrozenLevel() > 1 && !MicroTickManager.INSTANCE.getMicroTickFlag(MicroTickingFlags.PENDING_FLUID)) {
-            MicroTickManager.INSTANCE.tryFreeze(Text.of("test2"));
+        if (MicroTickManager.getInstance().getTickFrozenLevel() > 1 && !MicroTickManager.getInstance().getMicroTickFlag(MicroTickingFlags.PENDING_FLUID)) {
+            System.out.println("PENDING_FLUID");
+            MicroTickManager.getInstance().tryFreeze();
         }
     }
     @ModifyVariable(method = "tick(Ljava/util/function/BooleanSupplier;)V",at = @At(value = "LOAD",ordinal = 3),ordinal = 0)
     private boolean shouldTickRaid(boolean original){
         return original;
     }
-    @ModifyVariable(method = "tick(Ljava/util/function/BooleanSupplier;)V",at = @At(value = "LOAD",ordinal = 4),ordinal = 0)
-    private boolean shouldTickBlockEvents(boolean original){
-        return original;
+    @WrapOperation(method = "tick(Ljava/util/function/BooleanSupplier;)V",at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;processSyncedBlockEvents()V"))
+    private void shouldTickBlockEvents(ServerWorld instance, Operation<Void> original){
+        original.call(instance);
+        if (MicroTickManager.getInstance().getTickFrozenLevel() > 1 && !MicroTickManager.getInstance().getMicroTickFlag(MicroTickingFlags.BLOCK_EVENT)) {
+            System.out.println("BLOCK_EVENT");
+            MicroTickManager.getInstance().tryFreeze();
+        }
     }
     @ModifyVariable(method = "tick(Ljava/util/function/BooleanSupplier;)V",at = @At(value = "LOAD",ordinal = 5),ordinal = 0)
     private boolean shouldTickIdleTime(boolean original){

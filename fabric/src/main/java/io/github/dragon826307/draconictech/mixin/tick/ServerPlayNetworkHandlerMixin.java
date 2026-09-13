@@ -6,6 +6,7 @@ import com.mojang.brigadier.context.ParsedCommandNode;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.CommandNode;
 import io.github.dragon826307.draconictech.DraconicTech;
+import io.github.dragon826307.draconictech.command.CommandFlags;
 import io.github.dragon826307.draconictech.features.microtick.MicroTickManager;
 import io.github.dragon826307.draconictech.features.microtick.mixin_int.InstantCommandNode;
 import net.minecraft.network.packet.c2s.play.CommandExecutionC2SPacket;
@@ -29,19 +30,16 @@ public abstract class ServerPlayNetworkHandlerMixin {
     protected abstract ParseResults<ServerCommandSource> parse(String command);
 
     @Shadow
-    protected abstract void executeCommand(String command);
-
-    @Shadow
     public ServerPlayerEntity player;
 
     @Inject(method = "onCommandExecution",at = @At("HEAD"),cancellable = true)
     private void onOnCommandExecution(CommandExecutionC2SPacket packet, CallbackInfo ci){
-        MinecraftServer server = MicroTickManager.INSTANCE.getServer();
+        MinecraftServer server = MicroTickManager.getInstance().getServer();
         ParseResults<ServerCommandSource> parseResults = this.parse(packet.command());
         List<ParsedCommandNode<ServerCommandSource>> nodes = parseResults.getContext().getNodes();
         if (!nodes.isEmpty()){
             CommandNode<ServerCommandSource> commandNode = nodes.getLast().getNode();
-            if (((InstantCommandNode) commandNode).draconictech$isInstant()) {
+            if ((((InstantCommandNode) commandNode).draconictech$getFlags() & CommandFlags.INSTANT) == CommandFlags.INSTANT) {
                 try {
                     server.getCommandManager().getDispatcher().execute(parseResults);
                 } catch (Exception e) {
@@ -56,6 +54,6 @@ public abstract class ServerPlayNetworkHandlerMixin {
     }
     @ModifyExpressionValue(method = "onPlayerMove", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/tick/TickManager;shouldTick()Z"))
     private boolean onOnPlayerMove(boolean original){
-        return original && !MicroTickManager.INSTANCE.isOnTickPostProcessing();
+        return original && !MicroTickManager.getInstance().isOnTickPostProcessing();
     }
 }

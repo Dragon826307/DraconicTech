@@ -18,14 +18,10 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
-import net.minecraft.util.Colors;
-import net.minecraft.util.profiler.Profilers;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.concurrent.*;
+import java.util.function.Consumer;
 
 public class MicroTickManager {
     private static final String FAIL_NULL = ServerTranslationUtil.getOrNull("dt.micro_tick.fail_null");
@@ -35,21 +31,22 @@ public class MicroTickManager {
     private static final String ALREADY_HALT = ServerTranslationUtil.getOrNull("dt.micro_tick.already_halt");
     private static final Text ALREADY_HALT_T = SendMessageHelper.getMessage(ServerTranslationUtil.getTranslatedWithFallback("dt.micro_tick.already_halt"),true);
 
-    public static MicroTickManager INSTANCE;
+    private static MicroTickManager INSTANCE;
 
-    private final ScheduledExecutorService MicroTickManagerThread = Executors.newSingleThreadScheduledExecutor(runnable -> {
-        Thread thread = new Thread(runnable, "MicroTick-Manager-Thread");
+    private final MinecraftServer server;
+    private final ScheduledExecutorService microTickManagerThread = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread thread = new Thread(r);
         thread.setDaemon(true);
         return thread;
     });
-    private @Nullable ServerCommandSource source;
-    private final MinecraftServer server;
+
+    private Consumer<Text> feedback = text -> {};
+
     private volatile CountDownLatch unfreezeLatch;
-    private ScheduledFuture<?> keepAliveTask;
     private boolean onTickPostProcessing = false;
     private boolean isFreeze = false;
     private int remainStep = 0;
-    private int tick_flags = -1;
+    private int tick_flags = 0;
     private int frozen_lvl = 0;
     // level:
     // 000 -> normal
@@ -62,11 +59,11 @@ public class MicroTickManager {
     @AutoInitialize(phase = InitializePhase.ON_MOD_INIT_MAIN)
     private static void init() {
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
-            INSTANCE.setMicroTickFlag(-1,true);
             INSTANCE.setTickFrozenLevel(0);
             if (INSTANCE.isFreeze()) {
                 INSTANCE.unfreeze();
             }
+            INSTANCE.microTickManagerThread.close();
         });
     }
 
@@ -75,12 +72,32 @@ public class MicroTickManager {
         INSTANCE.checkConfig();
     }
 
+    public static MicroTickManager getInstance() {
+        return INSTANCE;
+    }
+
     public MicroTickManager(MinecraftServer server) {
         this.server = server;
+        CompletableFuture.runAsync(() -> microTickManagerThread.scheduleAtFixedRate(() -> {
+            if (INSTANCE.isFreeze()) {
+                for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+                    ((ServerCommonNetworkHandlerAccessor)player.networkHandler).runBaseTick();
+                }
+            }
+        },10,10,TimeUnit.SECONDS));
         INSTANCE = this;
     }
 
     public MinecraftServer getServer() {return this.server;}
+
+    public void onEndTick() {
+        onTickPostProcessing = false;
+    }
+
+    public void checkConfig() {
+        String config = ConfigProjectManager.getConfig(ConfigProjects.Main.GLOBAL_TICK_FREEZE_ORIGIN).asString();
+        setMicroTickFlag(MicroTickingFlags.ORIGIN_BEFORE_NU, config.equals(ConfigProjects.Main.GLOBAL_TICK_FREEZE_ORIGIN.getDefaultValue()));
+    }
 
     public boolean isFreeze() {
         return isFreeze;
@@ -95,7 +112,7 @@ public class MicroTickManager {
     }
 
     public boolean getMicroTickFlag(int flag) {
-        return ((tick_flags & flag) ^ flag) == 0;
+        return (tick_flags & flag) == flag;
     }
 
     public void setTickFrozenLevel(int lvl){
@@ -109,69 +126,37 @@ public class MicroTickManager {
         if (step <= 0) {
             throw new IllegalArgumentException("Invalid value for step: " + step);
         }
-        remainStep = step;
-        unfreeze();
+        if (!isFreeze) {
+            return;
+        }
+        isFreeze = false;
+        remainStep = step - 1;
+        unfreezeLatch.countDown();
     }
 
-    public void onEndTick() {
-        onTickPostProcessing = false;
-    }
-
-    public void checkConfig() {
-        String config = ConfigProjectManager.getConfig(ConfigProjects.Main.GLOBAL_TICK_FREEZE_ORIGIN).asString();
-        setMicroTickFlag(MicroTickingFlags.ORIGIN_BEFORE_NU, config.equals(ConfigProjects.Main.GLOBAL_TICK_FREEZE_ORIGIN.getDefaultValue()));
-    }
     public int getTickFrozenLevel(){
         return frozen_lvl;
     }
     //游戏逻辑线程-指令
     public void setCommandSource(ServerCommandSource source) {
-        this.source = source;
+        feedback = text -> source.sendFeedback(() -> text,true);
     }
     //游戏逻辑线程
     public void tryFreeze(Text t) {
-        MutableText text = (MutableText) t;
-        text.styled(style -> style.withHoverEvent(new HoverEvent.ShowText(text)));
-        server.getPlayerManager().getPlayerList().forEach(player -> player.sendMessage(text));
+//        MutableText text = (MutableText) t;
+//        text.styled(style -> style.withHoverEvent(new HoverEvent.ShowText(text)));
+        feedback.accept(t);
         tryFreeze();
     }
 
     public void tryFreeze() {
         if (remainStep > 0) {
             remainStep--;
-            if (DraconicTech.DEBUG) DraconicTech.LOGGER.info("remain:{}", remainStep);
             return;
         }
         if (isFreeze) {
-            sendFeedback(ALREADY_HALT_T);
+            feedback.accept(ALREADY_HALT_T);
             DraconicTech.LOGGER.warn(ALREADY_HALT);
-            return;
-        }
-        if (server == null) {
-            sendFeedback(FAIL_NULL_T);
-            DraconicTech.LOGGER.warn(FAIL_NULL);
-            return;
-        }
-        CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-            Profilers.get().push("prepare");
-            //MicroTickManagerThread 线程
-            keepAliveTask = MicroTickManagerThread.scheduleAtFixedRate(() -> {
-                for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-                    ((ServerCommonNetworkHandlerAccessor)player.networkHandler).runBaseTick();
-                }
-            }, 5, 5, TimeUnit.SECONDS);
-            Profilers.get().pop();
-        }, MicroTickManagerThread);
-        try {
-            future.get(1, TimeUnit.SECONDS);
-        } catch (TimeoutException e) {
-            future.cancel(true);
-            DraconicTech.LOGGER.warn(PREPARE_FAIL);
-            sendFeedback(PREPARE_FAIL_T);
-            return;
-        } catch (Exception e) {
-            DraconicTech.LOGGER.error(e.getMessage());
-            sendFeedback(Text.literal(e.getMessage()).withColor(Colors.RED));
             return;
         }
         unfreezeLatch = new CountDownLatch(1);
@@ -185,12 +170,6 @@ public class MicroTickManager {
         } catch (InterruptedException e) {
             isFreeze = false;
             Thread.currentThread().interrupt();
-        }
-    }
-
-    private void sendFeedback(Text text) {
-        if (source != null) {
-            source.sendFeedback(() -> text,true);
         }
     }
 
@@ -218,16 +197,10 @@ public class MicroTickManager {
             DraconicTech.LOGGER.warn("[MicroTickManager] The game logic thread is not halt");
             return;
         }
-        if (keepAliveTask != null && !keepAliveTask.isCancelled()) {
-            keepAliveTask.cancel(true);
-        }
         if (unfreezeLatch != null) {
             unfreezeLatch.countDown();
         }
         isFreeze = false;
-        if (remainStep > 0) {
-            return;
-        }
         setTickFrozenLevel(0);
     }
 }

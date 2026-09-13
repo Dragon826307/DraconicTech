@@ -46,7 +46,7 @@ public final class ServerCommandHandler {
      * 将方法内的指令节点标记为瞬时指令，即在Netty IO线程中运行的指令，不会进入游戏主线程
      */
     public static <T extends ArgumentBuilder<ServerCommandSource, T>> T instantRun(T builder) {
-        ((InstantCommandBuilder) builder).draconictech$setInstant(true);
+        ((InstantCommandBuilder) builder).draconictech$setSingleFlag(CommandFlags.INSTANT, true);
         return builder;
     }
 }

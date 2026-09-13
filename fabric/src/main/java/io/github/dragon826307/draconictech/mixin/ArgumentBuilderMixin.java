@@ -1,4 +1,4 @@
-package io.github.dragon826307.draconictech.mixin.tick;
+package io.github.dragon826307.draconictech.mixin;
 
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import io.github.dragon826307.draconictech.features.microtick.mixin_int.InstantCommandBuilder;
@@ -8,15 +8,15 @@ import org.spongepowered.asm.mixin.Unique;
 @Mixin(value = ArgumentBuilder.class)
 public abstract class ArgumentBuilderMixin implements InstantCommandBuilder {
     @Unique
-    private boolean isInstantCommand = false;
+    private int flags = 0;
 
     @Override
-    public void draconictech$setInstant(boolean instant) {
-        this.isInstantCommand = instant;
+    public void draconictech$setSingleFlag(int flag, boolean bl) {
+        flags = (flags | flag) & (bl ? -1 : ~flag);
     }
 
     @Override
-    public boolean draconictech$isInstant() {
-        return this.isInstantCommand;
+    public int draconictech$getFlags() {
+        return flags;
     }
 }

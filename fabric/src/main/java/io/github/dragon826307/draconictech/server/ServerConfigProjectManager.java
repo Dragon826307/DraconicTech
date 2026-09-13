@@ -22,6 +22,9 @@ public class ServerConfigProjectManager extends ConfigProjectManager {
         ConfigProjectManager.onConfigSave(ServerConfigProjectManager::saveALL);
     }
     public static ConfigGetterValue getConfig(ConfigProjects.Server project) {
+        if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
+            return new ConfigGetterValue(project.getSinglePlayerValue());
+        }
         return CACHE.getOrDefault(project,new ConfigGetterValue(project.getDefaultValue()));
     }
     public static boolean setConfig(ConfigProjects.Server project, Object value) {

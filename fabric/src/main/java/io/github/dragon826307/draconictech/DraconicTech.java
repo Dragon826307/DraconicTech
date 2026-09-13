@@ -26,7 +26,7 @@ public class DraconicTech implements ModInitializer {
         drawModLogoInLogger();
     }
     public static MicroTickManager getMicroTickManager(){
-        return MicroTickManager.INSTANCE;
+        return MicroTickManager.getInstance();
     }
     private static void drawModLogoInLogger() {
         LOGGER.info("""

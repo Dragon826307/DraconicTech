@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 public class DedicatedServerWatchdogMixin {
     @ModifyVariable(method = "run",at = @At(value = "LOAD", ordinal = 0),ordinal = 0)
     private long onRun(long l){
-        if (MicroTickManager.INSTANCE.isOnTickPostProcessing()) return Long.MAX_VALUE;
+        if (MicroTickManager.getInstance().isOnTickPostProcessing()) return Long.MAX_VALUE;
         return l;
     }
 }

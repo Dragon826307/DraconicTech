@@ -73,7 +73,7 @@ public final class ConfigProjects {
             return REGISTRY.toArray(new Main[0]);
         }
         public static final Main ALLOW_MODIFY_CONTAINER_SIGNAL = register(new Main("ContainerSignalModifier:allow_modify_container_signal", ConfigType.BOOLEAN, false, null, false, null, null));
-        public static final Main GLOBAL_TICK_FREEZE_ORIGIN = register(new Main("MicroTickManager:default_global_tick_freeze_origin", ConfigType.STRING, "before_network_update", "^(?:before|after)_network_update$", false, new String[]{"before_network_update", "after_network_update"}, () -> MicroTickManager.INSTANCE.checkConfig()));
+        public static final Main GLOBAL_TICK_FREEZE_ORIGIN = register(new Main("MicroTickManager:default_global_tick_freeze_origin", ConfigType.STRING, "before_network_update", "^(?:before|after)_network_update$", false, new String[]{"before_network_update", "after_network_update"}, () -> MicroTickManager.getInstance().checkConfig()));
         private final String name;
         private final ConfigType type;
         private final Object defaultValue;
@@ -120,19 +120,21 @@ public final class ConfigProjects {
         public static Server[] values() {
             return REGISTRY.toArray(new Server[0]);
         }
-        public static final Server STATUS_COMMAND_PERMISSION = register(new Server("status_command_permission_requirement", ConfigType.INT, 2, "0-4",null));
-        public static final Server ALLOW_PLAYER_WITH_NO_MOD_CHANGE_CONFIG = register(new Server("allow_player_with_no_mod_change_config", ConfigType.BOOLEAN, true, null,null));
+        public static final Server STATUS_COMMAND_PERMISSION = register(new Server("status_command_permission_requirement", ConfigType.INT, 2, "0-4",null,4));
+        public static final Server ALLOW_PLAYER_WITH_NO_MOD_CHANGE_CONFIG = register(new Server("allow_player_with_no_mod_change_config", ConfigType.BOOLEAN, false, null,null,true));
         private final String name;
         private final ConfigType type;
         private final Object defaultValue;
         private final String validRange;
         private final Runnable postProcessing;
-        public Server(String name, ConfigType type, Object defaultValue, String validRange,Runnable configPostProcessing) {
+        private final Object singlePlayerValue;
+        public Server(String name, ConfigType type, Object defaultValue, String validRange,Runnable configPostProcessing,Object singlePlayerValue) {
             this.name = name;
             this.type = type;
             this.defaultValue = defaultValue;
             this.validRange = validRange;
             this.postProcessing = configPostProcessing;
+            this.singlePlayerValue = singlePlayerValue;
         }
         @Override
         public String getName() { return name; }
@@ -150,6 +152,7 @@ public final class ConfigProjects {
         public String[] getSuggestList() { return EmptyArrays.EMPTY_STRINGS; }
         @Override
         public @Nullable Runnable getPostProcessing() {return postProcessing; }
+        public Object getSinglePlayerValue() { return singlePlayerValue; }
     }
     @SuppressWarnings("ClassCanBeRecord")
     public static final class Auto implements ConfigProjectsInt {

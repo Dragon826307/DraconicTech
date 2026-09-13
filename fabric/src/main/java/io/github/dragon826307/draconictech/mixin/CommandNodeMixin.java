@@ -1,4 +1,4 @@
-package io.github.dragon826307.draconictech.mixin.tick;
+package io.github.dragon826307.draconictech.mixin;
 
 import com.mojang.brigadier.tree.CommandNode;
 import io.github.dragon826307.draconictech.features.microtick.mixin_int.InstantCommandNode;
@@ -8,15 +8,15 @@ import org.spongepowered.asm.mixin.Unique;
 @Mixin(value = CommandNode.class)
 public class CommandNodeMixin implements InstantCommandNode {
     @Unique
-    private boolean isInstantCommand = false;
+    private int flags = 0;
 
     @Override
-    public void draconictech$setInstant(boolean instant) {
-        isInstantCommand = instant;
+    public void draconictech$setFlags(int flags) {
+        this.flags = flags;
     }
 
     @Override
-    public boolean draconictech$isInstant() {
-        return isInstantCommand;
+    public int draconictech$getFlags() {
+        return flags;
     }
 }

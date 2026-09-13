@@ -1,4 +1,4 @@
-package io.github.dragon826307.draconictech.mixin.tick;
+package io.github.dragon826307.draconictech.mixin;
 
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.tree.ArgumentCommandNode;
@@ -14,8 +14,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class RequiredArgumentBuilderMixin {
     @Inject(method = "build()Lcom/mojang/brigadier/tree/ArgumentCommandNode;",at = @At(value = "RETURN"))
     private void onBuild(CallbackInfoReturnable<ArgumentCommandNode<ServerCommandSource, ?>> cir) {
-        if (((InstantCommandBuilder) this).draconictech$isInstant()) {
-            ((InstantCommandNode) cir.getReturnValue()).draconictech$setInstant(true);
-        }
+        ((InstantCommandNode) cir.getReturnValue()).draconictech$setFlags(((InstantCommandBuilder) this).draconictech$getFlags());
     }
 }

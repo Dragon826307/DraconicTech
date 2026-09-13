@@ -25,7 +25,7 @@ public class TickHaltCommand implements ServerCommandCallback, FeatureCommandInt
     @Override
     public LiteralArgumentBuilder<ServerCommandSource> addCommandBranch(LiteralArgumentBuilder<ServerCommandSource> thisCommandBranch) {
         return ServerCommandHandler.instantRun(thisCommandBranch.executes(context -> {
-            int lvl = MicroTickManager.INSTANCE.getTickFrozenLevel();
+            int lvl = MicroTickManager.getInstance().getTickFrozenLevel();
             context.getSource().sendFeedback(() -> Text.empty().append(PREFIX).append(ServerTranslationUtil.getTranslatedWithFallback("dt.micro_tick.frozen_lvl",switch (lvl){
                 case 0 -> "normal(0)";
                 case 1 -> "global(1)";
@@ -39,7 +39,7 @@ public class TickHaltCommand implements ServerCommandCallback, FeatureCommandInt
         }).then(CommandManager.literal("halt").then(ServerCommandHandler.instantRun(CommandManager.argument("level",IntegerArgumentType.integer(0,5)).executes(commandContext -> {
             int lvl = IntegerArgumentType.getInteger(commandContext,"level");
             if (lvl == 0) {
-                if (MicroTickManager.INSTANCE.isFreeze()) MicroTickManager.INSTANCE.unfreeze();
+                if (MicroTickManager.getInstance().isFreeze()) MicroTickManager.getInstance().unfreeze();
                 return 1;
             }
             ServerTickManager serverTickManager = commandContext.getSource().getServer().getTickManager();
@@ -47,19 +47,19 @@ public class TickHaltCommand implements ServerCommandCallback, FeatureCommandInt
                 commandContext.getSource().sendFeedback(() -> CANT_FREEZE,false);
                 return 1;
             }
-            MicroTickManager.INSTANCE.setCommandSource(commandContext.getSource());
-            DraconicTech.getMicroTickManager().setTickFrozenLevel(lvl);
+            MicroTickManager.getInstance().setCommandSource(commandContext.getSource());
             serverTickManager.stopSprinting();
+            DraconicTech.getMicroTickManager().setTickFrozenLevel(lvl);
             return 1;
         }))).requires(s -> s.hasPermissionLevel(4))).then(CommandManager.literal("step").then(ServerCommandHandler.instantRun(CommandManager.argument("step",IntegerArgumentType.integer(1)).executes(commandContext -> {
             int step = IntegerArgumentType.getInteger(commandContext,"step");
-            if (!MicroTickManager.INSTANCE.isFreeze()) {
+            if (!MicroTickManager.getInstance().isFreeze()) {
                 commandContext.getSource().sendFeedback(() -> Text.empty().append(PREFIX).append(CANT_STEP),false);
                 return 1;
             }
-            MicroTickManager.INSTANCE.setCommandSource(commandContext.getSource());
-            MicroTickManager.INSTANCE.step(step);
-            commandContext.getSource().sendFeedback(() -> Text.empty().append(PREFIX).append(ServerTranslationUtil.getTranslatedWithFallback("dt.micro_tick.step",step)),false);
+            MicroTickManager.getInstance().setCommandSource(commandContext.getSource());
+            MicroTickManager.getInstance().step(step);
+            commandContext.getSource().sendFeedback(() -> Text.empty().append(PREFIX).append(ServerTranslationUtil.getTranslatedWithFallback("dt.micro_tick.step",step)),true);
             return 1;
         }))).requires(s -> s.hasPermissionLevel(4))).then(ServerCommandHandler.instantRun(Util.flagCommand())));
     }
@@ -72,12 +72,12 @@ public class TickHaltCommand implements ServerCommandCallback, FeatureCommandInt
             LiteralArgumentBuilder<ServerCommandSource> node = CommandManager.literal("flag");
             MicroTickingFlags.getFlags().forEach((i, s) -> {
                 node.then(CommandManager.literal(s).executes(context -> {
-                    context.getSource().sendFeedback(() -> ServerTranslationUtil.getFullKeyAndTryTranslate("current_micro_tick_flag",String.valueOf(MicroTickManager.INSTANCE.getMicroTickFlag(i))).withColor(6750130),false);
+                    context.getSource().sendFeedback(() -> ServerTranslationUtil.getFullKeyAndTryTranslate("current_micro_tick_flag",String.valueOf(MicroTickManager.getInstance().getMicroTickFlag(i))).withColor(6750130),false);
                     return 1;
                 }).then(CommandManager.argument("flag", BoolArgumentType.bool()).executes(context -> {
-                    MicroTickManager.INSTANCE.setCommandSource(context.getSource());
-                    MicroTickManager.INSTANCE.setMicroTickFlag(i,BoolArgumentType.getBool(context,"flag"));
-                    context.getSource().sendFeedback(() -> ServerTranslationUtil.getFullKeyAndTryTranslate("set_micro_tick_flag",s,String.valueOf(MicroTickManager.INSTANCE.getMicroTickFlag(i))).withColor(6750130),true);
+                    MicroTickManager.getInstance().setCommandSource(context.getSource());
+                    MicroTickManager.getInstance().setMicroTickFlag(i,BoolArgumentType.getBool(context,"flag"));
+                    context.getSource().sendFeedback(() -> ServerTranslationUtil.getFullKeyAndTryTranslate("set_micro_tick_flag",s,String.valueOf(MicroTickManager.getInstance().getMicroTickFlag(i))).withColor(6750130),true);
                     return 1;
                 })));
             });
