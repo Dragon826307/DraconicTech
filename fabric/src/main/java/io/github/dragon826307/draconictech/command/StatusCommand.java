@@ -2,11 +2,11 @@ package io.github.dragon826307.draconictech.command;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.sun.management.OperatingSystemMXBean;
-import io.github.dragon826307.draconictech.config.ConfigProjects;
+import io.github.dragon826307.draconictech.config.ConfigProject;
 import io.github.dragon826307.draconictech.server.ServerConfigProjectManager;
-import io.github.dragon826307.draconictech.util.AutoInitialize;
-import io.github.dragon826307.draconictech.util.InitializePhase;
 import io.github.dragon826307.draconictech.util.ServerTranslationUtil;
+import io.github.dragon826307.draconictech.util.auto_init.AutoInitialize;
+import io.github.dragon826307.draconictech.util.auto_init.InitializePhase;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
@@ -44,7 +44,7 @@ public class StatusCommand implements ServerCommandCallback{
             updateSystemInfo();
             context.getSource().sendFeedback(() -> Text.translatableWithFallback("status_command.system_info", ServerTranslationUtil.getOrNull("status_command.system_info"),SYSTEM_INFO_LIST).withColor(0x55FFFF),false);
             return 1;
-        })).then(CommandManager.literal("minecraft")).requires(source -> source.hasPermissionLevel(ServerConfigProjectManager.getConfig(ConfigProjects.Server.STATUS_COMMAND_PERMISSION).asInt()));
+        })).then(CommandManager.literal("minecraft")).requires(source -> source.hasPermissionLevel(ServerConfigProjectManager.getConfig(ConfigProject.Server.STATUS_COMMAND_PERMISSION)));
     }
     @Override
     public String setBranchName() {

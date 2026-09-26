@@ -1,8 +1,6 @@
 package io.github.dragon826307.draconictech.client.util.click_event;
 
 import io.github.dragon826307.draconictech.DraconicTech;
-import io.github.dragon826307.draconictech.client.DraconicTechClient;
-import io.github.dragon826307.draconictech.client.util.ClientChatHudHelper;
 import org.apache.commons.lang3.RandomStringUtils;
 
 import java.util.HashMap;
@@ -17,7 +15,6 @@ public final class CommandBaseClickEvent {
         return new net.minecraft.text.ClickEvent.RunCommand(PREFIX + id);
     }
     public static void runWithID(String id) {
-        if (DraconicTechClient.DEBUG) ClientChatHudHelper.sendDebugMessageInChat("Running CommandBaseClickEvent for ID: " + id);
         ClickEvent event = TASK_EVENTS.get(id);
         if (event != null) {
             event.onClick();

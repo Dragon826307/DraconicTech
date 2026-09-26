@@ -4,9 +4,9 @@ import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import io.github.dragon826307.draconictech.DraconicTech;
-import io.github.dragon826307.draconictech.features.microtick.mixin_int.InstantCommandBuilder;
-import io.github.dragon826307.draconictech.util.AutoInitialize;
-import io.github.dragon826307.draconictech.util.InitializePhase;
+import io.github.dragon826307.draconictech.functions.microtick.mixin_int.InstantCommandBuilder;
+import io.github.dragon826307.draconictech.util.auto_init.AutoInitialize;
+import io.github.dragon826307.draconictech.util.auto_init.InitializePhase;
 import io.github.dragon826307.draconictech.util.marker_int.FeatureCommandInt;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandManager;
@@ -28,7 +28,7 @@ public final class ServerCommandHandler {
     private static void init(){
         for(ServerCommandCallback c : callbacks) {
             LiteralArgumentBuilder<ServerCommandSource> branch;
-            if (c instanceof FeatureCommandInt) branch = CommandManager.literal("features").then(c.addCommandBranch(CommandManager.literal(c.setBranchName())));
+            if (c instanceof FeatureCommandInt) branch = CommandManager.literal("functions").then(c.addCommandBranch(CommandManager.literal(c.setBranchName())));
             else branch = c.addCommandBranch(CommandManager.literal(c.setBranchName()));
             commandRoot.then(branch);
             commandRoot_copy.then(branch);

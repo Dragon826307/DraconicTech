@@ -5,39 +5,35 @@ import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
-import io.github.dragon826307.draconictech.DraconicTech;
-import io.github.dragon826307.draconictech.config.ConfigParserValue;
-import io.github.dragon826307.draconictech.config.ConfigProjectManager;
-import io.github.dragon826307.draconictech.config.ConfigProjectsInt;
-import net.minecraft.text.Text;
+import io.github.dragon826307.draconictech.config.AbstractConfigType;
+import io.github.dragon826307.draconictech.util.ServerTranslationUtil;
+import io.netty.util.internal.UnstableApi;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.Colors;
 
-public record ConfigValueArgumentType(ConfigProjectsInt config) implements ArgumentType<Object> {
-    private static final DynamicCommandExceptionType CONFIG_ERR = new DynamicCommandExceptionType(err -> Text.translatable("dt.config_value.invalid_range", err).withColor(Colors.RED));
+//TODO
+@UnstableApi
+public record ConfigValueArgumentType<T>(AbstractConfigType<T> config) implements ArgumentType<Object> {
+    private static final DynamicCommandExceptionType CONFIG_ERR = new DynamicCommandExceptionType(err -> ServerTranslationUtil.getFullKeyAndTryTranslate("invalid_value",err).withColor(Colors.RED));
 
-    public static ConfigValueArgumentType config(ConfigProjectsInt config) {
-        return new ConfigValueArgumentType(config);
+    public static <T> ConfigValueArgumentType<T> config(AbstractConfigType<T> config) {
+        return new ConfigValueArgumentType<>(config);
     }
 
     @Override
     public Object parse(StringReader reader) throws CommandSyntaxException {
-        String rawString = reader.readString();
-        if (DraconicTech.DEBUG) {
-            DraconicTech.LOGGER.debug("[ConfigValueArgumentType]: ParseValue:{}", rawString);
+        int start = reader.getCursor();
+        String raw_input = reader.readString();
+        if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
+            T raw_parse_result = config.getParser().parse(raw_input);
+            if (raw_parse_result == null || config.getConfigValidator().check(raw_parse_result)) {
+                throw CONFIG_ERR.create(config.getInvalidReason());
+            }
+        }else {
+
         }
-        if (config == null) {
-            throw CONFIG_ERR.create("NULL Config");
-        }
-        Object parsedObject = ConfigProjectManager.parseValueFromString(rawString, config.getConfigType());
-        if (parsedObject == null) {
-            throw CONFIG_ERR.create(rawString);
-        }
-        ConfigParserValue validation = ConfigProjectManager.parseValue(parsedObject, config);
-        if (validation.isSuccess()) {
-            return parsedObject;
-        } else {
-            throw CONFIG_ERR.create(validation.message());
-        }
+        return null;
     }
 
     public static Object getValueOrNull(CommandContext<?> context, String name) {

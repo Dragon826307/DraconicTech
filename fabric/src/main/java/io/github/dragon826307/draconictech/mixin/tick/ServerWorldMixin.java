@@ -2,8 +2,8 @@ package io.github.dragon826307.draconictech.mixin.tick;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import io.github.dragon826307.draconictech.features.microtick.MicroTickManager;
-import io.github.dragon826307.draconictech.features.microtick.MicroTickingFlags;
+import io.github.dragon826307.draconictech.functions.microtick.MicroTickManager;
+import io.github.dragon826307.draconictech.functions.microtick.MicroTickingFlags;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.border.WorldBorder;

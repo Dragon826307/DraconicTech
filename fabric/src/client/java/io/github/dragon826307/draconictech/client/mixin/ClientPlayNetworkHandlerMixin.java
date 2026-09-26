@@ -3,9 +3,7 @@ package io.github.dragon826307.draconictech.client.mixin;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.tree.ArgumentCommandNode;
 import com.mojang.brigadier.tree.CommandNode;
-import io.github.dragon826307.draconictech.client.DraconicTechClient;
 import io.github.dragon826307.draconictech.client.command.ClientCommandHandler;
-import io.github.dragon826307.draconictech.client.util.ClientChatHudHelper;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -34,15 +32,7 @@ public class ClientPlayNetworkHandlerMixin {
             int index = command.indexOf(" ");
             if (index == -1) return;
             String string = command.substring(index).trim();
-//            if (serverCommandTreeBranch != null && isInCommandTree(string,serverCommandTreeBranch)) {
-//                if (DraconicTechClient.DEBUG) ClientChatHudHelper.sendDebugMessageInChat("is server command!");
-//                ClientPlayNetworkHandler clientPlayNetworkHandler = MinecraftClient.getInstance().getNetworkHandler();
-//                if (clientPlayNetworkHandler != null) {
-//                    clientPlayNetworkHandler.sendPacket(new CommandExecutionC2SPacket(command));
-//                }
-//            }
             if (clientCommandTreeBranch != null && isInCommandTree(string, clientCommandTreeBranch)) {
-                if (DraconicTechClient.DEBUG) ClientChatHudHelper.sendDebugMessageInChat("is client command!");
                 return;
             }else {
                 //TODO : 判断不严谨！需要单独保存客户端与服务端指令树，随后各自判断
@@ -50,7 +40,6 @@ public class ClientPlayNetworkHandlerMixin {
                 if (clientPlayNetworkHandler != null) {
                     clientPlayNetworkHandler.sendPacket(new CommandExecutionC2SPacket(command));
                 }
-                if (DraconicTechClient.DEBUG) ClientChatHudHelper.sendDebugMessageInChat("is server command!");
             }
             ci.cancel();
         }

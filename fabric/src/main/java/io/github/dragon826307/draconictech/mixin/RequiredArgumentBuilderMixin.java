@@ -2,8 +2,8 @@ package io.github.dragon826307.draconictech.mixin;
 
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.tree.ArgumentCommandNode;
-import io.github.dragon826307.draconictech.features.microtick.mixin_int.InstantCommandBuilder;
-import io.github.dragon826307.draconictech.features.microtick.mixin_int.InstantCommandNode;
+import io.github.dragon826307.draconictech.functions.microtick.mixin_int.InstantCommandBuilder;
+import io.github.dragon826307.draconictech.functions.microtick.mixin_int.InstantCommandNode;
 import net.minecraft.server.command.ServerCommandSource;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

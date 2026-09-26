@@ -1,4 +1,4 @@
-package io.github.dragon826307.draconictech.util;
+package io.github.dragon826307.draconictech.util.auto_init;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -21,6 +21,7 @@ import java.util.stream.Stream;
 public final class AutoInitializeManager {
     private static final String[] TARGET_ARRAYS = new String[]{"mixins", "client", "server"};
     private static final Map<InitializePhase, List<Method>> REGISTERED_METHODS = new EnumMap<>(InitializePhase.class);
+    private static final Map<Method, Integer> INFERRED_PRIORITIES = new HashMap<>();
     public static void scanAndRegister(Predicate<String> packageFilter) {
         for (ModContainer modContainer : FabricLoader.getInstance().getAllMods()) {
             CustomValue customValue = modContainer.getMetadata().getCustomValue(DraconicTech.MOD_ID + ":auto_init");
@@ -57,14 +58,86 @@ public final class AutoInitializeManager {
                 }
             }
         }
+        resolvePriorities();
         for (List<Method> methods : REGISTERED_METHODS.values()) {
-            methods.sort((m1, m2) -> {
-                int p1 = m1.getAnnotation(AutoInitialize.class).priority();
-                int p2 = m2.getAnnotation(AutoInitialize.class).priority();
-                return Integer.compare(p1, p2);
-            });
+            methods.sort(Comparator.comparingInt(m -> INFERRED_PRIORITIES.getOrDefault(m, 1000)));
         }
     }
+
+    private static void resolvePriorities() {
+        Map<Method, Integer> inDegree = new HashMap<>();
+        Map<Method, List<Method>> dependents = new HashMap<>();
+        Map<Method, Integer> minTargetTracker = new HashMap<>();
+        for (List<Method> methods : REGISTERED_METHODS.values()) {
+            for (Method m : methods) {
+                inDegree.put(m, 0);
+                dependents.put(m, new ArrayList<>());
+                minTargetTracker.put(m, Integer.MAX_VALUE);
+            }
+        }
+        for (Map.Entry<InitializePhase, List<Method>> entry : REGISTERED_METHODS.entrySet()) {
+            List<Method> methods = entry.getValue();
+            for (Method m : methods) {
+                if (m.isAnnotationPresent(ProviderTo.class)) {
+                    Class<?> targetClass = m.getAnnotation(ProviderTo.class).value();
+                    boolean foundTarget = false;
+                    for (Method targetM : methods) {
+                        if (targetM.getDeclaringClass().equals(targetClass)) {
+                            foundTarget = true;
+                            inDegree.put(m, inDegree.get(m) + 1);
+                            dependents.get(targetM).add(m);
+                        }
+                    }
+                    if (!foundTarget) {
+                        minTargetTracker.put(m, 1000);
+                    }
+                }
+            }
+        }
+        Queue<Method> queue = new LinkedList<>();
+        for (Map.Entry<Method, Integer> entry : inDegree.entrySet()) {
+            if (entry.getValue() == 0) {
+                queue.offer(entry.getKey());
+            }
+        }
+        int resolvedCount = 0;
+        while (!queue.isEmpty()) {
+            Method current = queue.poll();
+            resolvedCount++;
+            int finalPriority;
+            if (current.isAnnotationPresent(ProviderTo.class)) {
+                int currentPriority = minTargetTracker.get(current);
+                if (currentPriority == Integer.MIN_VALUE) {
+                    DraconicTech.LOGGER.error("The priority inference value of method '{}' is out of range. (-2147483648) At '{}'", current.getName(), current.getDeclaringClass().getSimpleName());
+                    throw new IllegalStateException();
+                }
+                finalPriority = currentPriority - 1;
+            } else {
+                finalPriority = current.getAnnotation(AutoInitialize.class).priority();
+            }
+            INFERRED_PRIORITIES.put(current, finalPriority);
+            for (Method dep : dependents.get(current)) {
+                minTargetTracker.put(dep, Math.min(minTargetTracker.get(dep), finalPriority));
+                int currentInDegree = inDegree.get(dep) - 1;
+                inDegree.put(dep, currentInDegree);
+                if (currentInDegree == 0) {
+                    queue.offer(dep);
+                }
+            }
+        }
+        if (resolvedCount != inDegree.size()) {
+            List<String> cycleMethods = new ArrayList<>();
+            for (Map.Entry<Method, Integer> entry : inDegree.entrySet()) {
+                if (entry.getValue() > 0) {
+                    Method m = entry.getKey();
+                    cycleMethods.add(m.getDeclaringClass().getSimpleName() + "#" + m.getName());
+                }
+            }
+            DraconicTech.LOGGER.error("Circular dependency! \n Involving the following methods: {}", Arrays.toString(cycleMethods.toArray()));
+            throw new IllegalStateException();
+        }
+    }
+
     public static void trigger(InitializePhase phase, Object... contexts) {
         List<Method> methods = REGISTERED_METHODS.getOrDefault(phase, Collections.emptyList());
         for (Method method : methods) {

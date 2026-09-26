@@ -4,10 +4,8 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import io.github.dragon826307.draconictech.DraconicTech;
 import io.github.dragon826307.draconictech.client.command.argument.EnhancedChatArgumentType;
-import io.github.dragon826307.draconictech.command.argument.ConfigValueArgumentType;
-import io.github.dragon826307.draconictech.command.argument.serializer.ConfigValueArgumentSerializer;
-import io.github.dragon826307.draconictech.util.AutoInitialize;
-import io.github.dragon826307.draconictech.util.InitializePhase;
+import io.github.dragon826307.draconictech.util.auto_init.AutoInitialize;
+import io.github.dragon826307.draconictech.util.auto_init.InitializePhase;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
@@ -45,6 +43,6 @@ public final class ClientCommandHandler {
     @AutoInitialize(phase = InitializePhase.ON_MOD_INIT_CLIENT)
     private static void register() {
         ArgumentTypeRegistry.registerArgumentType(Identifier.of(DraconicTech.MOD_ID,"enhanced_chat"), EnhancedChatArgumentType.class, ConstantArgumentSerializer.of(EnhancedChatArgumentType::eChatArgument));
-        ArgumentTypeRegistry.registerArgumentType(Identifier.of(DraconicTech.MOD_ID,"config_value"), ConfigValueArgumentType.class, new ConfigValueArgumentSerializer());
+//        ArgumentTypeRegistry.registerArgumentType(Identifier.of(DraconicTech.MOD_ID,"config_value"), ConfigValueArgumentType.class, new ConfigValueArgumentSerializer());
     }
 }

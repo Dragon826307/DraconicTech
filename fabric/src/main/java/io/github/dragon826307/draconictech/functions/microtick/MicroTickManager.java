@@ -1,16 +1,16 @@
-package io.github.dragon826307.draconictech.features.microtick;
+package io.github.dragon826307.draconictech.functions.microtick;
 
 import io.github.dragon826307.draconictech.DraconicTech;
+import io.github.dragon826307.draconictech.config.ConfigProject;
 import io.github.dragon826307.draconictech.config.ConfigProjectManager;
-import io.github.dragon826307.draconictech.config.ConfigProjects;
 import io.github.dragon826307.draconictech.mixin.tick.ChunkHolderInvoker;
 import io.github.dragon826307.draconictech.mixin.tick.EntityTrackerInvoker;
 import io.github.dragon826307.draconictech.mixin.tick.ServerChunkLoadingManagerAccessor;
 import io.github.dragon826307.draconictech.mixin.tick.ServerCommonNetworkHandlerAccessor;
-import io.github.dragon826307.draconictech.util.AutoInitialize;
-import io.github.dragon826307.draconictech.util.InitializePhase;
 import io.github.dragon826307.draconictech.util.SendMessageHelper;
 import io.github.dragon826307.draconictech.util.ServerTranslationUtil;
+import io.github.dragon826307.draconictech.util.auto_init.AutoInitialize;
+import io.github.dragon826307.draconictech.util.auto_init.InitializePhase;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
@@ -20,10 +20,13 @@ import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 
+import java.util.List;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 public class MicroTickManager {
+    public static final ConfigProject.Main<Boolean> IS_FREEZE_ORIGIN_BEFORE_NETWORK_UPDATE = ConfigProject.Main.register(new ConfigProject.Main<>("MicroTickManager:is_freeze_origin_before_network_update", Boolean.class , true, null, s -> s.equals("before_network_update") ? Boolean.TRUE : s.equals("after_network_update") ? Boolean.FALSE : null ,null , () -> List.of("before_network_update", "after_network_update"), () -> MicroTickManager.getInstance().checkConfig(), ConfigProject.UpdateCommandTreeFlags.NOTHING));
+
     private static final String FAIL_NULL = ServerTranslationUtil.getOrNull("dt.micro_tick.fail_null");
     private static final Text FAIL_NULL_T = SendMessageHelper.getMessage(ServerTranslationUtil.getTranslatedWithFallback("dt.micro_tick.fail_null"),true);
     private static final String PREPARE_FAIL = ServerTranslationUtil.getOrNull("dt.micro_tick.prepare_fail");
@@ -95,8 +98,8 @@ public class MicroTickManager {
     }
 
     public void checkConfig() {
-        String config = ConfigProjectManager.getConfig(ConfigProjects.Main.GLOBAL_TICK_FREEZE_ORIGIN).asString();
-        setMicroTickFlag(MicroTickingFlags.ORIGIN_BEFORE_NU, config.equals(ConfigProjects.Main.GLOBAL_TICK_FREEZE_ORIGIN.getDefaultValue()));
+        boolean before_nu = ConfigProjectManager.getConfig(IS_FREEZE_ORIGIN_BEFORE_NETWORK_UPDATE);
+        setMicroTickFlag(MicroTickingFlags.ORIGIN_BEFORE_NU, before_nu);
     }
 
     public boolean isFreeze() {

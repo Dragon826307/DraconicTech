@@ -1,10 +1,8 @@
 package io.github.dragon826307.draconictech.client.util.enhanced_chat;
 
 import com.google.common.io.BaseEncoding;
-import io.github.dragon826307.draconictech.client.DraconicTechClient;
 import io.github.dragon826307.draconictech.client.config.ClientConfigProjectManager;
 import io.github.dragon826307.draconictech.client.config.ClientConfigProjects;
-import io.github.dragon826307.draconictech.client.util.ClientChatHudHelper;
 import net.minecraft.util.StringHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -20,8 +18,7 @@ public enum ChatFeatures {
         if (utf_matcher.find()) {
             String hex_string = utf_matcher.group();
             String parse = new String(BaseEncoding.base16().decode(hex_string), StandardCharsets.UTF_8);
-            if (DraconicTechClient.DEBUG) ClientChatHudHelper.sendDebugMessageInChat("UTF8 value:" + parse);
-            if (ClientConfigProjectManager.getConfig(ClientConfigProjects.ALLOW_ILLEGAL_CHAT_CHARACTER).asBoolean()) return EnhancedChatParseResult.success(parse);
+            if (ClientConfigProjectManager.getConfig(ClientConfigProjects.ALLOW_ILLEGAL_CHAT_CHARACTER)) return EnhancedChatParseResult.success(parse);
             for (int i = 0; i < parse.length(); i++) if (!StringHelper.isValidChar(parse.charAt(i))) return EnhancedChatParseResult.error("dt.e_chat.utf.illegal_char", parse);
             return EnhancedChatParseResult.success(parse);
         }else return EnhancedChatParseResult.error("dt.e_chat.utf.format_err");

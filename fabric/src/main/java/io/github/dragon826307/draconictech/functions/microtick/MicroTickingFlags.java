@@ -1,4 +1,4 @@
-package io.github.dragon826307.draconictech.features.microtick;
+package io.github.dragon826307.draconictech.functions.microtick;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;

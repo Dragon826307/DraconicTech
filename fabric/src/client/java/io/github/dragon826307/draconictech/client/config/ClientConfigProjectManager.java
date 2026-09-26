@@ -1,21 +1,22 @@
 package io.github.dragon826307.draconictech.client.config;
 
 import io.github.dragon826307.draconictech.DraconicTech;
-import io.github.dragon826307.draconictech.config.ConfigGetterValue;
+import io.github.dragon826307.draconictech.config.ConfigProject;
 import io.github.dragon826307.draconictech.config.ConfigProjectManager;
-import io.github.dragon826307.draconictech.config.ConfigProjects;
-import io.github.dragon826307.draconictech.util.AutoInitialize;
-import io.github.dragon826307.draconictech.util.InitializePhase;
+import io.github.dragon826307.draconictech.util.auto_init.AutoInitialize;
+import io.github.dragon826307.draconictech.util.auto_init.InitializePhase;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class ClientConfigProjectManager extends ConfigProjectManager {
-    private static final Map<ConfigProjects.Client, ConfigGetterValue> CACHE = new ConcurrentHashMap<>();
+    private static final Map<ConfigProject.Client<?>, Object> CACHE = new ConcurrentHashMap<>();
+    private static final Path CLIENT_CONFIG = ROOT.resolve("client.dat");
     @AutoInitialize(phase = InitializePhase.ON_CLIENT_STARTED,priority = 999)
     private static void init() {
         DraconicTech.LOGGER.info("Initializing ClientConfigProjectManager");
@@ -28,23 +29,13 @@ public final class ClientConfigProjectManager extends ConfigProjectManager {
             throw new RuntimeException(e);
         }
         loadALL();
-        for (ConfigProjects.Client project: ConfigProjects.Client.values()) CACHE.putIfAbsent(project, new ConfigGetterValue(project.getDefaultValue()));
-        onConfigSave(ClientConfigProjectManager::saveALL);
-    }
-    public static ConfigGetterValue getConfig(ConfigProjects.Client project) {
-        return CACHE.get(project);
-    }
-    public static boolean setConfig(ConfigProjects.Client project, Object value) {
-        if (project.getConfigType().getClazz().isInstance(value)) {
-            CACHE.put(project, new ConfigGetterValue(value));
-            return true;
-        }
-        return false;
+        for (ConfigProject.Client<?> project: ConfigProject.Client.values()) CACHE.putIfAbsent(project, project.getDefaultValue());
+        ConfigProjectManager.onSave(ClientConfigProjectManager::saveALL);
     }
     public static void saveALL(){
         atomicWrite(CLIENT_CONFIG,copyALL(CACHE));
     }
     private static void loadALL(){
-        loadFormFile(CLIENT_CONFIG,ConfigProjects.Client.values(),CACHE);
+        loadFormFile(CLIENT_CONFIG, ConfigProject.Client.values(),CACHE);
     }
 }

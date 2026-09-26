@@ -4,9 +4,13 @@ import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.github.dragon826307.draconictech.DraconicTech;
-import io.github.dragon826307.draconictech.features.microtick.MicroTickManager;
-import io.github.dragon826307.draconictech.features.microtick.MicroTickingFlags;
-import io.github.dragon826307.draconictech.util.*;
+import io.github.dragon826307.draconictech.functions.microtick.MicroTickManager;
+import io.github.dragon826307.draconictech.functions.microtick.MicroTickingFlags;
+import io.github.dragon826307.draconictech.util.SendMessageHelper;
+import io.github.dragon826307.draconictech.util.ServerTranslationUtil;
+import io.github.dragon826307.draconictech.util.TextColorHelper;
+import io.github.dragon826307.draconictech.util.auto_init.AutoInitialize;
+import io.github.dragon826307.draconictech.util.auto_init.InitializePhase;
 import io.github.dragon826307.draconictech.util.marker_int.FeatureCommandInt;
 import net.minecraft.server.ServerTickManager;
 import net.minecraft.server.command.CommandManager;
@@ -70,17 +74,15 @@ public class TickHaltCommand implements ServerCommandCallback, FeatureCommandInt
     private static final class Util {
         private static LiteralArgumentBuilder<ServerCommandSource> flagCommand() {
             LiteralArgumentBuilder<ServerCommandSource> node = CommandManager.literal("flag");
-            MicroTickingFlags.getFlags().forEach((i, s) -> {
-                node.then(CommandManager.literal(s).executes(context -> {
-                    context.getSource().sendFeedback(() -> ServerTranslationUtil.getFullKeyAndTryTranslate("current_micro_tick_flag",String.valueOf(MicroTickManager.getInstance().getMicroTickFlag(i))).withColor(6750130),false);
-                    return 1;
-                }).then(CommandManager.argument("flag", BoolArgumentType.bool()).executes(context -> {
-                    MicroTickManager.getInstance().setCommandSource(context.getSource());
-                    MicroTickManager.getInstance().setMicroTickFlag(i,BoolArgumentType.getBool(context,"flag"));
-                    context.getSource().sendFeedback(() -> ServerTranslationUtil.getFullKeyAndTryTranslate("set_micro_tick_flag",s,String.valueOf(MicroTickManager.getInstance().getMicroTickFlag(i))).withColor(6750130),true);
-                    return 1;
-                })));
-            });
+            MicroTickingFlags.getFlags().forEach((i, s) -> node.then(CommandManager.literal(s).executes(context -> {
+                context.getSource().sendFeedback(() -> ServerTranslationUtil.getFullKeyAndTryTranslate("current_micro_tick_flag",String.valueOf(MicroTickManager.getInstance().getMicroTickFlag(i))).withColor(6750130),false);
+                return 1;
+            }).then(CommandManager.argument("flag", BoolArgumentType.bool()).executes(context -> {
+                MicroTickManager.getInstance().setCommandSource(context.getSource());
+                MicroTickManager.getInstance().setMicroTickFlag(i,BoolArgumentType.getBool(context,"flag"));
+                context.getSource().sendFeedback(() -> ServerTranslationUtil.getFullKeyAndTryTranslate("set_micro_tick_flag",s,String.valueOf(MicroTickManager.getInstance().getMicroTickFlag(i))).withColor(6750130),true);
+                return 1;
+            }))));
             return node;
         }
     }

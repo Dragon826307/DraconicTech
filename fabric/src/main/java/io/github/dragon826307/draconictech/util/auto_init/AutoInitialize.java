@@ -1,4 +1,4 @@
-package io.github.dragon826307.draconictech.util;
+package io.github.dragon826307.draconictech.util.auto_init;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

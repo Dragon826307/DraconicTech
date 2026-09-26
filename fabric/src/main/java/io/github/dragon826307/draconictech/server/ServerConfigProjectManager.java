@@ -1,46 +1,39 @@
 package io.github.dragon826307.draconictech.server;
 
-import io.github.dragon826307.draconictech.config.ConfigGetterValue;
+import io.github.dragon826307.draconictech.config.ConfigProject;
 import io.github.dragon826307.draconictech.config.ConfigProjectManager;
-import io.github.dragon826307.draconictech.config.ConfigProjects;
-import io.github.dragon826307.draconictech.util.AutoInitialize;
-import io.github.dragon826307.draconictech.util.InitializePhase;
+import io.github.dragon826307.draconictech.util.auto_init.AutoInitialize;
+import io.github.dragon826307.draconictech.util.auto_init.InitializePhase;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ServerConfigProjectManager extends ConfigProjectManager {
-    private static final Map<ConfigProjects.Server, ConfigGetterValue> CACHE = new ConcurrentHashMap<>();
+    private static final Map<ConfigProject.Server<?>, Object> CACHE = new ConcurrentHashMap<>();
+    private static final Path SERVER_CONFIG = ROOT.resolve("server.dat");
     @AutoInitialize(phase = InitializePhase.ON_SERVER_STARTING)
     private static void init() {
         if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
             return;
         }
         loadALL();
-        ConfigProjectManager.onConfigSave(ServerConfigProjectManager::saveALL);
+        ConfigProjectManager.onSave(ServerConfigProjectManager::saveALL);
     }
-    public static ConfigGetterValue getConfig(ConfigProjects.Server project) {
+    @SuppressWarnings("unchecked")
+    public static <T> T getConfig(ConfigProject.Server<T> project) {
+        if (project == null) return null;
         if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
-            return new ConfigGetterValue(project.getSinglePlayerValue());
+            return project.getSinglePlayerValue();
         }
-        return CACHE.getOrDefault(project,new ConfigGetterValue(project.getDefaultValue()));
-    }
-    public static boolean setConfig(ConfigProjects.Server project, Object value) {
-        if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
-            return false;
-        }
-        if (project.getConfigType().getClazz().isInstance(value)) {
-            CACHE.put(project, new ConfigGetterValue(value));
-            return true;
-        }
-        return false;
+        return (T) CACHE.getOrDefault(project,project.getDefaultValue());
     }
     public static void saveALL(){
         atomicWrite(SERVER_CONFIG,copyALL(CACHE));
     }
     private static void loadALL(){
-        loadFormFile(SERVER_CONFIG,ConfigProjects.Server.values(),CACHE);
+        loadFormFile(SERVER_CONFIG, ConfigProject.Server.values(),CACHE);
     }
 }

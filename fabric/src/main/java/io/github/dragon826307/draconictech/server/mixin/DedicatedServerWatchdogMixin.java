@@ -1,6 +1,6 @@
 package io.github.dragon826307.draconictech.server.mixin;
 
-import io.github.dragon826307.draconictech.features.microtick.MicroTickManager;
+import io.github.dragon826307.draconictech.functions.microtick.MicroTickManager;
 import net.minecraft.server.dedicated.DedicatedServerWatchdog;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

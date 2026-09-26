@@ -2,8 +2,8 @@ package io.github.dragon826307.draconictech.client.network;
 
 import io.github.dragon826307.draconictech.DraconicTech;
 import io.github.dragon826307.draconictech.client.util.ChatHudTracker;
-import io.github.dragon826307.draconictech.util.AutoInitialize;
-import io.github.dragon826307.draconictech.util.InitializePhase;
+import io.github.dragon826307.draconictech.util.auto_init.AutoInitialize;
+import io.github.dragon826307.draconictech.util.auto_init.InitializePhase;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.Address;
