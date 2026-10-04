@@ -2,11 +2,15 @@
   "en_us": {
     "invalid_value": "Invalid config value: %s",
     "invalid_reason": "Invalid config value!",
-    "current_value": "§bThe current value of config project '%s§b' is '%s§b'"
+    "current_value": "§bThe current value of config project '%s§b' is '%s§b'",
+    "unknow_err": "Unknow Error!",
+    "set_config_to": "§aSet config '%s§a' to value: %s"
   },
   "zh_cn": {
     "invalid_value": "非法配置值：%s",
     "invalid_reason": "非法配置值！",
-    "current_value": "§b当前配置项'%s§b'的值是'%s§b'"
+    "current_value": "§b当前配置项'%s§b'的值是'%s§b'",
+    "unknow_err": "未知错误！",
+    "set_config_to": "§a配置项'%s§a'的值更新至：%s"
   }
 }

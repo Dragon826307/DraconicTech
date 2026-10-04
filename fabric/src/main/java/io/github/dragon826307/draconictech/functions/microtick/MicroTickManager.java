@@ -1,6 +1,9 @@
 package io.github.dragon826307.draconictech.functions.microtick;
 
 import io.github.dragon826307.draconictech.DraconicTech;
+import io.github.dragon826307.draconictech.api.auto_init.AutoInitialize;
+import io.github.dragon826307.draconictech.api.auto_init.InitializePhase;
+import io.github.dragon826307.draconictech.config.ConfigInfo;
 import io.github.dragon826307.draconictech.config.ConfigProject;
 import io.github.dragon826307.draconictech.config.ConfigProjectManager;
 import io.github.dragon826307.draconictech.mixin.tick.ChunkHolderInvoker;
@@ -9,8 +12,6 @@ import io.github.dragon826307.draconictech.mixin.tick.ServerChunkLoadingManagerA
 import io.github.dragon826307.draconictech.mixin.tick.ServerCommonNetworkHandlerAccessor;
 import io.github.dragon826307.draconictech.util.SendMessageHelper;
 import io.github.dragon826307.draconictech.util.ServerTranslationUtil;
-import io.github.dragon826307.draconictech.util.auto_init.AutoInitialize;
-import io.github.dragon826307.draconictech.util.auto_init.InitializePhase;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
@@ -25,7 +26,7 @@ import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 public class MicroTickManager {
-    public static final ConfigProject.Main<Boolean> IS_FREEZE_ORIGIN_BEFORE_NETWORK_UPDATE = ConfigProject.Main.register(new ConfigProject.Main<>("MicroTickManager:is_freeze_origin_before_network_update", Boolean.class , true, null, s -> s.equals("before_network_update") ? Boolean.TRUE : s.equals("after_network_update") ? Boolean.FALSE : null ,null , () -> List.of("before_network_update", "after_network_update"), () -> MicroTickManager.getInstance().checkConfig(), ConfigProject.UpdateCommandTreeFlags.NOTHING));
+    public static final ConfigProject.Main<Boolean> IS_FREEZE_ORIGIN_BEFORE_NETWORK_UPDATE = ConfigProject.Main.register(new ConfigProject.Main<>(new ConfigInfo("MicroTickManager:is_freeze_origin_before_network_update"), Boolean.class , true, null, (string, invalidReason) -> string.equals("before_network_update") ? Boolean.TRUE : string.equals("after_network_update") ? Boolean.FALSE : null ,null , () -> List.of("before_network_update", "after_network_update"), () -> MicroTickManager.getInstance().checkConfig(), ConfigProject.UpdateCommandTreeFlags.NOTHING));
 
     private static final String FAIL_NULL = ServerTranslationUtil.getOrNull("dt.micro_tick.fail_null");
     private static final Text FAIL_NULL_T = SendMessageHelper.getMessage(ServerTranslationUtil.getTranslatedWithFallback("dt.micro_tick.fail_null"),true);
@@ -44,6 +45,7 @@ public class MicroTickManager {
     });
 
     private Consumer<Text> feedback = text -> {};
+    private Text freeze_message = Text.empty();
 
     private volatile CountDownLatch unfreezeLatch;
     private boolean onTickPostProcessing = false;
@@ -146,9 +148,7 @@ public class MicroTickManager {
     }
     //游戏逻辑线程
     public void tryFreeze(Text t) {
-//        MutableText text = (MutableText) t;
-//        text.styled(style -> style.withHoverEvent(new HoverEvent.ShowText(text)));
-        feedback.accept(t);
+        freeze_message = t;
         tryFreeze();
     }
 
@@ -169,6 +169,7 @@ public class MicroTickManager {
             if (getTickFrozenLevel() > 1) {
                 syncToClientImmediately();
             }
+            SendMessageHelper.sendMessageToAllPlayer(freeze_message);
             unfreezeLatch.await();
         } catch (InterruptedException e) {
             isFreeze = false;

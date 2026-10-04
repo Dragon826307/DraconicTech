@@ -1,4 +1,4 @@
-package io.github.dragon826307.draconictech.client.util.enhanced_chat;
+package io.github.dragon826307.draconictech.client.functions.enhanced_chat;
 
 public record EnhancedChatParseResult(boolean isSuccess, String parseValue, String errMessage, Object... args) {
     public static EnhancedChatParseResult success(String value) {

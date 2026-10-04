@@ -1,4 +1,4 @@
-package io.github.dragon826307.draconictech.client.util.enhanced_chat;
+package io.github.dragon826307.draconictech.client.functions.enhanced_chat;
 
 import com.google.common.io.BaseEncoding;
 import io.github.dragon826307.draconictech.client.config.ClientConfigProjectManager;

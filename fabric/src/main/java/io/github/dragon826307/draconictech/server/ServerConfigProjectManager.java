@@ -1,24 +1,23 @@
 package io.github.dragon826307.draconictech.server;
 
+import io.github.dragon826307.draconictech.api.auto_init.AutoInitialize;
+import io.github.dragon826307.draconictech.api.auto_init.InitializePhase;
 import io.github.dragon826307.draconictech.config.ConfigProject;
 import io.github.dragon826307.draconictech.config.ConfigProjectManager;
-import io.github.dragon826307.draconictech.util.auto_init.AutoInitialize;
-import io.github.dragon826307.draconictech.util.auto_init.InitializePhase;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ServerConfigProjectManager extends ConfigProjectManager {
-    private static final Map<ConfigProject.Server<?>, Object> CACHE = new ConcurrentHashMap<>();
     private static final Path SERVER_CONFIG = ROOT.resolve("server.dat");
     @AutoInitialize(phase = InitializePhase.ON_SERVER_STARTING)
     private static void init() {
         if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
             return;
         }
+        CACHE.put(ConfigProject.Server.getClazz(), new ConcurrentHashMap<>());
         loadALL();
         ConfigProjectManager.onSave(ServerConfigProjectManager::saveALL);
     }
@@ -28,12 +27,12 @@ public class ServerConfigProjectManager extends ConfigProjectManager {
         if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
             return project.getSinglePlayerValue();
         }
-        return (T) CACHE.getOrDefault(project,project.getDefaultValue());
+        return (T) CACHE.get(ConfigProject.Server.getClazz()).getOrDefault(project,project.getDefaultValue());
     }
-    public static void saveALL(){
-        atomicWrite(SERVER_CONFIG,copyALL(CACHE));
+    public static void saveALL(boolean feedback){
+        atomicWrite(SERVER_CONFIG,copyALL(CACHE.get(ConfigProject.Server.getClazz())),feedback);
     }
     private static void loadALL(){
-        loadFormFile(SERVER_CONFIG, ConfigProject.Server.values(),CACHE);
+        loadFormFile(SERVER_CONFIG, ConfigProject.Server.values(),CACHE.get(ConfigProject.Server.getClazz()));
     }
 }

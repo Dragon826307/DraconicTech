@@ -26,7 +26,7 @@ public record ConfigValueArgumentType<T>(AbstractConfigType<T> config) implement
         int start = reader.getCursor();
         String raw_input = reader.readString();
         if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
-            T raw_parse_result = config.getParser().parse(raw_input);
+            T raw_parse_result = config.parseStringToConfigValue(raw_input);
             if (raw_parse_result == null || config.getConfigValidator().check(raw_parse_result)) {
                 throw CONFIG_ERR.create(config.getInvalidReason());
             }

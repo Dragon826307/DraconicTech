@@ -6,40 +6,40 @@ import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import io.github.dragon826307.draconictech.command.argument.ConfigValueArgumentType;
-import io.github.dragon826307.draconictech.util.SendMessageHelper;
+import io.github.dragon826307.draconictech.platform.text.BuiltText;
+import io.github.dragon826307.draconictech.platform.text.Colors;
+import io.github.dragon826307.draconictech.platform.text.TextBuilder;
 import io.github.dragon826307.draconictech.util.ServerTranslationUtil;
-import net.minecraft.text.Text;
-import net.minecraft.util.Colors;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public final class ConfigCommandBuilder {
-    private static final Text UNKNOW_ERR = ServerTranslationUtil.getTranslatedWithFallback("dt.config_value.unknow_err").withColor(Colors.RED);
+    private static final BuiltText UNKNOW_ERR = TextBuilder.start().applyTranslatable(ServerTranslationUtil.getFullKey("unknow_err"),true).setColor(Colors.ARGB.RED).build();
 
     @FunctionalInterface
     public interface CommandFeedbackSender<S> {
-        void send(S source, Text text, boolean updateCommandTree);
+        void send(S source, BuiltText text, boolean updateCommandTree);
     }
     @FunctionalInterface
-    public interface ConfigGetter {
-        Object get(AbstractConfigType<?> project);
+    public interface ConfigGetter<T> {
+        Object get(AbstractConfigType<T> project);
     }
     @FunctionalInterface
-    public interface ConfigSetter {
-        boolean set(AbstractConfigType<?> project, Object value);
+    public interface ConfigSetter<T> {
+        boolean set(AbstractConfigType<T> project, T value);
     }
     @SuppressWarnings("unchecked")
-    public static <S,T extends AbstractConfigType<?>,U> LiteralArgumentBuilder<S> buildIn(LiteralArgumentBuilder<S> branchRoot, CommandFeedbackSender<S> feedbackSender , ConfigSetter setter, ConfigGetter getter, T[] configList) {
+    public static <S, T> LiteralArgumentBuilder<S> buildIn(LiteralArgumentBuilder<S> branchRoot, CommandFeedbackSender<S> feedbackSender , ConfigSetter<T> setter, ConfigGetter<T> getter, AbstractConfigType<?>[] configList) {
         for (AbstractConfigType<?> configProject : configList) {
-            AbstractConfigType<U> typedConfigProject = (AbstractConfigType<U>) configProject;
+            AbstractConfigType<T> typedConfigProject = (AbstractConfigType<T>) configProject;
             LiteralArgumentBuilder<S> singleConfigNode = LiteralArgumentBuilder.<S>literal(typedConfigProject.getID()).executes(context -> {
-                feedbackSender.send(context.getSource(), SendMessageHelper.getMessage(ServerTranslationUtil.getFullKeyAndTryTranslate("current_value", typedConfigProject.getID(), String.valueOf(getter.get(typedConfigProject))).withColor(0x449CCC),true),false);
+                feedbackSender.send(context.getSource(), TextBuilder.start().applyTranslatable(ServerTranslationUtil.getFullKey("current_value"), true, typedConfigProject.getID(), String.valueOf(getter.get(typedConfigProject))).setColor(Colors.ARGB.CYAN_300).build(),false);
                 return 1;
             });
             RequiredArgumentBuilder<S, Object> moddedArg = RequiredArgumentBuilder.<S, Object>argument("value",ConfigValueArgumentType.config(typedConfigProject))
                     .executes(context -> {
-                        Object newValue = ConfigValueArgumentType.getValueOrThrow(context, "value");
+                        T newValue = (T) ConfigValueArgumentType.getValueOrThrow(context, "value");
                         return executeConfigChange(context.getSource(), typedConfigProject, newValue, feedbackSender, setter);
                     })
                     .suggests((context, builder) -> configSuggestion(builder, typedConfigProject));
@@ -50,7 +50,7 @@ public final class ConfigCommandBuilder {
                             feedbackSender.send(context.getSource(),UNKNOW_ERR,false);
                             return 0;
                         }
-                        U newValue = typedConfigProject.getParser().parse(rawString);
+                        T newValue = typedConfigProject.parseStringToConfigValue(rawString);
                         if (newValue == null || !typedConfigProject.getConfigValidator().check(typedConfigProject.getConfigType().cast(newValue))) {
                             feedbackSender.send(context.getSource(), typedConfigProject.getInvalidReason(),false);
                             return 0;
@@ -68,16 +68,22 @@ public final class ConfigCommandBuilder {
         }
         return branchRoot;
     }
-    private static <S, T extends AbstractConfigType<?>> int executeConfigChange(S source, T configProject, Object parsedValue, CommandFeedbackSender<S> feedbackSender, ConfigSetter setter) {
+    private static <S, T> int executeConfigChange(S source, AbstractConfigType<T> configProject, T parsedValue, CommandFeedbackSender<S> feedbackSender, ConfigSetter<T> setter) {
         ConfigProject.UpdateCommandTreeFlags flag = configProject.getUpdateCommandTreeFlag();
         boolean success = setter.set(configProject, parsedValue);
         boolean update = flag != ConfigProject.UpdateCommandTreeFlags.NOTHING && (flag != ConfigProject.UpdateCommandTreeFlags.IF_SUCCESS || success);
         if (success) {
             configProject.getPostProcessor().run();
-            feedbackSender.send(source, SendMessageHelper.getMessage(ServerTranslationUtil.getTranslatedWithFallback("dt.config_value.set_config_to", configProject.getID(), String.valueOf(parsedValue)).withColor(0x00AA00),true), update);
+            TextBuilder textBuilder = TextBuilder.start();
+            if (configProject.getName() == null) {
+                textBuilder.apply(configProject.getID()).setHover(TextBuilder.start().apply("ID: ").setColor(Colors.ARGB.CYAN_100).apply(configProject.getID()).setColor(Colors.ARGB.BLUE_50).build());
+            } else {
+                textBuilder.apply(configProject.getName()).setHover(TextBuilder.start().apply("ID: ").setColor(Colors.ARGB.CYAN_100).apply(configProject.getID()).setColor(Colors.ARGB.BLUE_50).build());
+            }
+            feedbackSender.send(source, TextBuilder.start().applyTranslatable(ServerTranslationUtil.getFullKey("set_config_to"), true, configProject.getID(), String.valueOf(parsedValue)).setColor(Colors.ARGB.GREEN_A200).build(),true);
             return 1;
         } else {
-            feedbackSender.send(source, SendMessageHelper.getMessage(UNKNOW_ERR,true), update);
+            feedbackSender.send(source, UNKNOW_ERR, update);
             return 0;
         }
     }

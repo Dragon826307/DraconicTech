@@ -1,9 +1,10 @@
 package io.github.dragon826307.draconictech.network;
 
 import io.github.dragon826307.draconictech.DraconicTech;
+import io.github.dragon826307.draconictech.api.auto_init.AutoInitialize;
+import io.github.dragon826307.draconictech.api.auto_init.InitializePhase;
+import io.github.dragon826307.draconictech.api.auto_init.Location;
 import io.github.dragon826307.draconictech.util.PlayerRecorder;
-import io.github.dragon826307.draconictech.util.auto_init.AutoInitialize;
-import io.github.dragon826307.draconictech.util.auto_init.InitializePhase;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -14,7 +15,7 @@ public class ModNetworkHandler {
     public static final Identifier DEBUG_ID = Identifier.of(DraconicTech.MOD_ID, "debug");
     public static final Identifier HELLO_ID = Identifier.of(DraconicTech.MOD_ID, "hello");
 
-    @AutoInitialize(phase = InitializePhase.ON_MOD_INIT_MAIN, priority = 999)
+    @AutoInitialize(phase = InitializePhase.ON_MOD_INIT_MAIN, priority = @Location(priority = 999))
     private static void init() {
         DraconicTech.LOGGER.info("Initializing ModNetworkHandler...");
         PayloadTypeRegistry.playS2C().register(Mod$HelloDraconicTechS2CPacket.ID,Mod$HelloDraconicTechS2CPacket.CODEC);

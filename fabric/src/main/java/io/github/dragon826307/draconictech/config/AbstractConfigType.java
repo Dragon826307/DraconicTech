@@ -1,8 +1,8 @@
 package io.github.dragon826307.draconictech.config;
 
-import io.github.dragon826307.draconictech.util.ServerTranslationUtil;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import io.github.dragon826307.draconictech.platform.text.BuiltText;
+import io.github.dragon826307.draconictech.platform.text.Colors;
+import io.github.dragon826307.draconictech.platform.text.TextBuilder;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -12,28 +12,28 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 public abstract class AbstractConfigType<T> {
-    private static final Text DEFAULT_INVALID_REASON = ServerTranslationUtil.getFullKeyAndTryTranslate("invalid_reason").formatted(Formatting.RED);
+    private static final BuiltText DEFAULT_INVALID_REASON = TextBuilder.start().applyTranslatable("invalid_reason",true).setColor(Colors.ARGB.RED).build();
 
-    private static final HashSet<String> ID_RECORDER = new HashSet<>();
+    private static final HashSet<Integer> ID_RECORDER = new HashSet<>();
 
     private static final ConfigValidator<Object> NULL_CONFIG_VALIDATOR = o -> true;
     private static final BuildAsCommand ALWAYS_BUILD = () -> true;
 
-    private Text InvalidReason;
     private Supplier<List<String>> suggestionsSupplier;
     private Runnable postProcessor;
     private ConfigProject.UpdateCommandTreeFlags updateCommandTreeFlag = ConfigProject.UpdateCommandTreeFlags.NOTHING;
 
-    private final String ID;
+    private final ConfigInfo info;
     private final Class<T> type;
     private final T defaultValue;
     private final @Nullable ConfigValidator<T> configValidator;
     private final @NonNull StringParser<String,@Nullable T> parser;
     private final @Nullable BuildAsCommand shouldBuild;
+    private final InvalidReason invalidReason;
 
     @FunctionalInterface
     public interface StringParser<@NonNull String,@NonNull T> {
-        @Nullable T parse(@NonNull String string);
+        @Nullable T parse(@NonNull String string,InvalidReason invalidReason);
     }
 
     @FunctionalInterface
@@ -46,21 +46,26 @@ public abstract class AbstractConfigType<T> {
         boolean shouldBuild();
     }
 
-    protected AbstractConfigType(String ID, Class<T> type, @NonNull T defaultValue, @Nullable ConfigValidator<T> configValidator, @NonNull StringParser<String, T> parser, @Nullable BuildAsCommand shouldBuild) {
-        if (!ID_RECORDER.add(ID)) {
-            throw new IllegalStateException("Duplicate ID: " + ID);
+    protected AbstractConfigType(ConfigInfo info, Class<T> type, @NonNull T defaultValue, @Nullable ConfigValidator<T> configValidator, @NonNull StringParser<String, T> parser, @Nullable BuildAsCommand shouldBuild) {
+        if (!ID_RECORDER.add(info.getID().hashCode())) {
+            throw new IllegalStateException("Duplicate ID: " + info.getID());
         }
-        this.ID = Objects.requireNonNull(ID, "ID must not be null");
+        this.info = Objects.requireNonNull(info, "ID must not be null");
         this.type = Objects.requireNonNull(type, "type must not be null");
         this.defaultValue = Objects.requireNonNull(defaultValue, "Default value must not be null");
         this.configValidator = configValidator;
         this.parser = Objects.requireNonNull(parser, "Parser must not be null");
         this.shouldBuild = shouldBuild;
+        this.invalidReason = new InvalidReason();
     }
 
     @NonNull
     public String getID() {
-        return ID;
+        return info.getID();
+    }
+    @Nullable
+    public BuiltText getName() {
+        return info.getName();
     }
     @NonNull
     public Class<T> getConfigType() {
@@ -75,18 +80,15 @@ public abstract class AbstractConfigType<T> {
     public ConfigValidator<T> getConfigValidator() {
         return Objects.requireNonNullElse(configValidator, (ConfigValidator<T>) NULL_CONFIG_VALIDATOR);
     }
-    @NonNull
-    public StringParser<String, T> getParser() {
-        return parser;
+    @Nullable
+    public T parseStringToConfigValue(@NonNull String string) {
+        return parser.parse(string,invalidReason);
     }
     public BuildAsCommand shouldBuildAsCommand() {
         return Objects.requireNonNullElse(shouldBuild, ALWAYS_BUILD);
     }
-    public Text getInvalidReason() {
-        return Objects.requireNonNullElse(InvalidReason, DEFAULT_INVALID_REASON);
-    }
-    protected void setInvalidReason(String reason) {
-        this.InvalidReason = ServerTranslationUtil.getTranslatedWithFallback("invalid_value",reason).formatted(Formatting.RED);
+    public BuiltText getInvalidReason() {
+        return Objects.requireNonNullElse(invalidReason.getBuiltText(), DEFAULT_INVALID_REASON);
     }
     @NonNull
     public Supplier<List<String>> getSuggestionsSupplier() {
@@ -107,5 +109,18 @@ public abstract class AbstractConfigType<T> {
     }
     protected void setUpdateCommandTreeFlag(ConfigProject.UpdateCommandTreeFlags updateCommandTreeFlag) {
         this.updateCommandTreeFlag = updateCommandTreeFlag;
+    }
+    public static class InvalidReason {
+        private BuiltText text;
+        public void set(Supplier<BuiltText> text) {
+            if (text != null) {
+                this.text = text.get();
+            } else {
+                this.text = TextBuilder.empty();
+            }
+        }
+        public BuiltText getBuiltText() {
+            return text;
+        }
     }
 }

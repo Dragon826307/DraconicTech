@@ -1,9 +1,9 @@
 package io.github.dragon826307.draconictech;
 
+import io.github.dragon826307.draconictech.api.auto_init.AutoInitializeManager;
+import io.github.dragon826307.draconictech.api.auto_init.InitializePhase;
 import io.github.dragon826307.draconictech.functions.microtick.MicroTickManager;
 import io.github.dragon826307.draconictech.util.TextColorHelper;
-import io.github.dragon826307.draconictech.util.auto_init.AutoInitializeManager;
-import io.github.dragon826307.draconictech.util.auto_init.InitializePhase;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.text.Text;
@@ -15,6 +15,9 @@ public class DraconicTech implements ModInitializer {
     public static final String MOD_NAME = "DraconicTech";
 	public static final String MOD_ID = "draconictech";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_NAME);
+    static {
+        LOGGER.trace(MOD_NAME);
+    }
     @Override
     public void onInitialize() {
         DraconicTech.LOGGER.info("Initializing DraconicTech...");

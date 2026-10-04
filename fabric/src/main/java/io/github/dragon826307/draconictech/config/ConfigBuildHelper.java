@@ -14,5 +14,5 @@ public final class ConfigBuildHelper {
         return integer -> integer >= min && integer <= max;
     }
 
-    public static final AbstractConfigType.StringParser<String, Boolean> BOOLEAN_PARSER = s -> s.contains("true")? Boolean.TRUE : s.contains("false") ? Boolean.FALSE : null;
+    public static final AbstractConfigType.StringParser<String, Boolean> BOOLEAN_PARSER = (string, invalidReason) -> string.contains("true")? Boolean.TRUE : string.contains("false") ? Boolean.FALSE : null;
 }

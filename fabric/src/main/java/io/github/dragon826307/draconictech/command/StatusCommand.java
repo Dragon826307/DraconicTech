@@ -2,11 +2,11 @@ package io.github.dragon826307.draconictech.command;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.sun.management.OperatingSystemMXBean;
+import io.github.dragon826307.draconictech.api.auto_init.AutoInitialize;
+import io.github.dragon826307.draconictech.api.auto_init.InitializePhase;
 import io.github.dragon826307.draconictech.config.ConfigProject;
 import io.github.dragon826307.draconictech.server.ServerConfigProjectManager;
 import io.github.dragon826307.draconictech.util.ServerTranslationUtil;
-import io.github.dragon826307.draconictech.util.auto_init.AutoInitialize;
-import io.github.dragon826307.draconictech.util.auto_init.InitializePhase;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;

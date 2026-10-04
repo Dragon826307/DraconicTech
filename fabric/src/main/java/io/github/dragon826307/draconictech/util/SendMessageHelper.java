@@ -1,12 +1,14 @@
 package io.github.dragon826307.draconictech.util;
 
 import io.github.dragon826307.draconictech.DraconicTech;
-import io.github.dragon826307.draconictech.util.auto_init.AutoInitialize;
-import io.github.dragon826307.draconictech.util.auto_init.InitializePhase;
+import io.github.dragon826307.draconictech.api.auto_init.AutoInitialize;
+import io.github.dragon826307.draconictech.api.auto_init.InitializePhase;
+import io.netty.util.internal.UnstableApi;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 
+@UnstableApi
 public final class SendMessageHelper {
     private static MinecraftServer server;
     @AutoInitialize(phase = InitializePhase.ON_SERVER_STARTING)

@@ -1,8 +1,8 @@
 package io.github.dragon826307.draconictech.server;
 
 import io.github.dragon826307.draconictech.DraconicTech;
-import io.github.dragon826307.draconictech.util.auto_init.AutoInitializeManager;
-import io.github.dragon826307.draconictech.util.auto_init.InitializePhase;
+import io.github.dragon826307.draconictech.api.auto_init.AutoInitializeManager;
+import io.github.dragon826307.draconictech.api.auto_init.InitializePhase;
 import net.fabricmc.api.DedicatedServerModInitializer;
 
 public class DraconicTechServer implements DedicatedServerModInitializer {

@@ -1,4 +1,4 @@
-package io.github.dragon826307.draconictech.util.auto_init;
+package io.github.dragon826307.draconictech.api.auto_init;
 
 import io.github.dragon826307.draconictech.DraconicTech;
 import io.github.dragon826307.draconictech.server.DraconicTechServer;

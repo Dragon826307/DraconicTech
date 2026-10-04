@@ -1,11 +1,11 @@
 package io.github.dragon826307.draconictech.client.network;
 
 import io.github.dragon826307.draconictech.DraconicTech;
+import io.github.dragon826307.draconictech.api.auto_init.AutoInitialize;
+import io.github.dragon826307.draconictech.api.auto_init.InitializePhase;
 import io.github.dragon826307.draconictech.client.DraconicTechClient;
 import io.github.dragon826307.draconictech.network.Mod$HelloDraconicTechC2SPacket;
 import io.github.dragon826307.draconictech.network.Mod$HelloDraconicTechS2CPacket;
-import io.github.dragon826307.draconictech.util.auto_init.AutoInitialize;
-import io.github.dragon826307.draconictech.util.auto_init.InitializePhase;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 

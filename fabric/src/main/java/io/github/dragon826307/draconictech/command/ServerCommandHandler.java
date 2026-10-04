@@ -4,9 +4,10 @@ import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import io.github.dragon826307.draconictech.DraconicTech;
+import io.github.dragon826307.draconictech.api.auto_init.AutoInitialize;
+import io.github.dragon826307.draconictech.api.auto_init.InitializePhase;
+import io.github.dragon826307.draconictech.api.auto_init.Location;
 import io.github.dragon826307.draconictech.functions.microtick.mixin_int.InstantCommandBuilder;
-import io.github.dragon826307.draconictech.util.auto_init.AutoInitialize;
-import io.github.dragon826307.draconictech.util.auto_init.InitializePhase;
 import io.github.dragon826307.draconictech.util.marker_int.FeatureCommandInt;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandManager;
@@ -34,7 +35,7 @@ public final class ServerCommandHandler {
             commandRoot_copy.then(branch);
         }
     }
-    @AutoInitialize(phase = InitializePhase.ON_SERVER_STARTING, priority = 1001)
+    @AutoInitialize(phase = InitializePhase.ON_SERVER_STARTING, priority = @Location(priority = 1001))
     private static void registerAllCommands(MinecraftServer server){
         server.getCommandManager().getDispatcher().register(ServerCommandHandler.commandRoot);
         server.getCommandManager().getDispatcher().register(ServerCommandHandler.commandRoot_copy);

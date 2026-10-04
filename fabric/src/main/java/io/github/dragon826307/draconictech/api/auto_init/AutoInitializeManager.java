@@ -1,4 +1,4 @@
-package io.github.dragon826307.draconictech.util.auto_init;
+package io.github.dragon826307.draconictech.api.auto_init;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -21,7 +21,6 @@ import java.util.stream.Stream;
 public final class AutoInitializeManager {
     private static final String[] TARGET_ARRAYS = new String[]{"mixins", "client", "server"};
     private static final Map<InitializePhase, List<Method>> REGISTERED_METHODS = new EnumMap<>(InitializePhase.class);
-    private static final Map<Method, Integer> INFERRED_PRIORITIES = new HashMap<>();
     public static void scanAndRegister(Predicate<String> packageFilter) {
         for (ModContainer modContainer : FabricLoader.getInstance().getAllMods()) {
             CustomValue customValue = modContainer.getMetadata().getCustomValue(DraconicTech.MOD_ID + ":auto_init");
@@ -58,86 +57,8 @@ public final class AutoInitializeManager {
                 }
             }
         }
-        resolvePriorities();
-        for (List<Method> methods : REGISTERED_METHODS.values()) {
-            methods.sort(Comparator.comparingInt(m -> INFERRED_PRIORITIES.getOrDefault(m, 1000)));
-        }
+        resolvePrioritiesAndSort();
     }
-
-    private static void resolvePriorities() {
-        Map<Method, Integer> inDegree = new HashMap<>();
-        Map<Method, List<Method>> dependents = new HashMap<>();
-        Map<Method, Integer> minTargetTracker = new HashMap<>();
-        for (List<Method> methods : REGISTERED_METHODS.values()) {
-            for (Method m : methods) {
-                inDegree.put(m, 0);
-                dependents.put(m, new ArrayList<>());
-                minTargetTracker.put(m, Integer.MAX_VALUE);
-            }
-        }
-        for (Map.Entry<InitializePhase, List<Method>> entry : REGISTERED_METHODS.entrySet()) {
-            List<Method> methods = entry.getValue();
-            for (Method m : methods) {
-                if (m.isAnnotationPresent(ProviderTo.class)) {
-                    Class<?> targetClass = m.getAnnotation(ProviderTo.class).value();
-                    boolean foundTarget = false;
-                    for (Method targetM : methods) {
-                        if (targetM.getDeclaringClass().equals(targetClass)) {
-                            foundTarget = true;
-                            inDegree.put(m, inDegree.get(m) + 1);
-                            dependents.get(targetM).add(m);
-                        }
-                    }
-                    if (!foundTarget) {
-                        minTargetTracker.put(m, 1000);
-                    }
-                }
-            }
-        }
-        Queue<Method> queue = new LinkedList<>();
-        for (Map.Entry<Method, Integer> entry : inDegree.entrySet()) {
-            if (entry.getValue() == 0) {
-                queue.offer(entry.getKey());
-            }
-        }
-        int resolvedCount = 0;
-        while (!queue.isEmpty()) {
-            Method current = queue.poll();
-            resolvedCount++;
-            int finalPriority;
-            if (current.isAnnotationPresent(ProviderTo.class)) {
-                int currentPriority = minTargetTracker.get(current);
-                if (currentPriority == Integer.MIN_VALUE) {
-                    DraconicTech.LOGGER.error("The priority inference value of method '{}' is out of range. (-2147483648) At '{}'", current.getName(), current.getDeclaringClass().getSimpleName());
-                    throw new IllegalStateException();
-                }
-                finalPriority = currentPriority - 1;
-            } else {
-                finalPriority = current.getAnnotation(AutoInitialize.class).priority();
-            }
-            INFERRED_PRIORITIES.put(current, finalPriority);
-            for (Method dep : dependents.get(current)) {
-                minTargetTracker.put(dep, Math.min(minTargetTracker.get(dep), finalPriority));
-                int currentInDegree = inDegree.get(dep) - 1;
-                inDegree.put(dep, currentInDegree);
-                if (currentInDegree == 0) {
-                    queue.offer(dep);
-                }
-            }
-        }
-        if (resolvedCount != inDegree.size()) {
-            List<String> cycleMethods = new ArrayList<>();
-            for (Map.Entry<Method, Integer> entry : inDegree.entrySet()) {
-                if (entry.getValue() > 0) {
-                    Method m = entry.getKey();
-                    cycleMethods.add(m.getDeclaringClass().getSimpleName() + "#" + m.getName());
-                }
-            }
-            DraconicTech.LOGGER.error("Circular dependency! \n Involving the following methods: {}", Arrays.toString(cycleMethods.toArray()));
-            throw new IllegalStateException();
-        }
-    }
-
     public static void trigger(InitializePhase phase, Object... contexts) {
         List<Method> methods = REGISTERED_METHODS.getOrDefault(phase, Collections.emptyList());
         for (Method method : methods) {
@@ -160,6 +81,117 @@ public final class AutoInitializeManager {
             }
         }
         DraconicTech.LOGGER.info("[{}] {} method(s) were automatically initialized during the triggering phase '{}'",DraconicTech.MOD_NAME, methods.size(), phase.name());
+    }
+
+    private static void resolvePrioritiesAndSort() {
+        for (Map.Entry<InitializePhase, List<Method>> entry : REGISTERED_METHODS.entrySet()) {
+            InitializePhase phase = entry.getKey();
+            List<Method> methods = entry.getValue();
+            Map<Class<?>, List<Method>> classMethodsMap = new HashMap<>();
+            for (Method method : methods) {
+                classMethodsMap.computeIfAbsent(method.getDeclaringClass(), k -> new ArrayList<>()).add(method);
+            }
+            Map<Method, Integer> computedPriorityMap = new HashMap<>();
+            Map<Class<?>, Integer> classMinPriorityCache = new HashMap<>();
+            Deque<Class<?>> visitingStack = new ArrayDeque<>();
+            Set<Class<?>> visitingSet = new HashSet<>();
+            for (Method method : methods) {
+                Class<?> declaringClass = method.getDeclaringClass();
+                computeClassMinPriority(declaringClass, phase, classMethodsMap, computedPriorityMap, classMinPriorityCache, visitingStack, visitingSet);
+            }
+            methods.sort(Comparator.comparingInt(m -> computedPriorityMap.getOrDefault(m, 1000)));
+        }
+    }
+    private static int computeClassMinPriority(
+            Class<?> targetClass,
+            InitializePhase phase,
+            Map<Class<?>, List<Method>> classMethodsMap,
+            Map<Method, Integer> computedPriorityMap,
+            Map<Class<?>, Integer> classMinPriorityCache,
+            Deque<Class<?>> visitingStack,
+            Set<Class<?>> visitingSet
+    ) {
+        if (classMinPriorityCache.containsKey(targetClass)) {
+            return classMinPriorityCache.get(targetClass);
+        }
+        List<Method> targetMethods = classMethodsMap.get(targetClass);
+        if (targetMethods == null || targetMethods.isEmpty()) {
+            classMinPriorityCache.put(targetClass, 1000);
+            return 1000;
+        }
+        if (visitingSet.contains(targetClass)) {
+            StringBuilder cyclePath = new StringBuilder();
+            List<Class<?>> stackList = new ArrayList<>(visitingStack);
+            Collections.reverse(stackList);
+            for (Class<?> c : stackList) {
+                cyclePath.append(c.getName()).append(" -> ");
+            }
+            cyclePath.append(targetClass.getName());
+
+            throw new IllegalStateException(
+                    "[" + DraconicTech.MOD_NAME + "] Circular dependency detected in @Location 'provideTo' during phase '"
+                            + phase.name() + "': " + cyclePath
+            );
+        }
+        if (visitingStack.size() > 100) {
+            throw new IllegalStateException("[" + DraconicTech.MOD_NAME + "] Exceeded maximum dependency depth (100) while resolving @Location for class: " + targetClass.getName());
+        }
+        visitingStack.push(targetClass);
+        visitingSet.add(targetClass);
+        int minPriority = Integer.MAX_VALUE;
+        for (Method method : targetMethods) {
+            int priority = computeMethodPriority(method, phase, classMethodsMap, computedPriorityMap, classMinPriorityCache, visitingStack, visitingSet);
+            if (priority < minPriority) {
+                minPriority = priority;
+            }
+        }
+        visitingSet.remove(targetClass);
+        visitingStack.pop();
+        classMinPriorityCache.put(targetClass, minPriority);
+        return minPriority;
+    }
+    private static int computeMethodPriority(
+            Method method,
+            InitializePhase phase,
+            Map<Class<?>, List<Method>> classMethodsMap,
+            Map<Method, Integer> computedPriorityMap,
+            Map<Class<?>, Integer> classMinPriorityCache,
+            Deque<Class<?>> visitingStack,
+            Set<Class<?>> visitingSet
+    ) {
+        if (computedPriorityMap.containsKey(method)) {
+            return computedPriorityMap.get(method);
+        }
+        Location location = method.getAnnotation(Location.class);
+        AutoInitialize autoInit = method.getAnnotation(AutoInitialize.class);
+        int priority;
+        if (location != null) {
+            boolean hasProvideTo = location.provideTo() != Void.class;
+            boolean hasExplicitPriority = location.priority() != Integer.MIN_VALUE;
+            if (hasProvideTo && hasExplicitPriority) {
+                DraconicTech.LOGGER.warn(
+                        "[{}] Method '{}.{}' has both 'provideTo' ({}) and 'priority' ({}) in @Location. Using explicit priority and ignoring 'provideTo'.",
+                        DraconicTech.MOD_NAME,
+                        method.getDeclaringClass().getSimpleName(),
+                        method.getName(),
+                        location.provideTo().getSimpleName(),
+                        location.priority()
+                );
+                priority = location.priority();
+            } else if (hasExplicitPriority) {
+                priority = location.priority();
+            } else if (hasProvideTo) {
+                Class<?> targetClass = location.provideTo();
+                int targetMinPriority = computeClassMinPriority(targetClass, phase, classMethodsMap, computedPriorityMap, classMinPriorityCache, visitingStack, visitingSet);
+                priority = targetMinPriority - 1;
+            } else {
+                priority = autoInit != null ? autoInit.priority().priority() : 1000;
+            }
+        } else {
+            priority = autoInit != null ? autoInit.priority().priority() : 1000;
+        }
+        computedPriorityMap.put(method, priority);
+        return priority;
     }
     private static Set<String> getMixinClasses(ModContainer container) {
         Set<String> mixinClasses = new HashSet<>();
