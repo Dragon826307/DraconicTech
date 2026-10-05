@@ -20,7 +20,7 @@ public class MojangTextParser { //ojng
             return Text.empty();
         }
         ByteStream.Reader reader = new ByteStream.Reader(bytecode);
-        MutableText root = null;
+        MutableText root = Text.empty();
         MutableText currentNode = null;
         if (hasMagicNumber) {
             int magicNumber = reader.readInt();
@@ -43,8 +43,7 @@ public class MojangTextParser { //ojng
                 case TextOpcodes.OP_NODE_LITERAL -> {
                     String text = new String(reader.readBytes(length), StandardCharsets.UTF_8);
                     MutableText node = Text.literal(text);
-                    if (root == null) root = node;
-                    else root.append(node);
+                    root.append(node);
                     currentNode = node;
                 }
                 case TextOpcodes.OP_NODE_TRANSLATABLE -> {
@@ -67,17 +66,16 @@ public class MojangTextParser { //ojng
                     } else {
                         node = Text.translatable(key, values.toArray());
                     }
-                    if (root == null) root = node;
-                    else root.append(node);
+                    root.append(node);
                     currentNode = node;
                 }
                 case TextOpcodes.OP_TRANSLATABLE_VALUES -> {
-                    DraconicTech.LOGGER.warn("Invalid translatable values opcode 0x{} at {}", Integer.toHexString(op), Integer.toHexString(reader.getPos() - length));
+                    DraconicTech.LOGGER.warn("Invalid translatable values operation 0x{} at {}", Integer.toHexString(op), Integer.toHexString(reader.getPos() - length));
                     reader.skipBytes(length);
                 }
                 case TextOpcodes.OP_STYLE_COLOR -> {
                     int argb = reader.readInt();
-                    currentNode.setStyle(currentNode.getStyle().withColor(argb));
+                    currentNode.withColor(argb);
                 }
                 case TextOpcodes.OP_STYLE_FLAGS -> {
                     byte flags = reader.readByte();
@@ -98,7 +96,7 @@ public class MojangTextParser { //ojng
                 default -> throw new UnknowTextOpcodeException(op, reader.getPos() - 5);
             }
         }
-        return root != null ? root : Text.empty();
+        return root;
     }
     public static Text parse(byte[] bytecode) {
         return parse(bytecode, true, (byte) 0);

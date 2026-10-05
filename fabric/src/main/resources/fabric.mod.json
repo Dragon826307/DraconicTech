@@ -45,8 +45,5 @@
     "recommends": {
         "iris": "*",
         "sodium": "*"
-    },
-    "custom": {
-        "draconictech:auto_init": ["io.github.dragon826307.draconictech"]
     }
 }

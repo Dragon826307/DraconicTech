@@ -34,7 +34,15 @@ public final class ConfigCommandBuilder {
         for (AbstractConfigType<?> configProject : configList) {
             AbstractConfigType<T> typedConfigProject = (AbstractConfigType<T>) configProject;
             LiteralArgumentBuilder<S> singleConfigNode = LiteralArgumentBuilder.<S>literal(typedConfigProject.getID()).executes(context -> {
-                feedbackSender.send(context.getSource(), TextBuilder.start().applyTranslatable(ServerTranslationUtil.getFullKey("current_value"), true, typedConfigProject.getID(), String.valueOf(getter.get(typedConfigProject))).setColor(Colors.ARGB.CYAN_300).build(),false);
+                TextBuilder hover = TextBuilder.start().apply("ID: ").setBold(true).setColor(Colors.ARGB.GOLDENROD);
+                TextBuilder root = TextBuilder.start().applyTranslatable(ServerTranslationUtil.getFullKey("name"),true).setColor(Colors.ARGB.PURPLE_500).setBold(true);
+                if (configProject.getName() != null) {
+                    root.apply(configProject.getName()).setHover(hover.apply(configProject.getID()).build());
+                } else {
+                    root.apply(configProject.getID()).setHover(hover.apply(configProject.getID()).build()).setColor(Colors.ARGB.PURPLE_700);
+                }
+                feedbackSender.send(context.getSource(), root.build(), false);
+                if (configProject.getDescription() != null) feedbackSender.send(context.getSource(), configProject.getDescription(), true);
                 return 1;
             });
             RequiredArgumentBuilder<S, Object> moddedArg = RequiredArgumentBuilder.<S, Object>argument("value",ConfigValueArgumentType.config(typedConfigProject))
@@ -58,6 +66,15 @@ public final class ConfigCommandBuilder {
                         return executeConfigChange(context.getSource(), typedConfigProject, newValue, feedbackSender, setter);
                     })
                     .suggests((context, builder) -> configSuggestion(builder, typedConfigProject));
+            LiteralArgumentBuilder<S> prefixNode = null;
+            for (String string : configProject.getCategory()) {
+                if (prefixNode == null) {
+                    prefixNode = LiteralArgumentBuilder.literal(string);
+                } else {
+                    prefixNode.then(LiteralArgumentBuilder.literal(string));
+                }
+            }
+            if (prefixNode != null) singleConfigNode = prefixNode.then(singleConfigNode);
             branchRoot.then(singleConfigNode.then(moddedArg.requires(s -> {
                 //TODO
                 return false;

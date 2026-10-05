@@ -1,65 +1,68 @@
 package io.github.dragon826307.draconictech.api.auto_init;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import io.github.dragon826307.draconictech.DraconicTech;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
-import net.fabricmc.loader.api.metadata.CustomValue;
+import org.objectweb.asm.*;
+import org.spongepowered.asm.mixin.Mixin;
 
-import java.io.Reader;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public final class AutoInitializeManager {
-    private static final String[] TARGET_ARRAYS = new String[]{"mixins", "client", "server"};
+    private static final int MAXIMUM_DEPENDENCY_DEPTH = 128;
+    private static final String MINECRAFT_CLIENT_PACKAGE_PATH = "net/minecraft/client/";
     private static final Map<InitializePhase, List<Method>> REGISTERED_METHODS = new EnumMap<>(InitializePhase.class);
-    public static void scanAndRegister(Predicate<String> packageFilter) {
-        for (ModContainer modContainer : FabricLoader.getInstance().getAllMods()) {
-            CustomValue customValue = modContainer.getMetadata().getCustomValue(DraconicTech.MOD_ID + ":auto_init");
-            if (customValue != null && customValue.getType() == CustomValue.CvType.ARRAY) {
-                List<String> targetPackages = new ArrayList<>();
-                for (CustomValue cv : customValue.getAsArray()) {
-                    targetPackages.add(cv.getAsString());
-                }
-                Set<String> mixinBlacklist = getMixinClasses(modContainer);
-                for (Path root : modContainer.getRootPaths()) {
-                    final String[] className = {""};
-                    try (Stream<Path> paths = Files.walk(root)) {
-                        paths.filter(Files::isRegularFile).filter(path -> path.toString().endsWith(".class")).forEach(path -> {
-                            className[0] = root.relativize(path).toString().replace("/", ".").replace("\\", ".").replace(".class", "");
-                            boolean belongsToPackage = targetPackages.stream().anyMatch(className[0]::startsWith);
-                            if (belongsToPackage && !isMixinClass(className[0], mixinBlacklist) && packageFilter.test(className[0])) {
-                                try {
-                                    Class<?> clazz = Class.forName(className[0], false, AutoInitializeManager.class.getClassLoader());
-                                    for (Method method : clazz.getDeclaredMethods()) {
-                                        if (method.isAnnotationPresent(AutoInitialize.class)) {
-                                            AutoInitialize annotation = method.getAnnotation(AutoInitialize.class);
-                                            method.setAccessible(true);
-                                            REGISTERED_METHODS.computeIfAbsent(annotation.phase(), phase -> new ArrayList<>()).add(method);
-                                        }
-                                    }
-                                }catch (NoClassDefFoundError | ClassNotFoundException e) {
-                                    DraconicTech.LOGGER.error("[{}]Failed to load class: '{}' \n",DraconicTech.MOD_NAME, className[0], e);
+
+    private static boolean initialized = false;
+    @SuppressWarnings("unused")
+    private static void scanAndRegister() {
+        if (initialized) return;
+        long start = System.currentTimeMillis();
+        for (ModContainer mod : FabricLoader.getInstance().getAllMods()) {
+            if (!mod.getMetadata().getId().equals(DraconicTech.MOD_ID)) {
+                boolean dependsOnMe = mod.getMetadata().getDependencies().stream().anyMatch(dependency -> !dependency.getModId().equals(DraconicTech.MOD_ID));
+                if (!dependsOnMe) continue;
+            }
+            for (Path root : mod.getRootPaths()) {
+                final String[] classPath = {""};
+                try (Stream<Path> paths = Files.walk(root)) {
+                    paths.filter(Files::isRegularFile).filter(path -> path.toString().endsWith(".class")).forEach(path -> {
+                        classPath[0] = root.relativize(path).toString().replace("/",".").replace("\\", ".").replace(".class", "");
+                        try {
+                            if (!isSafeToLoad(path)) return;
+                            Class<?> clazz = Class.forName(classPath[0], false, AutoInitializeManager.class.getClassLoader());
+                            for (Method method : clazz.getDeclaredMethods()) {
+                                if (method.isAnnotationPresent(AutoInitialize.class)) {
+                                    AutoInitialize annotation = method.getAnnotation(AutoInitialize.class);
+                                    method.setAccessible(true);
+                                    REGISTERED_METHODS.computeIfAbsent(annotation.phase(), phase -> new ArrayList<>()).add(method);
                                 }
                             }
-                        });
-                    }catch (Throwable e) {
-                        DraconicTech.LOGGER.error("[{}]Failed to read from class: '{}' \n",DraconicTech.MOD_NAME, className[0], e);
-                    }
+                        } catch (ClassNotFoundException | NoClassDefFoundError | IOException e) {
+                            DraconicTech.LOGGER.error("Failed to load class: '{}' \n", classPath[0], e);
+                        }
+                    });
+                } catch (Throwable t) {
+                    DraconicTech.LOGGER.error("Failed to read from class: '{}' \n", classPath[0], t);
                 }
             }
         }
         resolvePrioritiesAndSort();
+        initialized = true;
+        DraconicTech.LOGGER.info("Scan and register all methods in {} ms", System.currentTimeMillis() - start);
     }
-    public static void trigger(InitializePhase phase, Object... contexts) {
+    @SuppressWarnings("unused")
+    private static void trigger(InitializePhase phase, Object... contexts) {
+        long start = System.currentTimeMillis();
         List<Method> methods = REGISTERED_METHODS.getOrDefault(phase, Collections.emptyList());
         for (Method method : methods) {
             Class<?>[] parameterTypes = method.getParameterTypes();
@@ -77,12 +80,20 @@ public final class AutoInitializeManager {
             try {
                 method.invoke(null, args);
             }catch (IllegalAccessException | InvocationTargetException e) {
-                DraconicTech.LOGGER.error("[{}]Automatic initialization execution failed in method: '{}'",DraconicTech.MOD_NAME, method.getName(), e);
+                DraconicTech.LOGGER.error("Automatic initialization execution failed in method: '{}'", method.getName(), e);
             }
         }
-        DraconicTech.LOGGER.info("[{}] {} method(s) were automatically initialized during the triggering phase '{}'",DraconicTech.MOD_NAME, methods.size(), phase.name());
+        DraconicTech.LOGGER.info("{} method(s) were automatically initialized during the triggering phase '{}' .Used {} ms", methods.size(), phase.name(), System.currentTimeMillis() - start);
     }
 
+    private static boolean isSafeToLoad(Path classPath) throws IOException {
+        try (InputStream is = Files.newInputStream(classPath)) {
+            ClassReader reader = new ClassReader(is);
+            ClassScanVisitor visitor = new ClassScanVisitor();
+            reader.accept(visitor, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG);
+            return visitor.isSafeForCurrentEnv && visitor.hasAutoInitialize && !visitor.isMixinClass;
+        }
+    }
     private static void resolvePrioritiesAndSort() {
         for (Map.Entry<InitializePhase, List<Method>> entry : REGISTERED_METHODS.entrySet()) {
             InitializePhase phase = entry.getKey();
@@ -127,14 +138,12 @@ public final class AutoInitializeManager {
                 cyclePath.append(c.getName()).append(" -> ");
             }
             cyclePath.append(targetClass.getName());
-
-            throw new IllegalStateException(
-                    "[" + DraconicTech.MOD_NAME + "] Circular dependency detected in @Location 'provideTo' during phase '"
-                            + phase.name() + "': " + cyclePath
-            );
+            DraconicTech.LOGGER.error("Circular dependency detected in @Location 'provideTo' during phase '{}': {}", phase.name(), cyclePath);
+            throw new IllegalStateException();
         }
-        if (visitingStack.size() > 100) {
-            throw new IllegalStateException("[" + DraconicTech.MOD_NAME + "] Exceeded maximum dependency depth (100) while resolving @Location for class: " + targetClass.getName());
+        if (visitingStack.size() > MAXIMUM_DEPENDENCY_DEPTH) {
+            DraconicTech.LOGGER.error("Exceeded maximum dependency depth ({}) while resolving @Location for class: {}", Integer.toString(MAXIMUM_DEPENDENCY_DEPTH), targetClass.getName());
+            throw new IllegalStateException();
         }
         visitingStack.push(targetClass);
         visitingSet.add(targetClass);
@@ -170,8 +179,7 @@ public final class AutoInitializeManager {
             boolean hasExplicitPriority = location.priority() != Integer.MIN_VALUE;
             if (hasProvideTo && hasExplicitPriority) {
                 DraconicTech.LOGGER.warn(
-                        "[{}] Method '{}.{}' has both 'provideTo' ({}) and 'priority' ({}) in @Location. Using explicit priority and ignoring 'provideTo'.",
-                        DraconicTech.MOD_NAME,
+                        "Method '{}.{}' has both 'provideTo' ({}) and 'priority' ({}) in @Location. Using explicit priority and ignoring 'provideTo'.",
                         method.getDeclaringClass().getSimpleName(),
                         method.getName(),
                         location.provideTo().getSimpleName(),
@@ -193,64 +201,57 @@ public final class AutoInitializeManager {
         computedPriorityMap.put(method, priority);
         return priority;
     }
-    private static Set<String> getMixinClasses(ModContainer container) {
-        Set<String> mixinClasses = new HashSet<>();
-        try {
-            Optional<Path> fabricJsonOpt = container.findPath("fabric.mod.json");
-            if (fabricJsonOpt.isEmpty()) return mixinClasses;
-            try (Reader reader = Files.newBufferedReader(fabricJsonOpt.get())) {
-                JsonObject fabricJson = JsonParser.parseReader(reader).getAsJsonObject();
-                if (!fabricJson.has("mixins")) return mixinClasses;
-                JsonArray mixinsArray = fabricJson.getAsJsonArray("mixins");
-                for (JsonElement mixin : mixinsArray) {
-                    String mixinConfigFile = null;
-                    if (mixin.isJsonObject()) {
-                        mixinConfigFile = mixin.getAsJsonObject().get("config").getAsString();
-                    }else if (mixin.isJsonPrimitive()) {
-                        mixinConfigFile = mixin.getAsString();
-                    }
-                    if (mixinConfigFile != null) {
-                        parseMixinConfig(container, mixinConfigFile, mixinClasses);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            DraconicTech.LOGGER.error("Failed to parse fabric.mod.json config file in mod: '{}'",container.getOrigin().getParentModId() , e);
+    private static final class ClassScanVisitor extends ClassVisitor {
+        boolean isSafeForCurrentEnv = true;
+        boolean hasAutoInitialize = false;
+        boolean isMixinClass = false;
+        private final boolean isDedicatedServer =
+                FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER;
+        public ClassScanVisitor() {
+            super(Opcodes.ASM9);
         }
-        return mixinClasses;
-    }
-    private static void parseMixinConfig(ModContainer container, String configName, Set<String> mixinClasses) {
-        try {
-            Optional<Path> configOpt = container.findPath(configName);
-            if (configOpt.isEmpty()) return;
-            try (Reader reader = Files.newBufferedReader(configOpt.get())) {
-                JsonObject configJson = JsonParser.parseReader(reader).getAsJsonObject();
-                String pkg = configJson.has("package") ? configJson.get("package").getAsString() : "";
-                if (!pkg.isEmpty() && !pkg.endsWith(".")) {
-                    pkg += ".";
-                }
-                for (String target : TARGET_ARRAYS) {
-                    if (configJson.has(target)) {
-                        JsonArray array = configJson.getAsJsonArray(target);
-                        for (JsonElement element : array) {
-                            mixinClasses.add(pkg + element.getAsString());
+        @Override
+        public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
+            if (Mixin.class.descriptorString().equals(descriptor)) {
+                isMixinClass = true;
+            }
+            if (Environment.class.descriptorString().equals(descriptor)) {
+                return new AnnotationVisitor(Opcodes.ASM9) {
+                    @Override
+                    public void visitEnum(String name, String descriptor, String value) {
+                        if (isDedicatedServer && EnvType.CLIENT.name().equals(value)) {
+                            isSafeForCurrentEnv = false;
                         }
                     }
+                };
+            }
+            return super.visitAnnotation(descriptor, visible);
+        }
+        @Override
+        public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
+            if (isDedicatedServer && isSafeForCurrentEnv && descriptor != null) {
+                if (descriptor.contains(MINECRAFT_CLIENT_PACKAGE_PATH)) {
+                    isSafeForCurrentEnv = false;
                 }
             }
-        } catch (Exception e) {
-            DraconicTech.LOGGER.error("Failed to parse mixin config '{}' in mod: '{}'",configName,container.getOrigin().getParentModId(), e);
+            return new MethodVisitor(Opcodes.ASM9) {
+                @Override
+                public AnnotationVisitor visitAnnotation(String methodDescriptor, boolean visible) {
+                    if (AutoInitialize.class.descriptorString().equals(methodDescriptor)) {
+                        hasAutoInitialize = true;
+                    }
+                    return super.visitAnnotation(methodDescriptor, visible);
+                }
+            };
         }
-    }
-    private static boolean isMixinClass(String className, Set<String> mixinBlacklist) {
-        if (mixinBlacklist.contains(className)) {
-            return true;
+        @Override
+        public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
+            if (isDedicatedServer && isSafeForCurrentEnv && descriptor != null) {
+                if (descriptor.contains(MINECRAFT_CLIENT_PACKAGE_PATH)) {
+                    isSafeForCurrentEnv = false;
+                }
+            }
+            return super.visitField(access, name, descriptor, signature, value);
         }
-        int dollarIndex = className.indexOf('$');
-        if (dollarIndex != -1) {
-            String outerClass = className.substring(0, dollarIndex);
-            return mixinBlacklist.contains(outerClass);
-        }
-        return false;
     }
 }

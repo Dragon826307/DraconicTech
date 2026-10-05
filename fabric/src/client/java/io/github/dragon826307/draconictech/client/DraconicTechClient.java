@@ -13,7 +13,11 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.util.Identifier;
+import org.apache.commons.lang3.ArrayUtils;
 import org.lwjgl.glfw.GLFW;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 public class DraconicTechClient implements ClientModInitializer {
     public static long windowHandle = 114514;
@@ -21,9 +25,25 @@ public class DraconicTechClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
         DraconicTech.LOGGER.info("Initializing DraconicTech Client...");
-        AutoInitializeManager.scanAndRegister(name -> name.contains(".client."));
-        AutoInitializeManager.trigger(InitializePhase.ON_MOD_INIT_CLIENT);
-        ClientLifecycleEvents.CLIENT_STARTED.register((client) -> AutoInitializeManager.trigger(InitializePhase.ON_CLIENT_STARTED, client));
+        try {
+            Method scanAndRegister = AutoInitializeManager.class.getDeclaredMethod("scanAndRegister");
+            scanAndRegister.setAccessible(true);
+            scanAndRegister.invoke(null);
+            Method trigger = AutoInitializeManager.class.getDeclaredMethod("trigger", InitializePhase.class, Object[].class);
+            trigger.setAccessible(true);
+            trigger.invoke(null, InitializePhase.ON_MOD_INIT_CLIENT, ArrayUtils.EMPTY_OBJECT_ARRAY);
+            ClientLifecycleEvents.CLIENT_STARTED.register((client) -> {
+                try {
+                    trigger.invoke(null, InitializePhase.ON_CLIENT_STARTED, ArrayUtils.toArray(client));
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    throw new ExceptionInInitializerError(e);
+                }
+            });
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            throw new ExceptionInInitializerError(e);
+        }
+
+
         KeyBinding openMenuKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding("draconictech.key.open_menu", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_O, KeyBinding.Category.create(Identifier.of(DraconicTech.MOD_ID, DraconicTech.MOD_ID))));
         ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
             if (windowHandle == 114514) {

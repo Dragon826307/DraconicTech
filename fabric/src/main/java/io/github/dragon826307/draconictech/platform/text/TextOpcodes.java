@@ -13,5 +13,5 @@ public final class TextOpcodes {
     public static final byte OP_STYLE_COLOR = 0x11; //4字节ARGB
     public static final byte OP_STYLE_FLAGS = 0x12; //1字节 Bitmask: 0x01-Bold, 0x02-Italic, 0x04-Underline, 0x08-Strikethrough, 0x10-Obfuscated
     //事件
-    public static final byte OP_STYLE_HOVER_TEXT  = 0x20; // 4字节载荷长度 + N字节子字节流
+    public static final byte OP_STYLE_HOVER_TEXT  = 0x20; //N字节子字节流
 }

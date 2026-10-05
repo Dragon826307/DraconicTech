@@ -26,7 +26,7 @@ import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 public class MicroTickManager {
-    public static final ConfigProject.Main<Boolean> IS_FREEZE_ORIGIN_BEFORE_NETWORK_UPDATE = ConfigProject.Main.register(new ConfigProject.Main<>(new ConfigInfo("MicroTickManager:is_freeze_origin_before_network_update"), Boolean.class , true, null, (string, invalidReason) -> string.equals("before_network_update") ? Boolean.TRUE : string.equals("after_network_update") ? Boolean.FALSE : null ,null , () -> List.of("before_network_update", "after_network_update"), () -> MicroTickManager.getInstance().checkConfig(), ConfigProject.UpdateCommandTreeFlags.NOTHING));
+    public static final ConfigProject.Main<Boolean> IS_FREEZE_ORIGIN_BEFORE_NETWORK_UPDATE = ConfigProject.Main.register(new ConfigProject.Main<>(new ConfigInfo<>("MicroTickManager:is_freeze_origin_before_network_update"), Boolean.class , true, null, (string, invalidReason) -> string.equals("before_network_update") ? Boolean.TRUE : string.equals("after_network_update") ? Boolean.FALSE : null ,null , () -> List.of("before_network_update", "after_network_update"), () -> MicroTickManager.getInstance().checkConfig(), ConfigProject.UpdateCommandTreeFlags.NOTHING));
 
     private static final String FAIL_NULL = ServerTranslationUtil.getOrNull("dt.micro_tick.fail_null");
     private static final Text FAIL_NULL_T = SendMessageHelper.getMessage(ServerTranslationUtil.getTranslatedWithFallback("dt.micro_tick.fail_null"),true);

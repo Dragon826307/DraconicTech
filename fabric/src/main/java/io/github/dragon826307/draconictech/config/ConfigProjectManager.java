@@ -6,6 +6,9 @@ import io.github.dragon826307.draconictech.api.auto_init.AutoInitialize;
 import io.github.dragon826307.draconictech.api.auto_init.InitializePhase;
 import io.github.dragon826307.draconictech.api.auto_init.Location;
 import io.github.dragon826307.draconictech.command.ServerCommandHandler;
+import io.github.dragon826307.draconictech.platform.text.Colors;
+import io.github.dragon826307.draconictech.platform.text.TextBuilder;
+import io.github.dragon826307.draconictech.util.ServerTranslationUtil;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import org.apache.commons.lang3.SerializationUtils;
@@ -29,7 +32,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class ConfigProjectManager {
-    public static final ConfigProject.Main<Integer> AUTO_SAVE_INTERVAL = ConfigProject.Main.register(new ConfigProject.Main<>(new ConfigInfo("ConfigProjectManager:auto_save_interval_seconds"), Integer.class, 120,integer -> integer >= 30 && integer <= 14400 , (string, invalidReason) -> Ints.tryParse(string),null, () -> List.of("60","120","300","1800"),null, ConfigProject.UpdateCommandTreeFlags.NOTHING));
+    public static final ConfigProject.Main<Integer> AUTO_SAVE_INTERVAL = ConfigProject.Main.register(new ConfigProject.Main<>(new ConfigInfo<Integer>("ConfigProjectManager:auto_save_interval_seconds").setName(TextBuilder.start().applyTranslatable(ServerTranslationUtil.getFullKey("save_sec"),true).setColor(Colors.ARGB.BLUE_GREY_400).build()).setDescription(TextBuilder.start().applyTranslatable(ServerTranslationUtil.getFullKey("save_sec_dec"), true).setColor(Colors.ARGB.GRAY).build()), Integer.class, 120, integer -> integer >= 30 && integer <= 14400 , (string, invalidReason) -> Ints.tryParse(string),null, () -> List.of("60","120","300","1800"),null, ConfigProject.UpdateCommandTreeFlags.NOTHING));
     protected static final Map<Class<? extends AbstractConfigType<?>>,ConcurrentHashMap<AbstractConfigType<?>, Object>> CACHE = new ConcurrentHashMap<>();
     protected static final Path ROOT = FabricLoader.getInstance().getGameDir().resolve(DraconicTech.MOD_ID).resolve("config");
     protected static final Path MAIN_CONFIG = ROOT.resolve("main.dat");

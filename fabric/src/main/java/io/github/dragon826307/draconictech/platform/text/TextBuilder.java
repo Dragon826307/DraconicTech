@@ -8,9 +8,9 @@ import org.apache.commons.lang3.SerializationException;
 import java.nio.charset.StandardCharsets;
 
 @SuppressWarnings("unused")
-public final class TextBuilder {
+public final class TextBuilder implements Cloneable{
     private static final BuiltText EMPTY_TEXT = TextBuilder.start().build().parse();
-    private final ByteStream.Writer stream = new ByteStream.Writer();
+    private ByteStream.Writer stream = new ByteStream.Writer();
 
     //缓存属性
     private boolean hasActiveNode = false;
@@ -33,6 +33,22 @@ public final class TextBuilder {
     }
     public static BuiltText empty() {
         return EMPTY_TEXT;
+    }
+
+    public TextBuilder clone() {
+        try {
+            TextBuilder cloned = (TextBuilder) super.clone();
+
+            //深拷贝
+            cloned.stream = new ByteStream.Writer();
+            cloned.stream.writeBytes(this.stream.toByteArray());
+            if (this.activeContentBytes != null) cloned.activeContentBytes = this.activeContentBytes.clone();
+            if (this.translateValues != null) cloned.translateValues = this.translateValues.clone();
+            if (this.activeHoverBytecode != null) cloned.activeHoverBytecode = this.activeHoverBytecode.clone();
+            return cloned;
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException("Failed to clone TextBuilder", e);
+        }
     }
 
     public TextBuilder apply(String literal) {
@@ -109,7 +125,7 @@ public final class TextBuilder {
 
     public BuiltText build() {
         flushCurrentNode();
-        return new BuiltText(byteSanitizer(stream.toByteArray(), true, (byte) 0));
+        return new BuiltText(byteSanitizer(stream.toByteArray()));
     }
 
     //刷入字节流
@@ -199,7 +215,7 @@ public final class TextBuilder {
                 }
                 case TextOpcodes.OP_TRANSLATABLE_VALUES -> {
                     if (currentNode != TextOpcodes.OP_NODE_TRANSLATABLE) {
-                        DraconicTech.LOGGER.warn("Invalid option code at {} \n Only Translatable node can has translatable values!", Integer.toHexString(reader.getPos()));
+                        DraconicTech.LOGGER.warn("Invalid text operation code at {} \n Only Translatable node can have translatable values!", Integer.toString(reader.getPos()));
                         reader.skipBytes(length);
                         continue;
                     }
@@ -223,9 +239,19 @@ public final class TextBuilder {
                     writer.writeInt(sanitizedHover.length);
                     writer.writeBytes(sanitizedHover);
                 }
-                default -> throw new UnknowTextOpcodeException(op, reader.getPos() - 5);
+                default -> {
+                    DraconicTech.LOGGER.error("Unknow text operation code 0x{} at position {}! Skip {} bytes.", Integer.toHexString(op), reader.getPos() - 5, Integer.toString(length));
+                    reader.skipBytes(length);
+                }
             }
         }
         return writer.toByteArray();
+    }
+
+    /**
+     * @return 一串合法的文本组件操作码
+     */
+    public static byte[] byteSanitizer(byte[] raw) {
+        return byteSanitizer(raw, true, (byte) 0);
     }
 }

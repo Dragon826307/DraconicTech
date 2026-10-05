@@ -23,7 +23,7 @@ public abstract class AbstractConfigType<T> {
     private Runnable postProcessor;
     private ConfigProject.UpdateCommandTreeFlags updateCommandTreeFlag = ConfigProject.UpdateCommandTreeFlags.NOTHING;
 
-    private final ConfigInfo info;
+    private final ConfigInfo<T> info;
     private final Class<T> type;
     private final T defaultValue;
     private final @Nullable ConfigValidator<T> configValidator;
@@ -46,7 +46,7 @@ public abstract class AbstractConfigType<T> {
         boolean shouldBuild();
     }
 
-    protected AbstractConfigType(ConfigInfo info, Class<T> type, @NonNull T defaultValue, @Nullable ConfigValidator<T> configValidator, @NonNull StringParser<String, T> parser, @Nullable BuildAsCommand shouldBuild) {
+    protected AbstractConfigType(ConfigInfo<T> info, Class<T> type, @NonNull T defaultValue, @Nullable ConfigValidator<T> configValidator, @NonNull StringParser<String, T> parser, @Nullable BuildAsCommand shouldBuild) {
         if (!ID_RECORDER.add(info.getID().hashCode())) {
             throw new IllegalStateException("Duplicate ID: " + info.getID());
         }
@@ -79,6 +79,12 @@ public abstract class AbstractConfigType<T> {
     @SuppressWarnings("unchecked")
     public ConfigValidator<T> getConfigValidator() {
         return Objects.requireNonNullElse(configValidator, (ConfigValidator<T>) NULL_CONFIG_VALIDATOR);
+    }
+    public String[] getCategory() {
+        return info.getCategory();
+    }
+    public BuiltText getDescription() {
+        return info.getDescription();
     }
     @Nullable
     public T parseStringToConfigValue(@NonNull String string) {

@@ -23,7 +23,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class ContainerSignalModifier implements UseBlockCallback{
-    public static final ConfigProject.Main<Boolean> ALLOW_MODIFY_CONTAINER_SIGNAL = ConfigProject.Main.register(new ConfigProject.Main<>(new ConfigInfo("ContainerSignalModifier:allow_modify_container_signal"), Boolean.class, false, null, ConfigBuildHelper.BOOLEAN_PARSER, null, () -> ConfigBuildHelper.BOOLEAN_SUGGESTIONS, null, ConfigProject.UpdateCommandTreeFlags.NOTHING));
+    public static final ConfigProject.Main<Boolean> ALLOW_MODIFY_CONTAINER_SIGNAL = ConfigProject.Main.register(new ConfigProject.Main<>(new ConfigInfo<>("ContainerSignalModifier:allow_modify_container_signal"), Boolean.class, false, null, ConfigBuildHelper.BOOLEAN_PARSER, null, () -> ConfigBuildHelper.BOOLEAN_SUGGESTIONS, null, ConfigProject.UpdateCommandTreeFlags.NOTHING));
     private static final Set<Block> AVAIL_BLOCKS = new HashSet<>(Arrays.asList(
             Blocks.COMPOSTER,
             Blocks.LAVA_CAULDRON,Blocks.WATER_CAULDRON,Blocks.POWDER_SNOW_CAULDRON,Blocks.CAULDRON
