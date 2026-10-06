@@ -48,4 +48,7 @@ public final class BuiltText {
         }
         return (T) parsedNativeComponent;
     }
+    public boolean isEmpty() {
+        return getBytecodeRaw().length == 0;
+    }
 }

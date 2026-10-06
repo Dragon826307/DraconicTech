@@ -14,6 +14,7 @@ import net.minecraft.util.Colors;
 
 //TODO
 @UnstableApi
+@Deprecated
 public record ConfigValueArgumentType<T>(AbstractConfigType<T> config) implements ArgumentType<Object> {
     private static final DynamicCommandExceptionType CONFIG_ERR = new DynamicCommandExceptionType(err -> ServerTranslationUtil.getFullKeyAndTryTranslate("invalid_value",err).withColor(Colors.RED));
 
@@ -23,16 +24,16 @@ public record ConfigValueArgumentType<T>(AbstractConfigType<T> config) implement
 
     @Override
     public Object parse(StringReader reader) throws CommandSyntaxException {
-        int start = reader.getCursor();
-        String raw_input = reader.readString();
-        if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
-            T raw_parse_result = config.parseStringToConfigValue(raw_input);
-            if (raw_parse_result == null || config.getConfigValidator().check(raw_parse_result)) {
-                throw CONFIG_ERR.create(config.getInvalidReason());
-            }
-        }else {
-
-        }
+//        int start = reader.getCursor();
+//        String raw_input = reader.readString();
+//        if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
+//            T raw_parse_result = config.parseStringToConfigValue(raw_input);
+//            if (raw_parse_result == null || config.getConfigValidator().check(raw_parse_result)) {
+//                throw CONFIG_ERR.create(config.getInvalidReason());
+//            }
+//        }else {
+//
+//        }
         return null;
     }
 

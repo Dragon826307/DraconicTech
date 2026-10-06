@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class ConfigProjectManager {
-    public static final ConfigProject.Main<Integer> AUTO_SAVE_INTERVAL = ConfigProject.Main.register(new ConfigProject.Main<>(new ConfigInfo<Integer>("ConfigProjectManager:auto_save_interval_seconds").setName(TextBuilder.start().applyTranslatable(ServerTranslationUtil.getFullKey("save_sec"),true).setColor(Colors.ARGB.BLUE_GREY_400).build()).setDescription(TextBuilder.start().applyTranslatable(ServerTranslationUtil.getFullKey("save_sec_dec"), true).setColor(Colors.ARGB.GRAY).build()), Integer.class, 120, integer -> integer >= 30 && integer <= 14400 , (string, invalidReason) -> Ints.tryParse(string),null, () -> List.of("60","120","300","1800"),null, ConfigProject.UpdateCommandTreeFlags.NOTHING));
+    public static final ConfigProject.Main<Integer> AUTO_SAVE_INTERVAL = ConfigProject.Main.register(new ConfigProject.Main<>(ConfigBuilder.CommonConfigBuilder.create("ConfigProjectManager:auto_save_interval_seconds", Integer.class, 120, ConfigBuildHelper.INTEGER_VALIDATOR(30, 14400), ((string, invalidReason) -> Ints.tryParse(string))).setSuggestionsSupplier(() -> List.of("60","120","300","1800")).setName(TextBuilder.start().applyTranslatable(ServerTranslationUtil.getFullKey("save_sec"),true).setColor(Colors.ARGB.BLUE_GREY_400).build()).setDescription(TextBuilder.start().applyTranslatable(ServerTranslationUtil.getFullKey("save_sec_dec"), true).setColor(Colors.ARGB.GRAY).build())));
     protected static final Map<Class<? extends AbstractConfigType<?>>,ConcurrentHashMap<AbstractConfigType<?>, Object>> CACHE = new ConcurrentHashMap<>();
     protected static final Path ROOT = FabricLoader.getInstance().getGameDir().resolve(DraconicTech.MOD_ID).resolve("config");
     protected static final Path MAIN_CONFIG = ROOT.resolve("main.dat");
@@ -92,7 +92,7 @@ public class ConfigProjectManager {
 
     public static <T> boolean setConfig(AbstractConfigType<T> project,T value) {
         if (project == null || value == null) return false;
-        if (project.getConfigValidator().check(value)) {
+        if (project.isConfigValueValid(value)) {
             CACHE.get(project.getClass()).put(project,value);
             return true;
         }
@@ -154,7 +154,7 @@ public class ConfigProjectManager {
     private static <V> boolean validateConfigValue(AbstractConfigType<V> project, Object rawValue) {
         if (project.getConfigType().isInstance(rawValue)) {
             V castedValue = project.getConfigType().cast(rawValue);
-            return project.getConfigValidator().check(castedValue);
+            return project.isConfigValueValid(castedValue);
         }
         return false;
     }

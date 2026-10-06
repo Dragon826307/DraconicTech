@@ -1,17 +1,23 @@
 package io.github.dragon826307.draconictech.config;
 
-import java.util.ArrayList;
+import io.github.dragon826307.draconictech.platform.text.Colors;
+import io.github.dragon826307.draconictech.platform.text.TextBuilder;
+import io.github.dragon826307.draconictech.util.ServerTranslationUtil;
+
 import java.util.List;
 import java.util.function.Supplier;
 
 public final class ConfigBuildHelper {
-    public static final Supplier<List<String>> NULL_SUGGESTIONS_SUPPLIER = ArrayList::new;
-    public static final Runnable NULL_RUNNABLE = () -> {};
-
-    public static final List<String> BOOLEAN_SUGGESTIONS = List.of("true","false");
+    public static final Supplier<List<String>> BOOLEAN_SUGGESTIONS = () -> List.of("true","false");
 
     public static AbstractConfigType.ConfigValidator<Integer> INTEGER_VALIDATOR(int min, int max) {
-        return integer -> integer >= min && integer <= max;
+        return (integer, invalidReason) -> {
+            boolean valid = integer >= min && integer <= max;
+            if (!valid) {
+                invalidReason.set(() -> TextBuilder.start().applyTranslatable(ServerTranslationUtil.getFullKey("invalid_value"), true, integer).setColor(Colors.ARGB.RED_800).setBold(true).build());
+            }
+            return valid;
+        };
     }
 
     public static final AbstractConfigType.StringParser<String, Boolean> BOOLEAN_PARSER = (string, invalidReason) -> string.contains("true")? Boolean.TRUE : string.contains("false") ? Boolean.FALSE : null;

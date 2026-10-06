@@ -4,19 +4,21 @@
     "invalid_reason": "Invalid config value!",
     "current_value": "Current value: '§b'",
     "name": "Config: ",
+    "description": "Description: ",
     "save_sec": "Save Interval",
     "save_sec_dec": "Interval in seconds for saving configuration",
     "unknow_err": "Unknow Error!",
-    "set_config_to": "§aSet config '%s§a' to value: %s"
+    "set_config_to": "§aSet current value to: ‘%s§a’"
   },
   "zh_cn": {
     "invalid_value": "非法配置值：%s",
     "invalid_reason": "非法配置值！",
     "current_value": "当前值：'§b'",
     "name": "配置项：",
+    "description": "介绍：",
     "save_sec": "保存间隔",
     "save_sec_dec": "保存配置文件的间隔秒数",
     "unknow_err": "未知错误！",
-    "set_config_to": "§a配置项'%s§a'的值更新至：%s"
+    "set_config_to": "§a将当前值更新至：‘%s§a’"
   }
 }

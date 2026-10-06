@@ -3,7 +3,7 @@ package io.github.dragon826307.draconictech.functions.analog_circuit;
 import io.github.dragon826307.draconictech.api.auto_init.AutoInitialize;
 import io.github.dragon826307.draconictech.api.auto_init.InitializePhase;
 import io.github.dragon826307.draconictech.config.ConfigBuildHelper;
-import io.github.dragon826307.draconictech.config.ConfigInfo;
+import io.github.dragon826307.draconictech.config.ConfigBuilder;
 import io.github.dragon826307.draconictech.config.ConfigProject;
 import io.github.dragon826307.draconictech.config.ConfigProjectManager;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
@@ -23,7 +23,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class ContainerSignalModifier implements UseBlockCallback{
-    public static final ConfigProject.Main<Boolean> ALLOW_MODIFY_CONTAINER_SIGNAL = ConfigProject.Main.register(new ConfigProject.Main<>(new ConfigInfo<>("ContainerSignalModifier:allow_modify_container_signal"), Boolean.class, false, null, ConfigBuildHelper.BOOLEAN_PARSER, null, () -> ConfigBuildHelper.BOOLEAN_SUGGESTIONS, null, ConfigProject.UpdateCommandTreeFlags.NOTHING));
+    public static final ConfigProject.Main<Boolean> ALLOW_MODIFY_CONTAINER_SIGNAL = ConfigProject.Main.register(new ConfigProject.Main<>(ConfigBuilder.CommonConfigBuilder.create("ContainerSignalModifier:allow_modify_container_signal", Boolean.class, false, (value, invalidReason) -> true, ConfigBuildHelper.BOOLEAN_PARSER).setSuggestionsSupplier(ConfigBuildHelper.BOOLEAN_SUGGESTIONS)));
     private static final Set<Block> AVAIL_BLOCKS = new HashSet<>(Arrays.asList(
             Blocks.COMPOSTER,
             Blocks.LAVA_CAULDRON,Blocks.WATER_CAULDRON,Blocks.POWDER_SNOW_CAULDRON,Blocks.CAULDRON

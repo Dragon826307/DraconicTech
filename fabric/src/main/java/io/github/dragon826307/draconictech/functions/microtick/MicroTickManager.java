@@ -3,7 +3,8 @@ package io.github.dragon826307.draconictech.functions.microtick;
 import io.github.dragon826307.draconictech.DraconicTech;
 import io.github.dragon826307.draconictech.api.auto_init.AutoInitialize;
 import io.github.dragon826307.draconictech.api.auto_init.InitializePhase;
-import io.github.dragon826307.draconictech.config.ConfigInfo;
+import io.github.dragon826307.draconictech.config.ConfigBuildHelper;
+import io.github.dragon826307.draconictech.config.ConfigBuilder;
 import io.github.dragon826307.draconictech.config.ConfigProject;
 import io.github.dragon826307.draconictech.config.ConfigProjectManager;
 import io.github.dragon826307.draconictech.mixin.tick.ChunkHolderInvoker;
@@ -26,7 +27,7 @@ import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 public class MicroTickManager {
-    public static final ConfigProject.Main<Boolean> IS_FREEZE_ORIGIN_BEFORE_NETWORK_UPDATE = ConfigProject.Main.register(new ConfigProject.Main<>(new ConfigInfo<>("MicroTickManager:is_freeze_origin_before_network_update"), Boolean.class , true, null, (string, invalidReason) -> string.equals("before_network_update") ? Boolean.TRUE : string.equals("after_network_update") ? Boolean.FALSE : null ,null , () -> List.of("before_network_update", "after_network_update"), () -> MicroTickManager.getInstance().checkConfig(), ConfigProject.UpdateCommandTreeFlags.NOTHING));
+    public static final ConfigProject.Main<Boolean> IS_FREEZE_ORIGIN_BEFORE_NETWORK_UPDATE = ConfigProject.Main.register(new ConfigProject.Main<>(ConfigBuilder.CommonConfigBuilder.create("MicroTickManager:is_freeze_origin_before_network_update", Boolean.class, true, (value, invalidReason) -> true, ((string, invalidReason) -> string.equals("before_network_update") ? Boolean.TRUE : string.equals("after_network_update") ? Boolean.FALSE : null)).setPostProcessor(() -> MicroTickManager.getInstance().checkConfig()).setSuggestionsSupplier(() -> List.of("before_network_update","after_network_update")).setCategory("microtick")));
 
     private static final String FAIL_NULL = ServerTranslationUtil.getOrNull("dt.micro_tick.fail_null");
     private static final Text FAIL_NULL_T = SendMessageHelper.getMessage(ServerTranslationUtil.getTranslatedWithFallback("dt.micro_tick.fail_null"),true);

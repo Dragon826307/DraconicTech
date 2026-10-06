@@ -174,7 +174,9 @@ public final class TextBuilder implements Cloneable{
     }
     private void checkHasActiveNode() {
         if (!hasActiveNode) {
-            throw new IllegalStateException("No activated node! Must first call apply() or applyTranslateable() to set text properties.");
+            IllegalStateException e = new IllegalStateException("No activated node! Must first call apply() or applyTranslateable() to set text properties.");
+            DraconicTech.LOGGER.error(e.getMessage(), e);
+            throw e;
         }
     }
     //清洗器
