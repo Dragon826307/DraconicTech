@@ -4,7 +4,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.sun.management.OperatingSystemMXBean;
 import io.github.dragon826307.draconictech.api.auto_init.AutoInitialize;
 import io.github.dragon826307.draconictech.api.auto_init.InitializePhase;
-import io.github.dragon826307.draconictech.config.ConfigProject;
+import io.github.dragon826307.draconictech.api.config.ConfigProject;
 import io.github.dragon826307.draconictech.server.ServerConfigProjectManager;
 import io.github.dragon826307.draconictech.util.ServerTranslationUtil;
 import net.minecraft.server.command.CommandManager;

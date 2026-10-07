@@ -1,4 +1,4 @@
-package io.github.dragon826307.draconictech.util.bytes;
+package io.github.dragon826307.draconictech.api.util.bytes;
 
 import java.util.Arrays;
 

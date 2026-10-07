@@ -2,8 +2,8 @@ package io.github.dragon826307.draconictech.command.argument.serializer;
 
 import com.google.gson.JsonObject;
 import io.github.dragon826307.draconictech.command.argument.ConfigValueArgumentType;
-import io.github.dragon826307.draconictech.config.AbstractConfigType;
-import io.github.dragon826307.draconictech.config.ConfigProject;
+import io.github.dragon826307.draconictech.api.config.AbstractConfigType;
+import io.github.dragon826307.draconictech.api.config.ConfigProject;
 import io.netty.util.internal.UnstableApi;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.command.argument.serialize.ArgumentSerializer;

@@ -5,8 +5,8 @@ import io.github.dragon826307.draconictech.api.auto_init.AutoInitialize;
 import io.github.dragon826307.draconictech.api.auto_init.InitializePhase;
 import io.github.dragon826307.draconictech.api.auto_init.Location;
 import io.github.dragon826307.draconictech.client.command.ClientCommandHandler;
-import io.github.dragon826307.draconictech.config.ConfigProject;
-import io.github.dragon826307.draconictech.config.ConfigProjectManager;
+import io.github.dragon826307.draconictech.api.config.ConfigProject;
+import io.github.dragon826307.draconictech.api.config.ConfigProjectManager;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 
@@ -33,7 +33,7 @@ public final class ClientConfigProjectManager extends ConfigProjectManager {
         for (ConfigProject.Client<?> project: ConfigProject.Client.values()) CACHE.get(ConfigProject.Client.getClazz()).putIfAbsent(project, project.getDefaultValue());
         ConfigProjectManager.onSave(ClientConfigProjectManager::saveALL);
     }
-    public static void saveALL(boolean feedback){
+    private static void saveALL(boolean feedback){
         atomicWrite(CLIENT_CONFIG,copyALL(CACHE.get(ConfigProject.Client.getClazz())),feedback);
     }
     private static void loadALL(){

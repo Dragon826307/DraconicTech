@@ -1,4 +1,4 @@
-package io.github.dragon826307.draconictech.util.bytes;
+package io.github.dragon826307.draconictech.api.util.bytes;
 
 public final class BitUtil {
     public static int setInt(int origin, int index, boolean bl) {

@@ -1,4 +1,4 @@
-package io.github.dragon826307.draconictech.platform.text;
+package io.github.dragon826307.draconictech.api.text;
 
 public class UnknowTextOpcodeException extends RuntimeException {
     public UnknowTextOpcodeException(byte op, int pos) {

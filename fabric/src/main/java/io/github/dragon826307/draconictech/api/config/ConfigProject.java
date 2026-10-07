@@ -1,4 +1,4 @@
-package io.github.dragon826307.draconictech.config;
+package io.github.dragon826307.draconictech.api.config;
 
 import com.google.common.primitives.Ints;
 
@@ -64,7 +64,7 @@ public final class ConfigProject {
             return REGISTRY.toArray(new Server[0]);
         }
 
-        public static final Server<Integer> STATUS_COMMAND_PERMISSION = register(new Server<>(ConfigBuilder.ServerConfigBuilder.create("status_command_permission_requirement", Integer.class, 2, ConfigBuildHelper.INTEGER_VALIDATOR(0, 4), ((string, invalidReason) -> Ints.tryParse(string)))));
+        public static final Server<Integer> STATUS_COMMAND_PERMISSION = register(new Server<>(ConfigBuilder.ServerConfigBuilder.create("status_command_permission_requirement", Integer.class, 2, ConfigBuildHelper.INTEGER_VALIDATOR(0, 4), ((string, invalidReason) -> Ints.tryParse(string))).setSinglePlayerValue(4)));
 
         public T getSinglePlayerValue() {
             return singlePlayerValue;

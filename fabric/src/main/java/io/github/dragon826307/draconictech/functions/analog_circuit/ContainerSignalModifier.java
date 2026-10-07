@@ -2,10 +2,10 @@ package io.github.dragon826307.draconictech.functions.analog_circuit;
 
 import io.github.dragon826307.draconictech.api.auto_init.AutoInitialize;
 import io.github.dragon826307.draconictech.api.auto_init.InitializePhase;
-import io.github.dragon826307.draconictech.config.ConfigBuildHelper;
-import io.github.dragon826307.draconictech.config.ConfigBuilder;
-import io.github.dragon826307.draconictech.config.ConfigProject;
-import io.github.dragon826307.draconictech.config.ConfigProjectManager;
+import io.github.dragon826307.draconictech.api.config.ConfigBuildHelper;
+import io.github.dragon826307.draconictech.api.config.ConfigBuilder;
+import io.github.dragon826307.draconictech.api.config.ConfigProject;
+import io.github.dragon826307.draconictech.api.config.ConfigProjectManager;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;

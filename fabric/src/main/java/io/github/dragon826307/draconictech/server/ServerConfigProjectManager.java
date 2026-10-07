@@ -2,8 +2,8 @@ package io.github.dragon826307.draconictech.server;
 
 import io.github.dragon826307.draconictech.api.auto_init.AutoInitialize;
 import io.github.dragon826307.draconictech.api.auto_init.InitializePhase;
-import io.github.dragon826307.draconictech.config.ConfigProject;
-import io.github.dragon826307.draconictech.config.ConfigProjectManager;
+import io.github.dragon826307.draconictech.api.config.ConfigProject;
+import io.github.dragon826307.draconictech.api.config.ConfigProjectManager;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 
@@ -29,7 +29,7 @@ public class ServerConfigProjectManager extends ConfigProjectManager {
         }
         return (T) CACHE.get(ConfigProject.Server.getClazz()).getOrDefault(project,project.getDefaultValue());
     }
-    public static void saveALL(boolean feedback){
+    private static void saveALL(boolean feedback){
         atomicWrite(SERVER_CONFIG,copyALL(CACHE.get(ConfigProject.Server.getClazz())),feedback);
     }
     private static void loadALL(){

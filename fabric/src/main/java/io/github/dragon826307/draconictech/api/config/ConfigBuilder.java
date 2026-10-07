@@ -1,4 +1,4 @@
-package io.github.dragon826307.draconictech.config;
+package io.github.dragon826307.draconictech.api.config;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 

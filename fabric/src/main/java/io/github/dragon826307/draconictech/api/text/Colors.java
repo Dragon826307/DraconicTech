@@ -1,4 +1,4 @@
-package io.github.dragon826307.draconictech.platform.text;
+package io.github.dragon826307.draconictech.api.text;
 
 @SuppressWarnings("unused")
 public final class Colors {

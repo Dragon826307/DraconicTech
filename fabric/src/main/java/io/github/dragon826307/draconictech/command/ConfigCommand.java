@@ -3,9 +3,9 @@ package io.github.dragon826307.draconictech.command;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.github.dragon826307.draconictech.api.auto_init.AutoInitialize;
 import io.github.dragon826307.draconictech.api.auto_init.InitializePhase;
-import io.github.dragon826307.draconictech.config.ConfigCommandBuilder;
-import io.github.dragon826307.draconictech.config.ConfigProject;
-import io.github.dragon826307.draconictech.config.ConfigProjectManager;
+import io.github.dragon826307.draconictech.api.config.ConfigCommandBuilder;
+import io.github.dragon826307.draconictech.api.config.ConfigProject;
+import io.github.dragon826307.draconictech.api.config.ConfigProjectManager;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 

@@ -1,17 +1,20 @@
-package io.github.dragon826307.draconictech.platform.text;
+package io.github.dragon826307.draconictech.api.text;
 
+import com.google.common.primitives.Bytes;
 import io.github.dragon826307.draconictech.DraconicTech;
-import io.github.dragon826307.draconictech.util.bytes.BitUtil;
-import io.github.dragon826307.draconictech.util.bytes.ByteStream;
+import io.github.dragon826307.draconictech.api.util.bytes.BitUtil;
+import io.github.dragon826307.draconictech.api.util.bytes.ByteStream;
+import io.github.dragon826307.draconictech.platform.text.MojangTextParser;
+import net.minecraft.text.Text;
 import org.apache.commons.lang3.SerializationException;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 @SuppressWarnings("unused")
 public final class TextBuilder implements Cloneable{
     private static final BuiltText EMPTY_TEXT = TextBuilder.start().build().parse();
     private ByteStream.Writer stream = new ByteStream.Writer();
-
     //缓存属性
     private boolean hasActiveNode = false;
     private byte activeNodeType = 0;
@@ -74,12 +77,11 @@ public final class TextBuilder implements Cloneable{
         translateValues = tmp.toByteArray();
         return this;
     }
-    public TextBuilder apply(BuiltText literal) {
+    public BuiltTextDecorator applyBuiltText(BuiltText literal) {
         flushCurrentNode();
         this.hasActiveNode = false;
-        activeNodeType = 0;
-        stream.writeBytes(literal.getBytecodeRaw());
-        return this;
+        activeNodeType = TextOpcodes.OP_NODE_BUILT_TEXT;
+        return new BuiltTextDecorator(this, literal);
     }
 
     public TextBuilder setColor(int argb) {
@@ -130,6 +132,11 @@ public final class TextBuilder implements Cloneable{
 
     //刷入字节流
     private void flushCurrentNode() {
+        if (activeNodeType == TextOpcodes.OP_NODE_BUILT_TEXT) {
+            IllegalStateException e = new IllegalStateException("Can not apply another node when BuiltTextDecorator is run. Call done() at first!");
+            DraconicTech.LOGGER.error(e.getMessage(), e);
+            throw e;
+        }
         if (!hasActiveNode || activeNodeType == 0) return;
         if (activeNodeType == TextOpcodes.OP_NODE_LITERAL) {
             stream.writeByte(TextOpcodes.OP_NODE_LITERAL);
@@ -174,13 +181,13 @@ public final class TextBuilder implements Cloneable{
     }
     private void checkHasActiveNode() {
         if (!hasActiveNode) {
-            IllegalStateException e = new IllegalStateException("No activated node! Must first call apply() or applyTranslateable() to set text properties.");
+            IllegalStateException e = new IllegalStateException("No activated node! Must first call applyBuiltText() or applyTranslateable() to set text properties.");
             DraconicTech.LOGGER.error(e.getMessage(), e);
             throw e;
         }
     }
     //清洗器
-    private static byte[] byteSanitizer(byte[] raw, boolean hasMagicNumber, byte ignoreOp) {
+    private static byte[] byteSanitizer(byte[] raw, boolean hasMagicNumber, byte... ignoreOp) {
         ByteStream.Writer writer = new ByteStream.Writer(raw.length);
         ByteStream.Reader reader = new ByteStream.Reader(raw);
         if (hasMagicNumber) {
@@ -190,12 +197,14 @@ public final class TextBuilder implements Cloneable{
             }
             writer.writeInt(TextOpcodes.MAGIC_NUMBER);
         }
+        boolean hasGlobalColor = false;
+        boolean hasGlobalStyle = false;
         byte currentNode = 0;
         while (reader.hasRemaining()) {
             byte op = reader.readByte();
             if (op == 0) continue;
             int length = reader.readInt();
-            if (op == ignoreOp) {
+            if (Bytes.contains(ignoreOp, op)) {
                 reader.skipBytes(length);
                 continue;
             }
@@ -203,15 +212,9 @@ public final class TextBuilder implements Cloneable{
                 throw new UnknowTextOpcodeException(op, reader.getPos() - 5);
             }
             switch (op) {
-                case TextOpcodes.OP_NODE_LITERAL -> {
+                case TextOpcodes.OP_NODE_LITERAL, TextOpcodes.OP_NODE_TRANSLATABLE -> {
                     currentNode = op;
-                    writer.writeByte(TextOpcodes.OP_NODE_LITERAL);
-                    writer.writeInt(length);
-                    writer.writeBytes(reader.readBytes(length));
-                }
-                case TextOpcodes.OP_NODE_TRANSLATABLE -> {
-                    currentNode = op;
-                    writer.writeByte(TextOpcodes.OP_NODE_TRANSLATABLE);
+                    writer.writeByte(op);
                     writer.writeInt(length);
                     writer.writeBytes(reader.readBytes(length));
                 }
@@ -221,11 +224,27 @@ public final class TextBuilder implements Cloneable{
                         reader.skipBytes(length);
                         continue;
                     }
-                    writer.writeByte(TextOpcodes.OP_TRANSLATABLE_VALUES);
+                    writer.writeByte(op);
                     writer.writeInt(length);
                     writer.writeBytes(reader.readBytes(length));
                 }
+                case TextOpcodes.OP_NODE_BUILT_TEXT -> {
+                    byte[] sanitizedBytes = byteSanitizer(reader.readBytes(length), false, ignoreOp);
+                    writer.writeByte(op);
+                    writer.writeInt(sanitizedBytes.length);
+                    writer.writeBytes(sanitizedBytes);
+                }
                 case TextOpcodes.OP_STYLE_COLOR -> {
+                    writer.writeByte(op);
+                    writer.writeInt(length);
+                    writer.writeInt(reader.readInt());
+                }
+                case TextOpcodes.OP_GLOBAL_COLOR -> {
+                    if (hasGlobalColor) {
+                        reader.skipBytes(length);
+                        continue;
+                    }
+                    hasGlobalColor = true;
                     writer.writeByte(op);
                     writer.writeInt(length);
                     writer.writeInt(reader.readInt());
@@ -235,9 +254,19 @@ public final class TextBuilder implements Cloneable{
                     writer.writeInt(length);
                     writer.writeByte(reader.readByte());
                 }
-                case TextOpcodes.OP_STYLE_HOVER_TEXT -> {
-                    byte[] sanitizedHover = byteSanitizer(reader.readBytes(length), false, TextOpcodes.OP_STYLE_HOVER_TEXT);
-                    writer.writeByte(TextOpcodes.OP_STYLE_HOVER_TEXT);
+                case TextOpcodes.OP_GLOBAL_STYLE -> {
+                    if (hasGlobalStyle) {
+                        reader.skipBytes(length);
+                        continue;
+                    }
+                    hasGlobalStyle = true;
+                    writer.writeByte(op);
+                    writer.writeInt(length);
+                    writer.writeByte(reader.readByte());
+                }
+                case TextOpcodes.OP_STYLE_HOVER_TEXT, TextOpcodes.OP_GLOBAL_HOVER_TEXT -> {
+                    byte[] sanitizedHover = byteSanitizer(reader.readBytes(length), false, TextOpcodes.OP_STYLE_HOVER_TEXT, TextOpcodes.OP_GLOBAL_HOVER_TEXT);
+                    writer.writeByte(op);
                     writer.writeInt(sanitizedHover.length);
                     writer.writeBytes(sanitizedHover);
                 }
@@ -254,6 +283,77 @@ public final class TextBuilder implements Cloneable{
      * @return 一串合法的文本组件操作码
      */
     public static byte[] byteSanitizer(byte[] raw) {
-        return byteSanitizer(raw, true, (byte) 0);
+        return byteSanitizer(raw, true);
+    }
+
+    @SuppressWarnings("unused")
+    public static final class BuiltTextDecorator {
+        private final TextBuilder textBuilder;
+        private final BuiltText builtText;
+        private int activeColor = -1;
+        private byte activeFormattingMask = 0;
+        private byte[] activeHoverBytecode = null;
+        private final ByteStream.Writer writer;
+        private BuiltTextDecorator(TextBuilder textBuilder, BuiltText builtText) {
+            this.builtText = builtText;
+            this.textBuilder = textBuilder;
+            this.writer = new ByteStream.Writer(builtText.getBytecodeRaw().length + 5);
+        }
+        public BuiltTextDecorator setColor(int argb) {
+            activeColor = argb;
+            return this;
+        }
+        public BuiltTextDecorator setBold(boolean bold) {
+            activeFormattingMask = BitUtil.setByte(activeFormattingMask, 0, bold);
+            return this;
+        }
+        public BuiltTextDecorator setItalic(boolean italic) {
+            activeFormattingMask = BitUtil.setByte(activeFormattingMask, 1, italic);
+            return this;
+        }
+        public BuiltTextDecorator setUnderline(boolean underline) {
+            activeFormattingMask = BitUtil.setByte(activeFormattingMask, 2, underline);
+            return this;
+        }
+        public BuiltTextDecorator setStrikethrough(boolean strikethrough) {
+            activeFormattingMask = BitUtil.setByte(activeFormattingMask, 3, strikethrough);
+            return this;
+        }
+        public BuiltTextDecorator setObfuscated(boolean obfuscated) {
+            activeFormattingMask = BitUtil.setByte(activeFormattingMask, 4, obfuscated);
+            return this;
+        }
+        public BuiltTextDecorator setHover(BuiltText builtText) {
+            if (builtText == null) {
+                activeHoverBytecode = null;
+                return this;
+            }
+            activeHoverBytecode = builtText.getBytecodeRaw();
+            return this;
+        }
+        public TextBuilder done() {
+            writer.writeBytes(builtText.getBytecodeRaw());
+            if (activeColor != -1) {
+                writer.writeByte(TextOpcodes.OP_GLOBAL_COLOR);
+                writer.writeInt(4);
+                writer.writeInt(activeColor);
+            }
+            if (activeFormattingMask != -1) {
+                writer.writeByte(TextOpcodes.OP_GLOBAL_STYLE);
+                writer.writeInt(1);
+                writer.writeByte(activeFormattingMask);
+            }
+            if (activeHoverBytecode != null) {
+                writer.writeByte(TextOpcodes.OP_GLOBAL_HOVER_TEXT);
+                writer.writeInt(activeHoverBytecode.length);
+                writer.writeBytes(activeHoverBytecode);
+            }
+            byte[] text = writer.toByteArray();
+            textBuilder.stream.writeByte(TextOpcodes.OP_NODE_BUILT_TEXT);
+            textBuilder.stream.writeInt(text.length);
+            textBuilder.stream.writeBytes(text);
+            textBuilder.activeNodeType = 0;
+            return textBuilder;
+        }
     }
 }

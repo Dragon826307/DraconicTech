@@ -1,4 +1,4 @@
-package io.github.dragon826307.draconictech.config;
+package io.github.dragon826307.draconictech.api.config;
 
 import com.google.common.primitives.Ints;
 import io.github.dragon826307.draconictech.DraconicTech;
@@ -6,18 +6,15 @@ import io.github.dragon826307.draconictech.api.auto_init.AutoInitialize;
 import io.github.dragon826307.draconictech.api.auto_init.InitializePhase;
 import io.github.dragon826307.draconictech.api.auto_init.Location;
 import io.github.dragon826307.draconictech.command.ServerCommandHandler;
-import io.github.dragon826307.draconictech.platform.text.Colors;
-import io.github.dragon826307.draconictech.platform.text.TextBuilder;
+import io.github.dragon826307.draconictech.api.text.Colors;
+import io.github.dragon826307.draconictech.api.text.TextBuilder;
 import io.github.dragon826307.draconictech.util.ServerTranslationUtil;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.function.BooleanConsumer;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -86,20 +83,29 @@ public class ConfigProjectManager {
     @SuppressWarnings("unchecked")
     public static <T> T getConfig(AbstractConfigType<T> project) {
         if (project == null) return null;
-        Object value = CACHE.get(project.getClass()).get(project);
+        Map<AbstractConfigType<?>, Object> map = CACHE.get(project.getClass());
+        if (map == null) {
+            DraconicTech.LOGGER.warn("The config cache map '{}' is null. Using '{}' default value '{}'",project.getClass().descriptorString(), project.getID(), String.valueOf(project.getDefaultValue()));
+            return project.getDefaultValue();
+        }
+        Object value = map.get(project);
         return value != null ? (T) value : project.getDefaultValue();
     }
 
     public static <T> boolean setConfig(AbstractConfigType<T> project,T value) {
         if (project == null || value == null) return false;
+        Map<AbstractConfigType<?>, Object> map = CACHE.get(project.getClass());
+        if (map == null) {
+            DraconicTech.LOGGER.warn("Failed to set config '{}' because config cache map '{}' is null", project.getID(), project.getClass().descriptorString());
+            return false;
+        }
         if (project.isConfigValueValid(value)) {
-            CACHE.get(project.getClass()).put(project,value);
+            map.put(project,value);
             return true;
         }
         return false;
     }
-
-    protected static void saveALL(boolean feedback){
+    private static void saveALL(boolean feedback){
         for (BooleanConsumer run: ON_SAVE) {
             run.accept(feedback);
         }
@@ -108,11 +114,17 @@ public class ConfigProjectManager {
     }
     public static void trySaveAll(boolean feedback){
         if (ASYNC_SAVE_EXECUTOR.isShutdown() || IS_SAVING.compareAndSet(false, true)) {
-            saveALL(feedback);
+            try {
+                saveALL(feedback);
+            } catch (Throwable e) {
+                DraconicTech.LOGGER.error("Unknown error while saving config projects.",e);
+            } finally {
+                IS_SAVING.set(false);
+            }
         }
-        IS_SAVING.set(false);
     }
     protected static <T extends AbstractConfigType<?>> Map<String,Object> copyALL(Map<T,Object> cache){
+        //TODO : Map 实例不保证是可序列化的
         return cache.entrySet().parallelStream().collect(Collectors.toMap(entry -> entry.getKey().getID(),Map.Entry::getValue));
     }
     private static void loadALL(){
@@ -123,7 +135,7 @@ public class ConfigProjectManager {
         if(!Files.exists(path)) return;
         HashMap<String, T> key_map = new HashMap<>(Arrays.stream(projects).parallel().collect(Collectors.toMap(element -> element.getID(),element -> element)));
         long start = System.nanoTime()/1000;
-        try (ObjectInputStream inputStream = new ObjectInputStream(Files.newInputStream(path))) {
+        try (BufferedInputStream inputStream = new BufferedInputStream(Files.newInputStream(path))) {
             byte[] raw = inputStream.readAllBytes();
             reverse(raw);
             Map<String,Object> value_map = SerializationUtils.deserialize(raw);
@@ -161,7 +173,7 @@ public class ConfigProjectManager {
     protected static void atomicWrite(Path target, Object object, boolean feedback){
         Path tmp = target.resolveSibling(target.getFileName() + ".tmp");
         long start = System.nanoTime()/1000;
-        try (ObjectOutputStream outputStream = new ObjectOutputStream(Files.newOutputStream(tmp))) {
+        try (BufferedOutputStream outputStream = new BufferedOutputStream(Files.newOutputStream(tmp))) {
             byte[] raw = SerializationUtils.serialize((Serializable) object);
             reverse(raw);
             outputStream.write(raw);
@@ -187,7 +199,7 @@ public class ConfigProjectManager {
     }
     private static void reverse(byte[] array) {
         if (array == null) return;
-        for (int i = 4; i < array.length; i++) {
+        for (int i = 0; i < array.length; i++) {
             array[i] = (byte) ~array[i];
         }
     }

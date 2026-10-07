@@ -1,8 +1,10 @@
 package io.github.dragon826307.draconictech.platform.text;
 
 import io.github.dragon826307.draconictech.DraconicTech;
-import io.github.dragon826307.draconictech.util.bytes.BitUtil;
-import io.github.dragon826307.draconictech.util.bytes.ByteStream;
+import io.github.dragon826307.draconictech.api.text.TextOpcodes;
+import io.github.dragon826307.draconictech.api.text.UnknowTextOpcodeException;
+import io.github.dragon826307.draconictech.api.util.bytes.BitUtil;
+import io.github.dragon826307.draconictech.api.util.bytes.ByteStream;
 import net.minecraft.text.HoverEvent;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
@@ -69,29 +71,50 @@ public class MojangTextParser { //ojng
                     root.append(node);
                     currentNode = node;
                 }
+                case TextOpcodes.OP_NODE_BUILT_TEXT -> {
+                    Text text = parse(reader.readBytes(length), false, ignoreOp);
+                    root.append(text);
+                    currentNode = null;
+                }
                 case TextOpcodes.OP_TRANSLATABLE_VALUES -> {
                     DraconicTech.LOGGER.warn("Invalid translatable values operation 0x{} at {}", Integer.toHexString(op), Integer.toHexString(reader.getPos() - length));
                     reader.skipBytes(length);
                 }
-                case TextOpcodes.OP_STYLE_COLOR -> {
+                case TextOpcodes.OP_STYLE_COLOR, TextOpcodes.OP_GLOBAL_COLOR -> {
                     int argb = reader.readInt();
-                    currentNode.withColor(argb);
+                    if (op == TextOpcodes.OP_STYLE_COLOR) {
+                        currentNode.withColor(argb);
+                    } else {
+                        root.withColor(argb);
+                    }
                 }
-                case TextOpcodes.OP_STYLE_FLAGS -> {
+                case TextOpcodes.OP_STYLE_FLAGS, TextOpcodes.OP_GLOBAL_STYLE -> {
                     byte flags = reader.readByte();
-                    Style newStyle = currentNode.getStyle()
+                    MutableText node;
+                    if (op == TextOpcodes.OP_STYLE_FLAGS) {
+                        node = currentNode;
+                    } else {
+                        node = root;
+                    }
+                    Style newStyle = node.getStyle()
                             .withBold(BitUtil.get(flags, 0))
                             .withItalic(BitUtil.get(flags, 1))
                             .withUnderline(BitUtil.get(flags, 2))
                             .withStrikethrough(BitUtil.get(flags, 3))
                             .withObfuscated(BitUtil.get(flags, 4));
-                    currentNode.setStyle(newStyle);
+                    node.setStyle(newStyle);
                 }
-                case TextOpcodes.OP_STYLE_HOVER_TEXT -> {
+                case TextOpcodes.OP_STYLE_HOVER_TEXT, TextOpcodes.OP_GLOBAL_HOVER_TEXT -> {
                     byte[] hoverBytes = reader.readBytes(length);
+                    MutableText node;
+                    if (op == TextOpcodes.OP_STYLE_HOVER_TEXT) {
+                        node = currentNode;
+                    } else {
+                        node = root;
+                    }
                     Text hoverTextComponent = parse(hoverBytes, false, TextOpcodes.OP_STYLE_HOVER_TEXT);
-                    Style hoverStyle = currentNode.getStyle().withHoverEvent(new HoverEvent.ShowText(hoverTextComponent));
-                    currentNode.setStyle(hoverStyle);
+                    Style hoverStyle = node.getStyle().withHoverEvent(new HoverEvent.ShowText(hoverTextComponent));
+                    node.setStyle(hoverStyle);
                 }
                 default -> throw new UnknowTextOpcodeException(op, reader.getPos() - 5);
             }

@@ -1,13 +1,13 @@
-package io.github.dragon826307.draconictech.config;
+package io.github.dragon826307.draconictech.api.config;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import io.github.dragon826307.draconictech.platform.text.BuiltText;
-import io.github.dragon826307.draconictech.platform.text.Colors;
-import io.github.dragon826307.draconictech.platform.text.TextBuilder;
+import io.github.dragon826307.draconictech.api.text.BuiltText;
+import io.github.dragon826307.draconictech.api.text.Colors;
+import io.github.dragon826307.draconictech.api.text.TextBuilder;
 import io.github.dragon826307.draconictech.util.ServerTranslationUtil;
 
 import java.util.concurrent.CompletableFuture;
@@ -35,12 +35,14 @@ public final class ConfigCommandBuilder {
                 TextBuilder hover = TextBuilder.start().apply("ID: ").setBold(true).setColor(Colors.ARGB.GOLDENROD);
                 TextBuilder root = TextBuilder.start().applyTranslatable(ServerTranslationUtil.getFullKey("name"),true).setHover(hover.apply(configProject.getID()).build()).setColor(Colors.ARGB.PURPLE_500).setBold(true);
                 if (!configProject.getName().isEmpty()) {
-                    root.apply(configProject.getName());
+                    root.applyBuiltText(configProject.getName()).done();
                 } else {
                     root.apply(configProject.getID()).setColor(Colors.ARGB.PURPLE_700);
                 }
                 feedbackSender.send(context.getSource(), root.build(), false);
-                if (!configProject.getDescription().isEmpty()) feedbackSender.send(context.getSource(), TextBuilder.start().applyTranslatable(ServerTranslationUtil.getFullKey("description"), true).setBold(true).setColor(Colors.ARGB.PURPLE_300).apply(configProject.getDescription()).build(), true);
+                if (!configProject.getDescription().isEmpty()) {
+                    feedbackSender.send(context.getSource(), TextBuilder.start().applyTranslatable(ServerTranslationUtil.getFullKey("description"), true).setBold(true).setColor(Colors.ARGB.PURPLE_300).applyBuiltText(configProject.getDescription()).done().build(), true);
+                }
                 return 1;
             });
             RequiredArgumentBuilder<S, String> vanillaArg = RequiredArgumentBuilder.<S, String>argument("new value", StringArgumentType.greedyString())

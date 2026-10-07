@@ -5,11 +5,9 @@ import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
-import io.github.dragon826307.draconictech.config.AbstractConfigType;
+import io.github.dragon826307.draconictech.api.config.AbstractConfigType;
 import io.github.dragon826307.draconictech.util.ServerTranslationUtil;
 import io.netty.util.internal.UnstableApi;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.Colors;
 
 //TODO

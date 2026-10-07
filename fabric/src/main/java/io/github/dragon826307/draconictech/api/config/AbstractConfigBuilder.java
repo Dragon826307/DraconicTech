@@ -1,8 +1,8 @@
-package io.github.dragon826307.draconictech.config;
+package io.github.dragon826307.draconictech.api.config;
 
-import io.github.dragon826307.draconictech.platform.text.BuiltText;
-import io.github.dragon826307.draconictech.platform.text.Colors;
-import io.github.dragon826307.draconictech.platform.text.TextBuilder;
+import io.github.dragon826307.draconictech.api.text.BuiltText;
+import io.github.dragon826307.draconictech.api.text.Colors;
+import io.github.dragon826307.draconictech.api.text.TextBuilder;
 import io.github.dragon826307.draconictech.util.ServerTranslationUtil;
 import org.checkerframework.checker.nullness.qual.Nullable;
 

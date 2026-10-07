@@ -1,4 +1,6 @@
-package io.github.dragon826307.draconictech.platform.text;
+package io.github.dragon826307.draconictech.api.text;
+
+import io.github.dragon826307.draconictech.platform.text.MojangTextParser;
 
 import java.util.Arrays;
 

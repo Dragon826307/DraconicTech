@@ -1,7 +1,7 @@
-package io.github.dragon826307.draconictech.config;
+package io.github.dragon826307.draconictech.api.config;
 
-import io.github.dragon826307.draconictech.platform.text.BuiltText;
-import io.github.dragon826307.draconictech.platform.text.TextBuilder;
+import io.github.dragon826307.draconictech.api.text.BuiltText;
+import io.github.dragon826307.draconictech.api.text.TextBuilder;
 import org.apache.commons.lang3.ArrayUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -82,7 +82,7 @@ public class AbstractConfigType<T> {
         return invalidReason.getBuiltText();
     }
     public BuiltText getName() {
-        return name.parse();
+        return name;
     }
     public BuiltText getDescription() {
         return description.parse();
