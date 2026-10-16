@@ -5,6 +5,7 @@ import com.mojang.blaze3d.platform.DepthTestFunction;
 import io.github.dragon826307.draconictech.DraconicTech;
 import io.github.dragon826307.draconictech.api.auto_init.AutoInitialize;
 import io.github.dragon826307.draconictech.api.auto_init.InitializePhase;
+import lombok.Getter;
 import net.fabricmc.loader.api.FabricLoader;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.api.v0.IrisApi;
@@ -18,8 +19,11 @@ import org.joml.Matrix4f;
 public abstract class RenderTask<T extends RenderTask<T>> {
     private static boolean irisInitialized;
     
+    @Getter
     private final long id;
+    @Getter
     private boolean isVisible = true;
+    @Getter
     private boolean isRainbow = false;
     private boolean isRemoved = false;
     private long expireTime = 1000;
@@ -27,7 +31,7 @@ public abstract class RenderTask<T extends RenderTask<T>> {
     public RenderTask(long id) {
         this.id = id;
     }
-    public long getId() { return id; }
+
     @SuppressWarnings("unchecked")
     public T setColor(int argbColor) {
         this.argbColor = argbColor;
@@ -49,8 +53,7 @@ public abstract class RenderTask<T extends RenderTask<T>> {
         return (T) this;
     }
     public void close() { this.isRemoved = true; }
-    public boolean isVisible() { return isVisible; }
-    public boolean isRainbow() { return isRainbow; }
+
     public boolean isExpired() { return isRemoved || System.currentTimeMillis() > expireTime; }
     public abstract void buildVertices(BufferBuilder bufferBuilder, Matrix4f positionMatrix, Vec3d cameraPos, int finalColor);
     public abstract RenderPipeline getPipeline();

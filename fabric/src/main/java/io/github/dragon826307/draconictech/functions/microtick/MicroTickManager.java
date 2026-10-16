@@ -12,6 +12,7 @@ import io.github.dragon826307.draconictech.mixin.tick.ServerChunkLoadingManagerA
 import io.github.dragon826307.draconictech.mixin.tick.ServerCommonNetworkHandlerAccessor;
 import io.github.dragon826307.draconictech.util.SendMessageHelper;
 import io.github.dragon826307.draconictech.util.ServerTranslationUtil;
+import lombok.Getter;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
@@ -26,7 +27,7 @@ import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 public class MicroTickManager {
-    public static final ConfigProject.Main<Boolean> IS_FREEZE_ORIGIN_BEFORE_NETWORK_UPDATE = ConfigProject.Main.register(new ConfigProject.Main<>(ConfigBuilder.CommonConfigBuilder.create("MicroTickManager:is_freeze_origin_before_network_update", Boolean.class, true, (value, invalidReason) -> true, ((string, invalidReason) -> string.equals("before_network_update") ? Boolean.TRUE : string.equals("after_network_update") ? Boolean.FALSE : null)).setPostProcessor(() -> MicroTickManager.getInstance().checkConfig()).setSuggestionsSupplier(() -> List.of("before_network_update","after_network_update")).setCategory("microtick")));
+    public static final ConfigProject.Main<Boolean> IS_FREEZE_ORIGIN_BEFORE_NETWORK_UPDATE = ConfigProject.Main.register(new ConfigProject.Main<>(ConfigBuilder.CommonConfigBuilder.create("MicroTickManager:is_freeze_origin_before_network_update", Boolean.class, true, ((string, invalidReason) -> string.equals("before_network_update") ? Boolean.TRUE : string.equals("after_network_update") ? Boolean.FALSE : null)).setPostProcessor(() -> MicroTickManager.getInstance().checkConfig()).setSuggestionsSupplier(() -> List.of("before_network_update","after_network_update")).setCategory("microtick")));
 
     private static final String FAIL_NULL = ServerTranslationUtil.getOrNull("dt.micro_tick.fail_null");
     private static final Text FAIL_NULL_T = SendMessageHelper.getMessage(ServerTranslationUtil.getTranslatedWithFallback("dt.micro_tick.fail_null"),true);
@@ -37,6 +38,7 @@ public class MicroTickManager {
 
     private static MicroTickManager INSTANCE;
 
+    @Getter
     private final MinecraftServer server;
     private final ScheduledExecutorService microTickManagerThread = Executors.newSingleThreadScheduledExecutor(r -> {
         Thread thread = new Thread(r);
@@ -48,7 +50,9 @@ public class MicroTickManager {
     private Text freeze_message = Text.empty();
 
     private volatile CountDownLatch unfreezeLatch;
+    @Getter
     private boolean onTickPostProcessing = false;
+    @Getter
     private boolean isFreeze = false;
     private int remainStep = 0;
     private int tick_flags = 0;
@@ -93,8 +97,6 @@ public class MicroTickManager {
         INSTANCE = this;
     }
 
-    public MinecraftServer getServer() {return this.server;}
-
     public void onEndTick() {
         onTickPostProcessing = false;
     }
@@ -102,14 +104,6 @@ public class MicroTickManager {
     public void checkConfig() {
         boolean before_nu = ConfigProjectManager.getConfig(IS_FREEZE_ORIGIN_BEFORE_NETWORK_UPDATE);
         setMicroTickFlag(MicroTickingFlags.ORIGIN_BEFORE_NU, before_nu);
-    }
-
-    public boolean isFreeze() {
-        return isFreeze;
-    }
-
-    public boolean isOnTickPostProcessing() {
-        return onTickPostProcessing;
     }
 
     public void setMicroTickFlag(int flag, boolean bl) {

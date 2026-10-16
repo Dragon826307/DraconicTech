@@ -17,9 +17,9 @@ public class TextColorHelper {
         int b2 = color2 & 0xFF;
         for (int i = 0; i < length; i++) {
             double t =  (double) i / (length - 1);
-            int r = (int) Math.max(0, Math.min(255, r1 + (r2 - r1) * t));
-            int g = (int) Math.max(0, Math.min(255, g1 + (g2 - g1) * t));
-            int b = (int) Math.max(0, Math.min(255, b1 + (b2 - b1) * t));
+            int r = (int) Math.clamp(r1 + (r2 - r1) * t, 0, 255);
+            int g = (int) Math.clamp(g1 + (g2 - g1) * t, 0, 255);
+            int b = (int) Math.clamp(b1 + (b2 - b1) * t, 0, 255);
             text.append(Text.literal(String.valueOf(string.charAt(i))).withColor(r << 16 | g << 8 | b));
         }
         return text;

@@ -3,6 +3,7 @@ package io.github.dragon826307.draconictech.client.functions.enhanced_chat;
 import com.google.common.io.BaseEncoding;
 import io.github.dragon826307.draconictech.client.config.ClientConfigProjectManager;
 import io.github.dragon826307.draconictech.client.config.ClientConfigProjects;
+import lombok.Getter;
 import net.minecraft.util.StringHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -40,6 +41,7 @@ public enum ChatFeatures {
         return EnhancedChatParseResult.error("");
     })
     ;
+    @Getter
     private final String ID;
     private final int ARG_COUNT;
     private final String[] SUGGESTIONS;
@@ -50,7 +52,7 @@ public enum ChatFeatures {
         SUGGESTIONS = suggestions;
         PARSER = parser;
     }
-    public String getID() {return ID;}
+
     public ChatFeatureParser getParser() {return PARSER;}
     public int getArgCount() {return ARG_COUNT;}
     @Nullable

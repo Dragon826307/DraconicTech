@@ -1,12 +1,13 @@
 package io.github.dragon826307.draconictech.api.config;
 
 import com.google.common.primitives.Ints;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public final class ConfigProject {
-    public static final AbstractConfigType<Integer> NULL_CONFIG = Main.register(new Main<>(ConfigBuilder.CommonConfigBuilder.create("NULL", Integer.class, Integer.MIN_VALUE, ((value, invalidReason) -> true), (string, invalidReason) -> null)));
+    public static final AbstractConfigType<Integer> NULL_CONFIG = Main.register(new Main<>(ConfigBuilder.CommonConfigBuilder.create("NULL", Integer.class, Integer.MIN_VALUE, (string, invalidReason) -> null)));
     public enum UpdateCommandTreeFlags {
         NOTHING,
         IF_SUCCESS,
@@ -46,6 +47,7 @@ public final class ConfigProject {
             return (Class<Main<?>>) (Object) Main.class;
         }
     }
+    @Getter
     public static final class Server<T> extends AbstractConfigType<T> {
         private static final List<Server<?>> REGISTRY = new ArrayList<>();
 
@@ -64,11 +66,8 @@ public final class ConfigProject {
             return REGISTRY.toArray(new Server[0]);
         }
 
-        public static final Server<Integer> STATUS_COMMAND_PERMISSION = register(new Server<>(ConfigBuilder.ServerConfigBuilder.create("status_command_permission_requirement", Integer.class, 2, ConfigBuildHelper.INTEGER_VALIDATOR(0, 4), ((string, invalidReason) -> Ints.tryParse(string))).setSinglePlayerValue(4)));
+        public static final Server<Integer> STATUS_COMMAND_PERMISSION = register(new Server<>(ConfigBuilder.ServerConfigBuilder.create("status_command_permission_requirement", Integer.class, 2, ((string, invalidReason) -> Ints.tryParse(string))).setConfigValidator((ConfigBuildHelper.INTEGER_VALIDATOR(0,4))).setSinglePlayerValue(4)));
 
-        public T getSinglePlayerValue() {
-            return singlePlayerValue;
-        }
         @SuppressWarnings("unchecked")
         public static Class<Server<?>> getClazz() {
             return (Class<Server<?>>) (Object) Server.class;

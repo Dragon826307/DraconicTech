@@ -1,5 +1,7 @@
 package io.github.dragon826307.draconictech.api.util.bytes;
 
+import lombok.Getter;
+
 import java.util.Arrays;
 
 public final class ByteStream {
@@ -41,6 +43,7 @@ public final class ByteStream {
     }
     public static final class Reader {
         private final byte[] buffer;
+        @Getter
         private int pos;
         public Reader(byte[] buf) {
             this.buffer = buf;
@@ -64,9 +67,6 @@ public final class ByteStream {
         }
         public void skipBytes(int len) {
             pos += len;
-        }
-        public int getPos() {
-            return pos;
         }
     }
 }

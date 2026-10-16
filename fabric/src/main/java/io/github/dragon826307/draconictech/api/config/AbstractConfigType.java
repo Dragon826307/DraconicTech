@@ -2,6 +2,7 @@ package io.github.dragon826307.draconictech.api.config;
 
 import io.github.dragon826307.draconictech.api.text.BuiltText;
 import io.github.dragon826307.draconictech.api.text.TextBuilder;
+import lombok.Getter;
 import org.apache.commons.lang3.ArrayUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -10,13 +11,16 @@ import java.util.List;
 import java.util.function.Supplier;
 
 public class AbstractConfigType<T> {
-    //必要
+
+    @Getter
     private final String ID;
     private final Class<T> type;
+    @Getter
     private final T defaultValue;
     private final ConfigValidator<T> configValidator;
     private final StringParser<String,@Nullable T> stringParser;
-    //可选
+
+    @Getter
     private final BuiltText name;
     private final BuiltText description;
     private final String category;
@@ -25,6 +29,7 @@ public class AbstractConfigType<T> {
     private final InvalidReason invalidReason;
     private final Supplier<List<String>> suggestionsSupplier;
     private final Runnable postProcessor;
+    @Getter
     private final ConfigProject.UpdateCommandTreeFlags updateCommandTreeFlag;
 
     protected AbstractConfigType(AbstractConfigBuilder<T, ?> builder) {
@@ -61,14 +66,8 @@ public class AbstractConfigType<T> {
         boolean shouldBuild();
     }
 
-    public String getID() {
-        return ID;
-    }
     public Class<T> getConfigType() {
         return type;
-    }
-    public T getDefaultValue() {
-        return defaultValue;
     }
     public boolean isConfigValueValid(T value) {
         invalidReason.text = AbstractConfigBuilder.DEFAULT_INVALID_REASON;
@@ -80,9 +79,6 @@ public class AbstractConfigType<T> {
     }
     public BuiltText getInvalidReason() {
         return invalidReason.getBuiltText();
-    }
-    public BuiltText getName() {
-        return name;
     }
     public BuiltText getDescription() {
         return description.parse();
@@ -104,9 +100,6 @@ public class AbstractConfigType<T> {
     }
     public void runPostProcessor() {
         postProcessor.run();
-    }
-    public ConfigProject.UpdateCommandTreeFlags getUpdateCommandTreeFlag() {
-        return updateCommandTreeFlag;
     }
 
     public static class InvalidReason {

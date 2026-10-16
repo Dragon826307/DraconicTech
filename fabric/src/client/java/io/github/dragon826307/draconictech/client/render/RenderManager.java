@@ -8,6 +8,7 @@ import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import io.github.dragon826307.draconictech.DraconicTech;
+import lombok.Getter;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.MappableRingBuffer;
@@ -39,6 +40,7 @@ public class RenderManager {
     private static final Matrix4f TEXTURE_MATRIX = new Matrix4f();
 
     private static float rainbowColor = 0f;
+    @Getter
     private static float rainbowSpeed = 0.005f;
     private static MappableRingBuffer vertexBuffer;
     private static <T extends RenderTask<T>> T submitTask(T task) {
@@ -147,9 +149,7 @@ public class RenderManager {
     public static Render3DBoxTask Render3DBoxTask(long id, float x1, float y1, float z1, float x2, float y2, float z2) {
         return submitTask(new Render3DBoxTask(id, x1, y1, z1, x2, y2, z2));
     }
-    public static float getRainbowSpeed() {
-        return rainbowSpeed;
-    }
+
     public static void setRainbowSpeed(float rainbowSpeed) {
         RenderManager.rainbowSpeed = rainbowSpeed;
     }
