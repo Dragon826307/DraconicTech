@@ -5,16 +5,19 @@ import io.github.dragon826307.draconictech.DraconicTech;
 import io.github.dragon826307.draconictech.api.auto_init.AutoInitialize;
 import io.github.dragon826307.draconictech.api.auto_init.InitializePhase;
 import io.github.dragon826307.draconictech.api.auto_init.Location;
-import io.github.dragon826307.draconictech.command.ServerCommandHandler;
 import io.github.dragon826307.draconictech.api.text.Colors;
 import io.github.dragon826307.draconictech.api.text.TextBuilder;
+import io.github.dragon826307.draconictech.command.ServerCommandHandler;
 import io.github.dragon826307.draconictech.util.ServerTranslationUtil;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.function.BooleanConsumer;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.IOException;
+import java.io.Serializable;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -124,8 +127,7 @@ public class ConfigProjectManager {
         }
     }
     protected static <T extends AbstractConfigType<?>> Map<String,Object> copyALL(Map<T,Object> cache){
-        //TODO : Map 实例不保证是可序列化的
-        return cache.entrySet().parallelStream().collect(Collectors.toMap(entry -> entry.getKey().getID(),Map.Entry::getValue));
+        return cache.entrySet().parallelStream().collect(Collectors.toMap(entry -> entry.getKey().getID(), Map.Entry::getValue, (k, v) -> k, HashMap::new));
     }
     private static void loadALL(){
         loadFormFile(MAIN_CONFIG, ConfigProject.Main.values(),CACHE.get(ConfigProject.Main.getClazz()));
@@ -138,7 +140,8 @@ public class ConfigProjectManager {
         try (BufferedInputStream inputStream = new BufferedInputStream(Files.newInputStream(path))) {
             byte[] raw = inputStream.readAllBytes();
             reverse(raw);
-            Map<String,Object> value_map = SerializationUtils.deserialize(raw);
+            Map<String,Object> value_map_raw = SerializationUtils.deserialize(raw);
+            HashMap<String, Object> value_map = value_map_raw.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (k, v) -> k, HashMap::new));
             entry.putAll(value_map.entrySet().parallelStream().filter(element -> {
                 if (key_map.containsKey(element.getKey())) {
                     return true;

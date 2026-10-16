@@ -3,9 +3,9 @@ package io.github.dragon826307.draconictech.client.command;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.github.dragon826307.draconictech.api.auto_init.AutoInitialize;
 import io.github.dragon826307.draconictech.api.auto_init.InitializePhase;
-import io.github.dragon826307.draconictech.client.config.ClientConfigProjectManager;
 import io.github.dragon826307.draconictech.api.config.ConfigCommandBuilder;
 import io.github.dragon826307.draconictech.api.config.ConfigProject;
+import io.github.dragon826307.draconictech.client.config.ClientConfigProjectManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 

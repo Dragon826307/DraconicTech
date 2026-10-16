@@ -33,12 +33,15 @@ public final class AutoInitializeManager {
                 if (!dependsOnMe) continue;
             }
             for (Path root : mod.getRootPaths()) {
-                final String[] classPath = {""};
+                String[] classPath = {""};
                 try (Stream<Path> paths = Files.walk(root)) {
                     paths.filter(Files::isRegularFile).filter(path -> path.toString().endsWith(".class")).forEach(path -> {
                         classPath[0] = root.relativize(path).toString().replace("/",".").replace("\\", ".").replace(".class", "");
+                        if (isAnonymousOrLocalClass(classPath[0])) {
+                            return;
+                        }
                         try {
-                            if (!isSafeToLoad(path)) return;
+                            if (!isSafeToLoad(path, classPath[0], root)) return;
                             Class<?> clazz = Class.forName(classPath[0], false, AutoInitializeManager.class.getClassLoader());
                             for (Method method : clazz.getDeclaredMethods()) {
                                 if (method.isAnnotationPresent(AutoInitialize.class)) {
@@ -86,12 +89,29 @@ public final class AutoInitializeManager {
         DraconicTech.LOGGER.info("{} method(s) were automatically initialized during the triggering phase '{}' .Used {} ms", methods.size(), phase.name(), System.currentTimeMillis() - start);
     }
 
-    private static boolean isSafeToLoad(Path classPath) throws IOException {
+    private static boolean isAnonymousOrLocalClass(String className) {
+        String[] parts = className.split("\\$");
+        if (parts.length <= 1) return false;
+        String sub = parts[parts.length - 1];
+        return !sub.isEmpty() && Character.isDigit(sub.charAt(0));
+    }
+    private static boolean isSafeToLoad(Path classPath, String className, Path root) throws IOException {
         try (InputStream is = Files.newInputStream(classPath)) {
             ClassReader reader = new ClassReader(is);
             ClassScanVisitor visitor = new ClassScanVisitor();
             reader.accept(visitor, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG);
-            return visitor.isSafeForCurrentEnv && visitor.hasAutoInitialize && !visitor.isMixinClass;
+            if (!visitor.isSafeForCurrentEnv || visitor.isMixinClass || !visitor.hasAutoInitialize) {
+                return false;
+            }
+            int dollarIndex = className.indexOf('$');
+            if (dollarIndex != -1) {
+                String outerClassName = className.substring(0, dollarIndex);
+                Path outerClassPath = root.resolve(outerClassName.replace('.', '/') + ".class");
+                if (Files.exists(outerClassPath)) {
+                    return isSafeToLoad(outerClassPath, outerClassName, root);
+                }
+            }
+            return true;
         }
     }
     private static void resolvePrioritiesAndSort() {

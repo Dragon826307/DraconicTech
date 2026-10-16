@@ -4,12 +4,9 @@ import com.google.common.primitives.Bytes;
 import io.github.dragon826307.draconictech.DraconicTech;
 import io.github.dragon826307.draconictech.api.util.bytes.BitUtil;
 import io.github.dragon826307.draconictech.api.util.bytes.ByteStream;
-import io.github.dragon826307.draconictech.platform.text.MojangTextParser;
-import net.minecraft.text.Text;
 import org.apache.commons.lang3.SerializationException;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 
 @SuppressWarnings("unused")
 public final class TextBuilder implements Cloneable{
@@ -181,7 +178,7 @@ public final class TextBuilder implements Cloneable{
     }
     private void checkHasActiveNode() {
         if (!hasActiveNode) {
-            IllegalStateException e = new IllegalStateException("No activated node! Must first call applyBuiltText() or applyTranslateable() to set text properties.");
+            IllegalStateException e = new IllegalStateException("No activated node! Must first call apply() or applyTranslatable() to set text properties.");
             DraconicTech.LOGGER.error(e.getMessage(), e);
             throw e;
         }
@@ -208,7 +205,7 @@ public final class TextBuilder implements Cloneable{
                 reader.skipBytes(length);
                 continue;
             }
-            if ((currentNode == 0) && !(op == TextOpcodes.OP_NODE_LITERAL) && !(op == TextOpcodes.OP_NODE_TRANSLATABLE)) {
+            if ((currentNode == 0) && !(op == TextOpcodes.OP_NODE_BUILT_TEXT) && !(op == TextOpcodes.OP_NODE_LITERAL) && !(op == TextOpcodes.OP_NODE_TRANSLATABLE)) {
                 throw new UnknowTextOpcodeException(op, reader.getPos() - 5);
             }
             switch (op) {
@@ -220,7 +217,7 @@ public final class TextBuilder implements Cloneable{
                 }
                 case TextOpcodes.OP_TRANSLATABLE_VALUES -> {
                     if (currentNode != TextOpcodes.OP_NODE_TRANSLATABLE) {
-                        DraconicTech.LOGGER.warn("Invalid text operation code at {} \n Only Translatable node can have translatable values!", Integer.toString(reader.getPos()));
+                        DraconicTech.LOGGER.warn("Invalid text operation code at {} \n Only Translatable node can have translatable values!", Integer.toString(reader.getPos() - 5));
                         reader.skipBytes(length);
                         continue;
                     }
@@ -229,6 +226,7 @@ public final class TextBuilder implements Cloneable{
                     writer.writeBytes(reader.readBytes(length));
                 }
                 case TextOpcodes.OP_NODE_BUILT_TEXT -> {
+                    currentNode = op;
                     byte[] sanitizedBytes = byteSanitizer(reader.readBytes(length), false, ignoreOp);
                     writer.writeByte(op);
                     writer.writeInt(sanitizedBytes.length);
@@ -328,7 +326,7 @@ public final class TextBuilder implements Cloneable{
                 activeHoverBytecode = null;
                 return this;
             }
-            activeHoverBytecode = builtText.getBytecodeRaw();
+            activeHoverBytecode = builtText.getBytecodeRaw().clone();
             return this;
         }
         public TextBuilder done() {
@@ -338,7 +336,7 @@ public final class TextBuilder implements Cloneable{
                 writer.writeInt(4);
                 writer.writeInt(activeColor);
             }
-            if (activeFormattingMask != -1) {
+            if (activeFormattingMask != 0) {
                 writer.writeByte(TextOpcodes.OP_GLOBAL_STYLE);
                 writer.writeInt(1);
                 writer.writeByte(activeFormattingMask);

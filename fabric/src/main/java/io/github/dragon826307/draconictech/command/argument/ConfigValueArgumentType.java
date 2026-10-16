@@ -6,42 +6,32 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import io.github.dragon826307.draconictech.api.config.AbstractConfigType;
+import io.github.dragon826307.draconictech.api.text.BuiltText;
+import io.github.dragon826307.draconictech.api.text.TextBuilder;
 import io.github.dragon826307.draconictech.util.ServerTranslationUtil;
-import io.netty.util.internal.UnstableApi;
-import net.minecraft.util.Colors;
 
-//TODO
-@UnstableApi
-@Deprecated
-public record ConfigValueArgumentType<T>(AbstractConfigType<T> config) implements ArgumentType<Object> {
-    private static final DynamicCommandExceptionType CONFIG_ERR = new DynamicCommandExceptionType(err -> ServerTranslationUtil.getFullKeyAndTryTranslate("invalid_value",err).withColor(Colors.RED));
-
-    public static <T> ConfigValueArgumentType<T> config(AbstractConfigType<T> config) {
+public record ConfigValueArgumentType<T>(AbstractConfigType<T> config) implements ArgumentType<AbstractConfigType<T>> {
+    private static final DynamicCommandExceptionType CONFIG_ERR = new DynamicCommandExceptionType(err -> TextBuilder.start().applyTranslatable(ServerTranslationUtil.getFullKey("invalid_value"),true).applyBuiltText((BuiltText) err).done().build().parse().get());
+    public static <T> ArgumentType<AbstractConfigType<T>> config(AbstractConfigType<T> config) {
         return new ConfigValueArgumentType<>(config);
     }
 
     @Override
-    public Object parse(StringReader reader) throws CommandSyntaxException {
-//        int start = reader.getCursor();
-//        String raw_input = reader.readString();
-//        if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
-//            T raw_parse_result = config.parseStringToConfigValue(raw_input);
-//            if (raw_parse_result == null || config.getConfigValidator().check(raw_parse_result)) {
-//                throw CONFIG_ERR.create(config.getInvalidReason());
-//            }
-//        }else {
-//
-//        }
-        return null;
+    public AbstractConfigType<T> parse(StringReader reader) throws CommandSyntaxException {
+        String raw_input = reader.readString();
+        T parsed_value = config.parseStringToConfig(raw_input);
+        if (parsed_value == null) {
+            throw CONFIG_ERR.create(config.getInvalidReason());
+        }
+        if (!config.isConfigValueValid(parsed_value)) {
+            throw CONFIG_ERR.create(config.getInvalidReason());
+        }
+        return config;
     }
 
-    public static Object getValueOrNull(CommandContext<?> context, String name) {
-        return context.getArgument(name, Object.class);
-    }
-
-    public static Object getValueOrThrow(CommandContext<?> context, String name) throws CommandSyntaxException {
-        Object obj = getValueOrNull(context, name);
-        if (obj == null) throw CONFIG_ERR.create("NULL");
-        return obj;
+    @SuppressWarnings("unchecked")
+    public static <T> T getNewValue(CommandContext<?> context, String name) {
+        System.out.println(context.getArgument(name, String.class));
+        return (T) context.getArgument(name, String.class);
     }
 }

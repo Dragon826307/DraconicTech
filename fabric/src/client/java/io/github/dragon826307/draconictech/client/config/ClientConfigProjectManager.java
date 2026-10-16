@@ -4,9 +4,9 @@ import io.github.dragon826307.draconictech.DraconicTech;
 import io.github.dragon826307.draconictech.api.auto_init.AutoInitialize;
 import io.github.dragon826307.draconictech.api.auto_init.InitializePhase;
 import io.github.dragon826307.draconictech.api.auto_init.Location;
-import io.github.dragon826307.draconictech.client.command.ClientCommandHandler;
 import io.github.dragon826307.draconictech.api.config.ConfigProject;
 import io.github.dragon826307.draconictech.api.config.ConfigProjectManager;
+import io.github.dragon826307.draconictech.client.command.ClientCommandHandler;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 

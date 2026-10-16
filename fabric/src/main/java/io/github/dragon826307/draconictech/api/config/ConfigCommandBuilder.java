@@ -45,33 +45,23 @@ public final class ConfigCommandBuilder {
                 }
                 return 1;
             });
-            RequiredArgumentBuilder<S, String> vanillaArg = RequiredArgumentBuilder.<S, String>argument("new value", StringArgumentType.greedyString())
+            RequiredArgumentBuilder<S, String> arg = RequiredArgumentBuilder.<S, String>argument("value", StringArgumentType.greedyString())
                     .executes(context -> {
-                        String rawString = StringArgumentType.getString(context, "new value");
+                        String rawString = StringArgumentType.getString(context, "value");
                         if (rawString == null) {
                             feedbackSender.send(context.getSource(),UNKNOW_ERR,false);
                             return 0;
                         }
                         T newValue = typedConfigProject.parseStringToConfig(rawString);
-                        if (newValue == null || !typedConfigProject.isConfigValueValid(typedConfigProject.getConfigType().cast(newValue))) {
+                        if (newValue == null || !typedConfigProject.isConfigValueValid(newValue)) {
                             feedbackSender.send(context.getSource(), typedConfigProject.getInvalidReason(),false);
                             return 0;
                         }
                         return executeConfigChange(context.getSource(), typedConfigProject, newValue, feedbackSender, setter);
                     })
                     .suggests((context, builder) -> configSuggestion(builder, typedConfigProject));
-            LiteralArgumentBuilder<S> prefixNode = null;
-            for (String string : configProject.getCategory()) {
-                if (prefixNode == null) {
-                    prefixNode = LiteralArgumentBuilder.literal(string);
-                }
-                //TODO : 前缀
-            }
-//            if (prefixNode != null) singleConfigNode = prefixNode.then(singleConfigNode);
-            branchRoot.then(singleConfigNode.then(vanillaArg.requires(s -> {
-                //TODO
-                return true;
-            }))).requires(s -> configProject.shouldBuildAsCommand());
+            //TODO : 类别
+            branchRoot.then(singleConfigNode.then(arg.requires(s -> true))).requires(s -> configProject.shouldBuildAsCommand());
         }
         return branchRoot;
     }
