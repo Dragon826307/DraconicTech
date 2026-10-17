@@ -1,7 +1,6 @@
 package io.github.dragon826307.draconictech.api.command;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Supplier;
 
 public record FlattenedCommandNode(

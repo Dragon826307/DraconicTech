@@ -12,31 +12,24 @@ import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.concurrent.ConcurrentHashMap;
 
 public final class ClientConfigProjectManager extends ConfigProjectManager {
-    private static final Path CLIENT_CONFIG = ROOT.resolve("client.dat");
-    @AutoInitialize(phase = InitializePhase.ON_CLIENT_STARTED,priority = @Location(provideTo = ClientCommandHandler.class))
+    @AutoInitialize(phase = InitializePhase.ON_CLIENT_STARTED, priority = @Location(provideTo = ClientCommandHandler.class))
     private static void init() {
         DraconicTech.LOGGER.info("Initializing ClientConfigProjectManager");
         if (FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER) {
             throw new IllegalStateException("Cannot initialize ClientConfigManager on a physical Server!");
         }
-        CACHE.put(ConfigProject.Client.getClazz(),new ConcurrentHashMap<>());
+        register(ConfigProject.Client.values());
+        loadToCacheFormFile(ConfigProject.Client.TYPE);
         try {
             Files.createDirectories(ROOT);
-        }catch (IOException e){
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        loadALL();
-        for (ConfigProject.Client<?> project: ConfigProject.Client.values()) CACHE.get(ConfigProject.Client.getClazz()).putIfAbsent(project, project.getDefaultValue());
         ConfigProjectManager.onSave(ClientConfigProjectManager::saveALL);
     }
-    private static void saveALL(boolean feedback){
-        atomicWrite(CLIENT_CONFIG,copyALL(CACHE.get(ConfigProject.Client.getClazz())),feedback);
-    }
-    private static void loadALL(){
-        loadFormFile(CLIENT_CONFIG, ConfigProject.Client.values(),CACHE.get(ConfigProject.Client.getClazz()));
+    private static void saveALL(boolean feedback) {
+        atomicWrite(ConfigProject.Client.TYPE, feedback);
     }
 }

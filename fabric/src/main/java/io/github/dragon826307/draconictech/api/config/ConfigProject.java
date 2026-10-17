@@ -14,6 +14,7 @@ public final class ConfigProject {
         ALWAYS_TRUE,
     }
     public static final class Client<T> extends AbstractConfigType<T> {
+        public static final String TYPE = "Client";
         private static final List<Client<?>> REGISTRY = new ArrayList<>();
         public Client(ConfigBuilder.CommonConfigBuilder<T> builder) {
             super(builder);
@@ -22,15 +23,18 @@ public final class ConfigProject {
             REGISTRY.add(config);
             return config;
         }
-        @SuppressWarnings("unchecked")
-        public static Class<Client<?>> getClazz() {
-            return (Class<Client<?>>) (Class<?>) Client.class;
-        }
+
         public static Client<?>[] values() {
             return REGISTRY.toArray(new Client[0]);
         }
+
+        @Override
+        public String typeName() {
+            return TYPE;
+        }
     }
     public static final class Main<T> extends AbstractConfigType<T> {
+        public static final String TYPE = "Main";
         private static final List<Main<?>> REGISTRY = new ArrayList<>();
         public Main(ConfigBuilder.CommonConfigBuilder<T> builder) {
             super(builder);
@@ -42,13 +46,15 @@ public final class ConfigProject {
         public static Main<?>[] values() {
             return REGISTRY.toArray(new Main[0]);
         }
-        @SuppressWarnings("unchecked")
-        public static Class<Main<?>> getClazz() {
-            return (Class<Main<?>>) (Object) Main.class;
+
+        @Override
+        public String typeName() {
+            return TYPE;
         }
     }
     @Getter
     public static final class Server<T> extends AbstractConfigType<T> {
+        public static final String TYPE = "Server";
         private static final List<Server<?>> REGISTRY = new ArrayList<>();
 
         private final T singlePlayerValue;
@@ -68,12 +74,13 @@ public final class ConfigProject {
 
         public static final Server<Integer> STATUS_COMMAND_PERMISSION = register(new Server<>(ConfigBuilder.ServerConfigBuilder.create("status_command_permission_requirement", Integer.class, 2, ((string, invalidReason) -> Ints.tryParse(string))).setConfigValidator((ConfigBuildHelper.INTEGER_VALIDATOR(0,4))).setSinglePlayerValue(4)));
 
-        @SuppressWarnings("unchecked")
-        public static Class<Server<?>> getClazz() {
-            return (Class<Server<?>>) (Object) Server.class;
+        @Override
+        public String typeName() {
+            return TYPE;
         }
     }
     public static final class Auto<T> extends AbstractConfigType<T> {
+        public static final String TYPE = "Auto";
         private static final List<Auto<?>> REGISTRY = new ArrayList<>();
 
         public Auto(ConfigBuilder.CommonConfigBuilder<T> builder) {
@@ -87,10 +94,10 @@ public final class ConfigProject {
         public static Auto<?>[] values() {
             return REGISTRY.toArray(new Auto[0]);
         }
-        @SuppressWarnings("unchecked")
-        public static Class<Auto<?>> getClazz() {
-            return (Class<Auto<?>>) (Object) Auto.class;
-        }
 
+        @Override
+        public String typeName() {
+            return TYPE;
+        }
     }
 }

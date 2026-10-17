@@ -6,8 +6,6 @@ import io.github.dragon826307.draconictech.api.text.TextBuilder;
 import io.github.dragon826307.draconictech.util.ServerTranslationUtil;
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.Setter;
-import lombok.experimental.Accessors;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Collections;

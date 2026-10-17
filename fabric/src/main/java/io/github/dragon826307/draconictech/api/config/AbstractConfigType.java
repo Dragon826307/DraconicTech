@@ -10,7 +10,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.util.List;
 import java.util.function.Supplier;
 
-public class AbstractConfigType<T> {
+public abstract class AbstractConfigType<T> {
 
     @Getter
     private final String ID;
@@ -31,6 +31,8 @@ public class AbstractConfigType<T> {
     private final Runnable postProcessor;
     @Getter
     private final ConfigProject.UpdateCommandTreeFlags updateCommandTreeFlag;
+
+    public abstract String typeName();
 
     protected AbstractConfigType(AbstractConfigBuilder<T, ?> builder) {
         this.ID = builder.getID();
